@@ -1,0 +1,5 @@
+package morphy.properties;
+
+public enum PreferenceKeys {
+	ValidUserNameRegEx, SocketConnectionLineDelimiter, SocketConnectionServiceHost, SocketConnectionServiceCharEncoding, SocketConnectionServicePorts, SocketConnectionServiceMaxCommunicationBytes, ThreadServiceMaxThreads, ThreadServiceCoreThreads, ThreadServiceKeepAlive
+};
