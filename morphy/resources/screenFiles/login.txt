@@ -1,0 +1,11 @@
+Welcome to the Morphy open soure chess server.
+
+             COOL ASCII ART GOES HERE
+             
+             
+             
+             
+             
+         
+         
+login: 
