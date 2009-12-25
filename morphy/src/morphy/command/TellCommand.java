@@ -40,11 +40,11 @@ public class TellCommand extends AbstractCommand {
 				ChannelService channelService = ChannelService.getInstance();
 				int number = Integer.parseInt(userName);
 				Channel c = channelService.getChannel(number);
-				if (c == null) 
+				if (c == null || number < Channel.MINIMUM || number > Channel.MAXIMUM)
 					{ userSession.send("Bad channel number."); } 
 				else { 
 					int sentTo = channelService.tell(c, message, userSession);
-					userSession.send("(told " + sentTo + " players in channel " + c.getNumber() + ")");
+					userSession.send("(told " + sentTo + " players in channel " + c.getNumber() + " \"" + c.getName() + "\")");
 				}
 			}
 			else {	

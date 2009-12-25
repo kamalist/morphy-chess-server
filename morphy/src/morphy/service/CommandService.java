@@ -24,9 +24,12 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import morphy.Morphy;
+import morphy.command.AddChannelCommand;
 import morphy.command.Command;
 import morphy.command.HelpCommand;
+import morphy.command.InchannelCommand;
 import morphy.command.QuitCommand;
+import morphy.command.RemoveChannelCommand;
 import morphy.command.ShoutCommand;
 import morphy.command.TellCommand;
 import morphy.command.WhoCommand;
@@ -42,7 +45,10 @@ public class CommandService implements Service {
 	@SuppressWarnings("unchecked")
 	private static final Class[] socketCommandsClasses = { HelpCommand.class,
 			QuitCommand.class, ShoutCommand.class, TellCommand.class,
-			WhoCommand.class };
+			WhoCommand.class,
+			
+			AddChannelCommand.class,RemoveChannelCommand.class,InchannelCommand.class
+	};
 
 	protected List<Command> commands = new ArrayList<Command>(100);
 	protected Map<String, Command> firstWordToCommandMap = new TreeMap<String, Command>();

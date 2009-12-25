@@ -27,6 +27,9 @@ import morphy.user.UserLevel;
 import morphy.user.UserSession;
 
 public class Channel implements Comparable<Channel> {
+	public static final int MINIMUM = 0;
+	public static final int MAXIMUM = 255;
+	
 	protected int number;
 	protected String name;
 	protected String description;
@@ -41,6 +44,14 @@ public class Channel implements Comparable<Channel> {
 
 	public List<UserSession> getListeners() {
 		return listeners;
+	}
+	
+	public void addListener(UserSession ses) {
+		getListeners().add(ses);
+	}
+	
+	public void removeListener(UserSession ses) {
+		getListeners().remove(ses);
 	}
 
 	public Channel(int number, String name, String description,
