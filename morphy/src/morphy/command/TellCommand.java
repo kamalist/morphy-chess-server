@@ -17,6 +17,8 @@
  */
 package morphy.command;
 
+import morphy.channel.Channel;
+import morphy.service.ChannelService;
 import morphy.service.UserService;
 import morphy.user.UserSession;
 
@@ -33,15 +35,29 @@ public class TellCommand extends AbstractCommand {
 			String userName = arguments.substring(0, spaceIndex);
 			String message = arguments.substring(spaceIndex + 1, arguments
 					.length());
-			UserSession personToTell = UserService.getInstance()
-					.getUserSession(userName);
-			if (personToTell == null) {
-				userSession.send("User " + userName + " is not logged in.");
-			} else {
-				personToTell.send(userSession.getUser().getUserName()
-						+ " tells you: " + message);
-				userSession.send("(told "
-						+ personToTell.getUser().getUserName() + ")");
+			
+			if (userName.matches("[0-9]+")) {
+				ChannelService channelService = ChannelService.getInstance();
+				int number = Integer.parseInt(userName);
+				Channel c = channelService.getChannel(number);
+				if (c == null) 
+					{ userSession.send("Bad channel number."); } 
+				else { 
+					int sentTo = channelService.tell(c, message, userSession);
+					userSession.send("(told " + sentTo + " players in channel " + c.getNumber() + ")");
+				}
+			}
+			else {	
+				UserSession personToTell = UserService.getInstance()
+						.getUserSession(userName);
+				if (personToTell == null) {
+					userSession.send("User " + userName + " is not logged in.");
+				} else {
+					personToTell.send(userSession.getUser().getUserName()
+							+ " tells you: " + message);
+					userSession.send("(told "
+							+ personToTell.getUser().getUserName() + ")");
+				}
 			}
 		}
 	}
