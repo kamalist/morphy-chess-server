@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import morphy.channel.Channel;
+import morphy.user.PersonalList;
 import morphy.user.PlayerTitle;
 import morphy.user.UserLevel;
 import morphy.user.UserSession;
@@ -67,6 +68,7 @@ public class ChannelService implements Service {
 	public int tell(Channel channel, String message, UserSession sender) {
 		int sentTo = 0;
 		for(UserSession person : channel.getListeners()) {
+			if (person.getUser().isOnList(PersonalList.censor,sender.getUser().getUserName())) { continue; }
 			person.send(sender.getUser().getUserName() + PlayerTitle.toString(sender.getUser().getTitles()) + "(" + channel.getNumber() + "): " + message);
 			sentTo++;
 		}

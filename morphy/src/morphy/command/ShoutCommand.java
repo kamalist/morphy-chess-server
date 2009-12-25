@@ -18,6 +18,7 @@
 package morphy.command;
 
 import morphy.service.UserService;
+import morphy.user.PersonalList;
 import morphy.user.UserSession;
 
 public class ShoutCommand extends AbstractCommand {
@@ -27,23 +28,21 @@ public class ShoutCommand extends AbstractCommand {
 
 	public void process(String arguments, UserSession userSession) {
 		UserSession[] sessions = UserService.getInstance().getLoggedInUsers();
-		String shoutedMessage = "(shouted to " + sessions.length + " players)";
-		boolean sendShoutedMessage = false;
+		int sentTo = 0;
+		final String message = userSession.getUser().getUserName() + " shouts: " + arguments;
 		for (UserSession session : sessions) {
 			if (session.getUser().getUserVars().isShoutOn()) {
 				if (session == userSession) {
-					session.send(userSession.getUser().getUserName()
-							+ " shouts: " + arguments + "\n" + shoutedMessage);
-					sendShoutedMessage = true;
+					continue;
 				} else {
-					session.send(userSession.getUser().getUserName()
-							+ " shouts: " + arguments);
+					if (userSession.getUser().isOnList(PersonalList.censor,session.getUser().getUserName())) { continue; }
+					session.send(message);
+					sentTo++;
 				}
 			}
 		}
 
-		if (!sendShoutedMessage) {
-			userSession.send(shoutedMessage);
-		}
+		final String shoutedMessage = "(shouted to " + sentTo + " players)";
+		userSession.send(message + "\n" + shoutedMessage);
 	}
 }

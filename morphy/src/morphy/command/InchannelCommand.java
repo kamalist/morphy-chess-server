@@ -20,6 +20,7 @@ package morphy.command;
 import morphy.channel.Channel;
 import morphy.service.ChannelService;
 import morphy.service.UserService;
+import morphy.user.PersonalList;
 import morphy.user.UserSession;
 
 public class InchannelCommand extends AbstractCommand {
@@ -62,9 +63,9 @@ public class InchannelCommand extends AbstractCommand {
 				UserService uS = UserService.getInstance();
 				UserSession sess = uS.getUserSession(userName);
 				if (sess == null) { userSession.send(userName + " is not logged in."); }
-				final int numUsers = sess.getUser().getOnChannels().size();
+				final int numUsers = sess.getUser().getLists().get(PersonalList.channel).size();
 				for(int i=0;i<numUsers;i++) {
-					str.append(sess.getUser().getOnChannels().get(i));
+					str.append(sess.getUser().getLists().get(PersonalList.channel).get(i));
 					if (i != numUsers+1) str.append(" ");
 				}
 				userSession.send(str.toString());

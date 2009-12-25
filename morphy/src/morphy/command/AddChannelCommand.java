@@ -19,8 +19,13 @@ package morphy.command;
 
 import morphy.channel.Channel;
 import morphy.service.ChannelService;
+import morphy.user.PersonalList;
 import morphy.user.UserSession;
 
+@Deprecated
+/**
+ * Deprecated in favor of the addlist command.
+ */
 public class AddChannelCommand extends AbstractCommand {
 
 	public AddChannelCommand() {
@@ -34,11 +39,11 @@ public class AddChannelCommand extends AbstractCommand {
 			ChannelService cS = ChannelService.getInstance();
 			Channel c = cS.getChannel(chNum);
 			if (c != null) {
-				if (userSession.getUser().getOnChannels().contains(new Integer(chNum))) { 
+				if (userSession.getUser().getLists().get(PersonalList.channel).contains("" + chNum)) { 
 					userSession.send("[" + chNum + "] is already on your channel list."); 
 					return;
 				}
-				userSession.getUser().getOnChannels().add(new Integer(chNum));
+				userSession.getUser().getLists().get(PersonalList.channel).add("" + chNum);
 				c.addListener(userSession);
 				userSession.send("[" + c.getNumber() + "] added to your channel list.");
 			}

@@ -17,30 +17,45 @@
  */
 package morphy.user;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-
-import morphy.service.ChannelService;
+import java.util.Map;
 
 public class User {
+	public static final int MAX_LIST_SIZE = 50;
+	
 	protected String userName;
 	protected UserLevel userLevel;
 	protected PlayerType playerType;
 	protected PlayerTitle[] titles = new PlayerTitle[0];
 	protected UserVars userVars = new UserVars();
 	
-	private List<Integer> onChannels;
+	private Map<PersonalList,List<String>> lists;
 	
-	public void setOnChannels(List<Integer> onChannels) {
-		this.onChannels = onChannels;
+	public Map<PersonalList, List<String>> getLists() {
+		return lists;
 	}
 
-	public List<Integer> getOnChannels() {
-		return onChannels;
+	private void setLists(Map<PersonalList, List<String>> lists) {
+		this.lists = lists;
 	}
 	
+	/**
+	 * Returns if userName is on list.
+	 * @param list
+	 * @param userName
+	 * @return
+	 */
+	public boolean isOnList(PersonalList list,String userName) {
+		List<String> myList = getLists().get(list);
+		if (myList == null) return false;
+		if (myList.contains(userName)) return true;
+		return false;
+	}
+	
+
 	public User() {
-		setOnChannels(new ArrayList<Integer>(ChannelService.MAX_NUM_CHANNELS));
+		setLists(new HashMap<PersonalList,List<String>>(User.MAX_LIST_SIZE));
 	}
 
 	public UserVars getUserVars() {

@@ -20,6 +20,7 @@ package morphy.command;
 import morphy.channel.Channel;
 import morphy.service.ChannelService;
 import morphy.service.UserService;
+import morphy.user.PersonalList;
 import morphy.user.UserSession;
 
 public class TellCommand extends AbstractCommand {
@@ -53,6 +54,11 @@ public class TellCommand extends AbstractCommand {
 				if (personToTell == null) {
 					userSession.send("User " + userName + " is not logged in.");
 				} else {
+					if (personToTell.getUser().isOnList(PersonalList.censor,userSession.getUser().getUserName())) {
+						userSession.send("Player \"" + userSession.getUser().getUserName() + "\" is censoring you.");
+						return;
+					}
+					
 					personToTell.send(userSession.getUser().getUserName()
 							+ " tells you: " + message);
 					userSession.send("(told "
