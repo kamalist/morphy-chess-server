@@ -17,11 +17,14 @@
  */
 package morphy.channel;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import morphy.user.PlayerTitle;
 import morphy.user.User;
 import morphy.user.UserLevel;
+import morphy.user.UserSession;
 
 public class Channel implements Comparable<Channel> {
 	protected int number;
@@ -29,6 +32,16 @@ public class Channel implements Comparable<Channel> {
 	protected String description;
 	protected UserLevel level;
 	protected PlayerTitle[] titles;
+	
+	private List<UserSession> listeners;
+
+	public void setListeners(List<UserSession> listeners) {
+		this.listeners = listeners;
+	}
+
+	public List<UserSession> getListeners() {
+		return listeners;
+	}
 
 	public Channel(int number, String name, String description,
 			UserLevel level, PlayerTitle[] titles) {
@@ -38,6 +51,7 @@ public class Channel implements Comparable<Channel> {
 		this.level = level;
 		this.titles = titles;
 		Arrays.sort(titles);
+		setListeners(new ArrayList<UserSession>());
 	}
 
 	public boolean hasAccess(User user) {
