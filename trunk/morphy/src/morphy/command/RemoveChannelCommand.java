@@ -19,8 +19,13 @@ package morphy.command;
 
 import morphy.channel.Channel;
 import morphy.service.ChannelService;
+import morphy.user.PersonalList;
 import morphy.user.UserSession;
 
+@Deprecated
+/**
+ * Deprecated in favor of the removelist command.
+ */
 public class RemoveChannelCommand extends AbstractCommand {
 
 	public RemoveChannelCommand() {
@@ -34,12 +39,12 @@ public class RemoveChannelCommand extends AbstractCommand {
 			ChannelService cS = ChannelService.getInstance();
 			Channel c = cS.getChannel(chNum);
 			if (c != null) {
-				if (!userSession.getUser().getOnChannels().contains(new Integer(chNum))) {
+				if (!userSession.getUser().getLists().get(PersonalList.channel).contains(""+chNum)) {
 					userSession.send("[" + chNum + "] is not in your channel list."); 
 					return;
 				}
 				c.removeListener(userSession);
-				userSession.getUser().getOnChannels().remove(new Integer(chNum));
+				userSession.getUser().getLists().get(PersonalList.channel).remove(""+chNum);
 				userSession.send("[" + c.getNumber() + "] removed from your channel list.");
 			}
 		} catch (NumberFormatException e) {
