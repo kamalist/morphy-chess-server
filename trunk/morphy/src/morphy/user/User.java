@@ -17,15 +17,30 @@
  */
 package morphy.user;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import morphy.service.ChannelService;
+
 public class User {
 	protected String userName;
 	protected UserLevel userLevel;
 	protected PlayerType playerType;
 	protected PlayerTitle[] titles = new PlayerTitle[0];
 	protected UserVars userVars = new UserVars();
+	
+	private List<Integer> onChannels;
+	
+	public void setOnChannels(List<Integer> onChannels) {
+		this.onChannels = onChannels;
+	}
 
+	public List<Integer> getOnChannels() {
+		return onChannels;
+	}
+	
 	public User() {
-
+		setOnChannels(new ArrayList<Integer>(ChannelService.MAX_NUM_CHANNELS));
 	}
 
 	public UserVars getUserVars() {

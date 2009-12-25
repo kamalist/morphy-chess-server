@@ -26,12 +26,15 @@ import morphy.user.UserLevel;
 import morphy.user.UserSession;
 
 public class ChannelService implements Service {
+	public static final int MAX_NUM_CHANNELS = 30;
+	
 	private static final ChannelService singletonInstance = new ChannelService();
 	
 	private List<Channel> channels = new ArrayList<Channel>(1);
 
 	private ChannelService() {
 		addChannel(new Channel(1,"Help","The help channel.",UserLevel.Player,PlayerTitle.values()));
+		//getChannel(1).addListener();
 	}
 
 	public static ChannelService getInstance() {

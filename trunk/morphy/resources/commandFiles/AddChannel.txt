@@ -1,0 +1,8 @@
+Name: addchannel
+Usage: addchannel number | +channel number
+Aliases: +ch
+SeeAlso: N/A
+LastModifiedBy: johnthegreat
+LastModifiedDate: 2009/12/25
+UserLevel: Guest
+Help: Adds a channel.
