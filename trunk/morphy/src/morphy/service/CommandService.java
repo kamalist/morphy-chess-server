@@ -24,16 +24,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import morphy.Morphy;
-import morphy.command.AddListCommand;
-import morphy.command.Command;
-import morphy.command.HelpCommand;
-import morphy.command.InchannelCommand;
-import morphy.command.QuitCommand;
-import morphy.command.RemoveListCommand;
-import morphy.command.ShoutCommand;
-import morphy.command.ShowListCommand;
-import morphy.command.TellCommand;
-import morphy.command.WhoCommand;
+import morphy.command.*;
 import morphy.user.SocketChannelUserSession;
 
 import org.apache.commons.lang.StringUtils;
@@ -49,7 +40,13 @@ public class CommandService implements Service {
 			WhoCommand.class,
 			
 			InchannelCommand.class,
-			AddListCommand.class,RemoveListCommand.class,ShowListCommand.class
+			AddCensorCommand.class,
+			AddGnotifyCommand.class,
+			AddNopartnerCommand.class,
+			AddNoplayCommand.class,
+			AddNotifyCommand.class,
+			AddRemoteCommand.class
+			//AddListCommand.class,RemoveListCommand.class,ShowListCommand.class
 	};
 
 	protected List<Command> commands = new ArrayList<Command>(100);

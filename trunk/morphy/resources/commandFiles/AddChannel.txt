@@ -1,8 +1,8 @@
-Name: addchannel
-Usage: addchannel number | +channel number
-Aliases: +ch
-SeeAlso: N/A
+Name: +channel
+Usage: +channel channel number
+Aliases: N/A
+See Also: N/A
 LastModifiedBy: johnthegreat
 LastModifiedDate: 2009/12/25
 UserLevel: Guest
-Help: Adds a channel.
+Help: Adds the specified channel number to the channel list.
