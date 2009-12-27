@@ -1,7 +1,6 @@
 package morphy.command;
 
 import morphy.service.UserService;
-import morphy.user.UserLevel;
 import morphy.user.UserSession;
 
 public class QtellCommand extends AbstractCommand {
