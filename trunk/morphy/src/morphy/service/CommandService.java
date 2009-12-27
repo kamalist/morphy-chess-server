@@ -24,7 +24,19 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import morphy.Morphy;
-import morphy.command.*;
+import morphy.command.AddCensorCommand;
+import morphy.command.AddGnotifyCommand;
+import morphy.command.AddNopartnerCommand;
+import morphy.command.AddNoplayCommand;
+import morphy.command.AddNotifyCommand;
+import morphy.command.AddRemoteCommand;
+import morphy.command.Command;
+import morphy.command.HelpCommand;
+import morphy.command.InchannelCommand;
+import morphy.command.QuitCommand;
+import morphy.command.ShoutCommand;
+import morphy.command.TellCommand;
+import morphy.command.WhoCommand;
 import morphy.user.SocketChannelUserSession;
 
 import org.apache.commons.lang.StringUtils;
@@ -38,15 +50,12 @@ public class CommandService implements Service {
 	private static final Class[] socketCommandsClasses = { HelpCommand.class,
 			QuitCommand.class, ShoutCommand.class, TellCommand.class,
 			WhoCommand.class,
-			
-			InchannelCommand.class,
-			AddCensorCommand.class,
-			AddGnotifyCommand.class,
-			AddNopartnerCommand.class,
-			AddNoplayCommand.class,
-			AddNotifyCommand.class,
+
+			InchannelCommand.class, AddCensorCommand.class,
+			AddGnotifyCommand.class, AddNopartnerCommand.class,
+			AddNoplayCommand.class, AddNotifyCommand.class,
 			AddRemoteCommand.class
-			//AddListCommand.class,RemoveListCommand.class,ShowListCommand.class
+	// AddListCommand.class,RemoveListCommand.class,ShowListCommand.class
 	};
 
 	protected List<Command> commands = new ArrayList<Command>(100);
@@ -56,12 +65,6 @@ public class CommandService implements Service {
 
 	public static CommandService getInstance() {
 		return singletonInstance;
-	}
-
-	public void dispose() {
-		commands.clear();
-		firstWordToCommandMap.clear();
-
 	}
 
 	@SuppressWarnings("unchecked")
@@ -120,13 +123,19 @@ public class CommandService implements Service {
 		}
 	}
 
-	public Command[] getCommands() {
-		return commands.toArray(new Command[0]);
+	public void dispose() {
+		commands.clear();
+		firstWordToCommandMap.clear();
+
 	}
 
 	public Command getCommand(String keyword) {
 		keyword = keyword.toLowerCase();
 		return firstWordToCommandMap.get(keyword);
+	}
+
+	public Command[] getCommands() {
+		return commands.toArray(new Command[0]);
 	}
 
 	public void processCommand(String command,

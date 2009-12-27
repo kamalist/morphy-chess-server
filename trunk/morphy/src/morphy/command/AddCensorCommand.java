@@ -28,12 +28,14 @@ public class AddCensorCommand extends AbstractCommand {
 
 	public void process(String arguments, UserSession userSession) {
 		String userName = arguments;
-			if (userSession.getUser().getLists().get(PersonalList.censor).contains(userName)) { 
-				userSession.send("[" + userName + "] is already on your censor list."); 
-				return;
-			}
-			userSession.getUser().getLists().get(PersonalList.censor).add(userName);
-			userSession.send("[" + userName + "] added to your censor list.");
+		if (userSession.getUser().getLists().get(PersonalList.censor).contains(
+				userName)) {
+			userSession.send("[" + userName
+					+ "] is already on your censor list.");
+			return;
+		}
+		userSession.getUser().getLists().get(PersonalList.censor).add(userName);
+		userSession.send("[" + userName + "] added to your censor list.");
 	}
 
 }

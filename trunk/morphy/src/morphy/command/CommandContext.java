@@ -27,7 +27,6 @@ import morphy.properties.PreferenceKeys;
 import morphy.service.PreferenceService;
 import morphy.user.UserLevel;
 import morphy.utils.MorphyStringTokenizer;
-import morphy.utils.MorphyStringUtils;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -108,7 +107,7 @@ public class CommandContext {
 					}
 				}
 			}
-			help = MorphyStringUtils.replaceNewlines(helpContent.toString());
+			help = helpContent.toString();
 
 			if (StringUtils.isBlank(getName())) {
 				throw new IllegalArgumentException(
@@ -133,64 +132,64 @@ public class CommandContext {
 		}
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
 	public String[] getAliases() {
 		return aliases;
-	}
-
-	public void setAliases(String[] aliases) {
-		this.aliases = aliases;
-	}
-
-	public String[] getSeeAlso() {
-		return seeAlso;
-	}
-
-	public void setSeeAlso(String[] seeAlso) {
-		this.seeAlso = seeAlso;
-	}
-
-	public String getUsage() {
-		return usage;
-	}
-
-	public void setUsage(String usage) {
-		this.usage = usage;
-	}
-
-	public String getLastModifiedBy() {
-		return lastModifiedBy;
-	}
-
-	public void setLastModifiedBy(String lastModifiedBy) {
-		this.lastModifiedBy = lastModifiedBy;
-	}
-
-	public String getLastModifiedDate() {
-		return lastModifiedDate;
-	}
-
-	public void setLastModifiedDate(String lastModifiedDate) {
-		this.lastModifiedDate = lastModifiedDate;
 	}
 
 	public String getHelp() {
 		return help;
 	}
 
-	public void setHelp(String help) {
-		this.help = help;
+	public String getLastModifiedBy() {
+		return lastModifiedBy;
+	}
+
+	public String getLastModifiedDate() {
+		return lastModifiedDate;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public String[] getSeeAlso() {
+		return seeAlso;
+	}
+
+	public String getUsage() {
+		return usage;
 	}
 
 	public UserLevel getUserLevel() {
 		return userLevel;
+	}
+
+	public void setAliases(String[] aliases) {
+		this.aliases = aliases;
+	}
+
+	public void setHelp(String help) {
+		this.help = help;
+	}
+
+	public void setLastModifiedBy(String lastModifiedBy) {
+		this.lastModifiedBy = lastModifiedBy;
+	}
+
+	public void setLastModifiedDate(String lastModifiedDate) {
+		this.lastModifiedDate = lastModifiedDate;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setSeeAlso(String[] seeAlso) {
+		this.seeAlso = seeAlso;
+	}
+
+	public void setUsage(String usage) {
+		this.usage = usage;
 	}
 
 	public void setUserLevel(UserLevel userLevel) {

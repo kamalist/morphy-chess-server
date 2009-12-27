@@ -22,9 +22,6 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
-import morphy.properties.PreferenceKeys;
-import morphy.service.PreferenceService;
-
 import org.apache.commons.lang.StringUtils;
 
 public class MorphyStringUtils {
@@ -104,6 +101,15 @@ public class MorphyStringUtils {
 				result.append(stringOfDigits.charAt(i));
 			}
 			return result.toString();
+		}
+	}
+
+	public static String formatServerMessage(String string) {
+		if (string == null || string.length() == 0) {
+			return "\n\r";
+		} else {
+			String result = string.replace("\n", "\n\r");
+			return result;
 		}
 	}
 
@@ -229,18 +235,6 @@ public class MorphyStringUtils {
 		}
 	}
 
-	public static String removeBeginingNewlines(String string) {
-		if (string == null || string.length() == 0) {
-			return string;
-		} else {
-			StringBuilder result = new StringBuilder(string);
-			while (result.charAt(0) == '\n') {
-				result.deleteCharAt(0);
-			}
-			return result.toString();
-		}
-	}
-
 	public static String replaceAll(String source, String strToReplace,
 			String replacement) {
 		int toRemoveIndex = source.indexOf(strToReplace);
@@ -349,12 +343,5 @@ public class MorphyStringUtils {
 			valuesString = valuesString.substring(0, valuesString.length() - 1);
 		}
 		return valuesString;
-	}
-
-	public static String replaceNewlines(String string) {
-		string = StringUtils.replaceChars(string, "\r", "");
-		return StringUtils.replaceChars(string, "\n", PreferenceService
-				.getInstance().getString(
-						PreferenceKeys.SocketConnectionLineDelimiter));
 	}
 }

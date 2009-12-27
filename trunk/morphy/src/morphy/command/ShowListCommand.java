@@ -31,24 +31,31 @@ public class ShowListCommand extends AbstractCommand {
 	}
 
 	public void process(String arguments, UserSession userSession) {
-		if (arguments.indexOf(" ") != -1) arguments = arguments.substring(0,arguments.indexOf(" "));
+		if (arguments.indexOf(" ") != -1)
+			arguments = arguments.substring(0, arguments.indexOf(" "));
 		String listName = arguments.toLowerCase();
 		if (listName.equals("")) {
 			PersonalList[] arr = PersonalList.values();
 			StringBuilder str = new StringBuilder();
 			str.append("Lists:\n\n");
-			for(int i=0;i<arr.length;i++) {
-				str.append(String.format("%-20s is %s",arr[i].name(),"PERSONAL"));
-				if (i != arr.length-1) str.append("\n");
+			for (int i = 0; i < arr.length; i++) {
+				str.append(String.format("%-20s is %s", arr[i].name(),
+						"PERSONAL"));
+				if (i != arr.length - 1)
+					str.append("\n");
 			}
 			userSession.send(str.toString());
 			return;
 		}
-		
+
 		PersonalList list = null;
 		try {
 			list = PersonalList.valueOf(listName);
-		} catch(Exception e) { userSession.send("\"" + listName + "\" does not match any list name."); return; }
+		} catch (Exception e) {
+			userSession.send("\"" + listName
+					+ "\" does not match any list name.");
+			return;
+		}
 		List<String> myList = userSession.getUser().getLists().get(list);
 		if (myList == null) {
 			myList = new ArrayList<String>(User.MAX_LIST_SIZE);
@@ -56,10 +63,13 @@ public class ShowListCommand extends AbstractCommand {
 		}
 		StringBuilder str = new StringBuilder(50);
 		Collections.sort(myList);
-		str.append("-- " + listName + " list: " + myList.size() + " names --\n");
-		for(int i=0;i<myList.size();i++) {
+		str
+				.append("-- " + listName + " list: " + myList.size()
+						+ " names --\n");
+		for (int i = 0; i < myList.size(); i++) {
 			str.append(myList.get(i));
-			if (i != myList.size()-1) str.append(" ");
+			if (i != myList.size() - 1)
+				str.append(" ");
 		}
 		userSession.send(str.toString());
 	}

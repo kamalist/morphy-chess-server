@@ -36,12 +36,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class ThreadService implements Service {
-	private static final Log LOG = LogFactory.getLog(ThreadService.class);
-	public static final String THREAD_DUMP_FILE_PATH = Morphy.USER_DIRECTORY
-			+ "/logs/threaddump_" + System.currentTimeMillis() + ".txt";
-
-	private static final ThreadService instance = new ThreadService();
-
 	protected static final class RunnableExceptionDecorator implements Runnable {
 		protected Runnable runnable;
 
@@ -60,9 +54,12 @@ public class ThreadService implements Service {
 
 	}
 
-	ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(200);
+	private static final Log LOG = LogFactory.getLog(ThreadService.class);
 
-	protected boolean isDisposed = false;
+	public static final String THREAD_DUMP_FILE_PATH = Morphy.USER_DIRECTORY
+			+ "/logs/threaddump_" + System.currentTimeMillis() + ".txt";
+
+	private static final ThreadService instance = new ThreadService();
 
 	public static ThreadService getInstance() {
 		return instance;
@@ -109,6 +106,10 @@ public class ThreadService implements Service {
 			}
 		}
 	}
+
+	ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(200);
+
+	protected boolean isDisposed = false;
 
 	private ThreadService() {
 		executor.setCorePoolSize(PreferenceService.getInstance().getInt(

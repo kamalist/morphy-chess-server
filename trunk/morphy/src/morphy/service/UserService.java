@@ -30,6 +30,10 @@ public class UserService implements Service {
 
 	private static final UserService singletonInstance = new UserService();
 
+	public static UserService getInstance() {
+		return singletonInstance;
+	}
+
 	Map<String, UserSession> userNameToSessionMap = new TreeMap<String, UserSession>();
 
 	private UserService() {
@@ -38,11 +42,13 @@ public class UserService implements Service {
 		}
 	}
 
-	public void sendAnnouncement(String message) {
-		String announcement = "Announcement: " + message;
-		for (UserSession session : getLoggedInUsers()) {
-			session.send(announcement);
-		}
+	public void addLoggedInUser(UserSession userSessopm) {
+		userNameToSessionMap.put(userSessopm.getUser().getUserName()
+				.toLowerCase(), userSessopm);
+	}
+
+	public void dispose() {
+		userNameToSessionMap.clear();
 	}
 
 	public int getLoggedInUserCount() {
@@ -69,16 +75,10 @@ public class UserService implements Service {
 		}
 	}
 
-	public void addLoggedInUser(UserSession userSessopm) {
-		userNameToSessionMap.put(userSessopm.getUser().getUserName()
-				.toLowerCase(), userSessopm);
-	}
-
-	public static UserService getInstance() {
-		return singletonInstance;
-	}
-
-	public void dispose() {
-		userNameToSessionMap.clear();
+	public void sendAnnouncement(String message) {
+		String announcement = "Announcement: " + message;
+		for (UserSession session : getLoggedInUsers()) {
+			session.send(announcement);
+		}
 	}
 }

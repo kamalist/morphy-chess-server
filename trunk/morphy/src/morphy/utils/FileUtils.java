@@ -200,8 +200,7 @@ public class FileUtils {
 			while ((line = reader.readLine()) != null) {
 				if (!isFirst) {
 					result.append("\n");
-				}
-				else {
+				} else {
 					isFirst = false;
 				}
 				result.append(line);

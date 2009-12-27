@@ -66,16 +66,12 @@ public class PreferenceService extends PropertiesConfiguration implements
 		save();
 	}
 
-	public void setProperty(PreferenceKeys key, Object value) {
-		super.setProperty(key.toString(), value);
+	public int getInt(PreferenceKeys key) {
+		return getInt(key.toString());
 	}
 
 	public String getString(PreferenceKeys key) {
 		return getString(key.toString());
-	}
-
-	public int getInt(PreferenceKeys key) {
-		return getInt(key.toString());
 	}
 
 	@Override
@@ -94,6 +90,10 @@ public class PreferenceService extends PropertiesConfiguration implements
 				}
 			}
 		}
+	}
+
+	public void setProperty(PreferenceKeys key, Object value) {
+		super.setProperty(key.toString(), value);
 	}
 
 	protected void loadDefaults() {

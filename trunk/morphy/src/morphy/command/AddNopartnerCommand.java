@@ -28,12 +28,15 @@ public class AddNopartnerCommand extends AbstractCommand {
 
 	public void process(String arguments, UserSession userSession) {
 		String userName = arguments;
-			if (userSession.getUser().getLists().get(PersonalList.nopartner).contains(userName)) { 
-				userSession.send("[" + userName + "] is already on your nopartner list."); 
-				return;
-			}
-			userSession.getUser().getLists().get(PersonalList.nopartner).add(userName);
-			userSession.send("[" + userName + "] added to your nopartner list.");
+		if (userSession.getUser().getLists().get(PersonalList.nopartner)
+				.contains(userName)) {
+			userSession.send("[" + userName
+					+ "] is already on your nopartner list.");
+			return;
+		}
+		userSession.getUser().getLists().get(PersonalList.nopartner).add(
+				userName);
+		userSession.send("[" + userName + "] added to your nopartner list.");
 	}
 
 }

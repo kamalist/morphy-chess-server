@@ -35,20 +35,25 @@ public class RemoveChannelCommand extends AbstractCommand {
 	public void process(String arguments, UserSession userSession) {
 		String[] args = arguments.split(" ");
 		try {
-			int chNum = Integer.parseInt(args[args.length-1]);
+			int chNum = Integer.parseInt(args[args.length - 1]);
 			ChannelService cS = ChannelService.getInstance();
 			Channel c = cS.getChannel(chNum);
 			if (c != null) {
-				if (!userSession.getUser().getLists().get(PersonalList.channel).contains(""+chNum)) {
-					userSession.send("[" + chNum + "] is not in your channel list."); 
+				if (!userSession.getUser().getLists().get(PersonalList.channel)
+						.contains("" + chNum)) {
+					userSession.send("[" + chNum
+							+ "] is not in your channel list.");
 					return;
 				}
 				c.removeListener(userSession);
-				userSession.getUser().getLists().get(PersonalList.channel).remove(""+chNum);
-				userSession.send("[" + c.getNumber() + "] removed from your channel list.");
+				userSession.getUser().getLists().get(PersonalList.channel)
+						.remove("" + chNum);
+				userSession.send("[" + c.getNumber()
+						+ "] removed from your channel list.");
 			}
 		} catch (NumberFormatException e) {
-			userSession.send("The channel to remove must be a number between " + Channel.MINIMUM + " and " + Channel.MAXIMUM + ".");
+			userSession.send("The channel to remove must be a number between "
+					+ Channel.MINIMUM + " and " + Channel.MAXIMUM + ".");
 		}
 	}
 

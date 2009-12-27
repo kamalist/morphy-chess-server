@@ -19,11 +19,10 @@ package morphy.user;
 
 public enum PlayerTitle {
 	SR, CA, CM, FM, IM, GM, WIM, WGM;
-	
-	
+
 	public static String toString(PlayerTitle[] titles) {
 		StringBuilder str = new StringBuilder(20);
-		for(int i=0;i<titles.length;i++) {
+		for (int i = 0; i < titles.length; i++) {
 			str.append("(" + titles[i].name() + ")");
 		}
 		return str.toString();
