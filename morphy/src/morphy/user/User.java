@@ -29,15 +29,40 @@ public class User {
 	protected PlayerType playerType;
 	protected PlayerTitle[] titles = new PlayerTitle[0];
 	protected UserVars userVars = new UserVars();
-
-	private Map<PersonalList, List<String>> lists;
-
-	public User() {
-		setLists(new HashMap<PersonalList, List<String>>(User.MAX_LIST_SIZE));
+	
+	private Map<PersonalList,List<String>> personalLists;
+	private void setLists(Map<PersonalList, List<String>> lists) {
+		this.personalLists = lists;
+	}
+	public Map<PersonalList, List<String>> getLists() {
+		return personalLists;
 	}
 
-	public Map<PersonalList, List<String>> getLists() {
-		return lists;
+	private Map<UserInfoList,List<String>> userInfoLists;
+	private void setUserInfoLists(Map<UserInfoList,List<String>> userInfoLists) {
+		this.userInfoLists = userInfoLists;
+	}
+	public Map<UserInfoList,List<String>> getUserInfoLists() {
+		return userInfoLists;
+	}
+
+	/**
+	 * Returns if userName is on list.
+	 * @param list
+	 * @param userName
+	 * @return
+	 */
+	public boolean isOnList(PersonalList list,String userName) {
+		List<String> myList = getLists().get(list);
+		if (myList == null) return false;
+		if (myList.contains(userName)) return true;
+		return false;
+	}
+
+	public User() {
+		setLists(new HashMap<PersonalList,List<String>>());
+		setUserInfoLists(new HashMap<UserInfoList,List<String>>());
+		setLists(new HashMap<PersonalList, List<String>>(User.MAX_LIST_SIZE));
 	}
 
 	public PlayerType getPlayerType() {
@@ -60,22 +85,6 @@ public class User {
 		return userVars;
 	}
 
-	/**
-	 * Returns if userName is on list.
-	 * 
-	 * @param list
-	 * @param userName
-	 * @return
-	 */
-	public boolean isOnList(PersonalList list, String userName) {
-		List<String> myList = getLists().get(list);
-		if (myList == null)
-			return false;
-		if (myList.contains(userName))
-			return true;
-		return false;
-	}
-
 	public void setPlayerType(PlayerType playerType) {
 		this.playerType = playerType;
 	}
@@ -94,9 +103,5 @@ public class User {
 
 	public void setUserVars(UserVars userVars) {
 		this.userVars = userVars;
-	}
-
-	private void setLists(Map<PersonalList, List<String>> lists) {
-		this.lists = lists;
 	}
 }

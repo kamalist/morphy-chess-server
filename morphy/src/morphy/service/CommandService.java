@@ -31,9 +31,11 @@ import morphy.command.AddNoplayCommand;
 import morphy.command.AddNotifyCommand;
 import morphy.command.AddRemoteCommand;
 import morphy.command.Command;
+import morphy.command.FingerCommand;
 import morphy.command.HelpCommand;
 import morphy.command.InchannelCommand;
 import morphy.command.QuitCommand;
+import morphy.command.SetCommand;
 import morphy.command.ShoutCommand;
 import morphy.command.TellCommand;
 import morphy.command.WhoCommand;
@@ -45,17 +47,18 @@ import org.apache.commons.logging.LogFactory;
 
 public class CommandService implements Service {
 	protected static Log LOG = LogFactory.getLog(CommandService.class);
-
-	@SuppressWarnings("unchecked")
-	private static final Class[] socketCommandsClasses = { HelpCommand.class,
+	
+	private static final Class<?>[] socketCommandsClasses = { HelpCommand.class,
 			QuitCommand.class, ShoutCommand.class, TellCommand.class,
 			WhoCommand.class,
 
 			InchannelCommand.class, AddCensorCommand.class,
 			AddGnotifyCommand.class, AddNopartnerCommand.class,
 			AddNoplayCommand.class, AddNotifyCommand.class,
-			AddRemoteCommand.class
-	// AddListCommand.class,RemoveListCommand.class,ShowListCommand.class
+			AddRemoteCommand.class,
+			FingerCommand.class,
+			SetCommand.class
+			// AddListCommand.class,RemoveListCommand.class,ShowListCommand.class
 	};
 
 	protected List<Command> commands = new ArrayList<Command>(100);
