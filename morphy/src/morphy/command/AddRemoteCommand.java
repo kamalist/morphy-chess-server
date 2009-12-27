@@ -28,11 +28,13 @@ public class AddRemoteCommand extends AbstractCommand {
 
 	public void process(String arguments, UserSession userSession) {
 		String userName = arguments;
-			if (userSession.getUser().getLists().get(PersonalList.remote).contains(userName)) { 
-				userSession.send("[" + userName + "] is already on your remote list."); 
-				return;
-			}
-			userSession.getUser().getLists().get(PersonalList.remote).add(userName);
-			userSession.send("[" + userName + "] added to your remote list.");
+		if (userSession.getUser().getLists().get(PersonalList.remote).contains(
+				userName)) {
+			userSession.send("[" + userName
+					+ "] is already on your remote list.");
+			return;
+		}
+		userSession.getUser().getLists().get(PersonalList.remote).add(userName);
+		userSession.send("[" + userName + "] added to your remote list.");
 	}
 }

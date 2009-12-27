@@ -51,8 +51,6 @@ public class Morphy {
 
 	protected static Log LOG = LogFactory.getLog(Morphy.class);
 
-	protected Service[] services;
-
 	public static void main(String[] args) {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
@@ -63,6 +61,8 @@ public class Morphy {
 
 		getInstance().init();
 	}
+
+	protected Service[] services;
 
 	private static Morphy singletonInstance = new Morphy();
 
@@ -75,18 +75,20 @@ public class Morphy {
 	private Morphy() {
 	}
 
-	private void init() {
-		if (LOG.isInfoEnabled()) {
-			LOG.info("Initializing Morphy");
-		}
-		services = new Service[] { PreferenceService.getInstance(),
-				ThreadService.getInstance(), CommandService.getInstance(),
-				SocketConnectionService.getInstance(),
-				ChannelService.getInstance(), UserService.getInstance() };
-	}
-
 	public boolean isShutdown() {
 		return isShutdown;
+	}
+
+	public void onError(String message) {
+		LOG.error(message);
+	}
+
+	public void onError(String message, Throwable t) {
+		LOG.error(message, t);
+	}
+
+	public void onError(Throwable t) {
+		LOG.error("", t);
 	}
 
 	public void shutdown() {
@@ -104,15 +106,13 @@ public class Morphy {
 		}
 	}
 
-	public void onError(String message) {
-		LOG.error(message);
-	}
-
-	public void onError(Throwable t) {
-		LOG.error("", t);
-	}
-
-	public void onError(String message, Throwable t) {
-		LOG.error(message, t);
+	private void init() {
+		if (LOG.isInfoEnabled()) {
+			LOG.info("Initializing Morphy");
+		}
+		services = new Service[] { PreferenceService.getInstance(),
+				ThreadService.getInstance(), CommandService.getInstance(),
+				SocketConnectionService.getInstance(),
+				ChannelService.getInstance(), UserService.getInstance() };
 	}
 }

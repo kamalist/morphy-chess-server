@@ -35,20 +35,25 @@ public class AddChannelCommand extends AbstractCommand {
 	public void process(String arguments, UserSession userSession) {
 		String[] args = arguments.split(" ");
 		try {
-			int chNum = Integer.parseInt(args[args.length-1]);
+			int chNum = Integer.parseInt(args[args.length - 1]);
 			ChannelService cS = ChannelService.getInstance();
 			Channel c = cS.getChannel(chNum);
 			if (c != null) {
-				if (userSession.getUser().getLists().get(PersonalList.channel).contains("" + chNum)) { 
-					userSession.send("[" + chNum + "] is already on your channel list."); 
+				if (userSession.getUser().getLists().get(PersonalList.channel)
+						.contains("" + chNum)) {
+					userSession.send("[" + chNum
+							+ "] is already on your channel list.");
 					return;
 				}
-				userSession.getUser().getLists().get(PersonalList.channel).add("" + chNum);
+				userSession.getUser().getLists().get(PersonalList.channel).add(
+						"" + chNum);
 				c.addListener(userSession);
-				userSession.send("[" + c.getNumber() + "] added to your channel list.");
+				userSession.send("[" + c.getNumber()
+						+ "] added to your channel list.");
 			}
 		} catch (NumberFormatException e) {
-			userSession.send("The channel to add must be a number between " + Channel.MINIMUM + " and " + Channel.MAXIMUM + ".");
+			userSession.send("The channel to add must be a number between "
+					+ Channel.MINIMUM + " and " + Channel.MAXIMUM + ".");
 		}
 	}
 

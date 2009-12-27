@@ -29,13 +29,17 @@ public class ShoutCommand extends AbstractCommand {
 	public void process(String arguments, UserSession userSession) {
 		UserSession[] sessions = UserService.getInstance().getLoggedInUsers();
 		int sentTo = 0;
-		final String message = userSession.getUser().getUserName() + " shouts: " + arguments;
+		final String message = userSession.getUser().getUserName()
+				+ " shouts: " + arguments;
 		for (UserSession session : sessions) {
 			if (session.getUser().getUserVars().isShoutOn()) {
 				if (session == userSession) {
 					continue;
 				} else {
-					if (userSession.getUser().isOnList(PersonalList.censor,session.getUser().getUserName())) { continue; }
+					if (userSession.getUser().isOnList(PersonalList.censor,
+							session.getUser().getUserName())) {
+						continue;
+					}
 					session.send(message);
 					sentTo++;
 				}

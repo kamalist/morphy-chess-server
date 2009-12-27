@@ -28,7 +28,6 @@ import morphy.service.SocketConnectionService;
 import morphy.service.UserService;
 import morphy.service.ScreenService.Screen;
 import morphy.utils.BufferUtils;
-import morphy.utils.MorphyStringUtils;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -56,54 +55,6 @@ public class SocketChannelUserSession implements UserSession {
 		}
 	}
 
-	public StringBuilder getInputBuffer() {
-		return inputBuffer;
-	}
-
-	public void setInputBuffer(StringBuilder inputBuffer) {
-		this.inputBuffer = inputBuffer;
-	}
-
-	public boolean hasLoggedIn() {
-		return hasLoggedIn;
-	}
-
-	public void setHasLoggedIn(boolean hasLoggedIn) {
-		this.hasLoggedIn = hasLoggedIn;
-	}
-
-	public Object get(UserSessionKey key) {
-		return objectMap.get(key);
-	}
-
-	public void put(UserSessionKey key, Object object) {
-		objectMap.put(key, object);
-	}
-
-	public User getUser() {
-		return user;
-	}
-
-	public void setUser(User user) {
-		this.user = user;
-	}
-
-	public SocketChannel getChannel() {
-		return channel;
-	}
-
-	public void setChannel(SocketChannel channel) {
-		this.channel = channel;
-	}
-
-	public long getLoginTime() {
-		return loginTime;
-	}
-
-	public boolean isConnected() {
-		return channel.isOpen();
-	}
-
 	public void disconnect() {
 		if (isConnected()) {
 			try {
@@ -122,8 +73,16 @@ public class SocketChannelUserSession implements UserSession {
 		}
 	}
 
-	public void touchLastReceivedTime() {
-		lastReceivedTime = System.currentTimeMillis();
+	public Object get(UserSessionKey key) {
+		return objectMap.get(key);
+	}
+
+	public Boolean getBoolean(UserSessionKey key) {
+		return (Boolean) get(key);
+	}
+
+	public SocketChannel getChannel() {
+		return channel;
 	}
 
 	public long getIdleTimeMillis() {
@@ -131,11 +90,44 @@ public class SocketChannelUserSession implements UserSession {
 				- System.currentTimeMillis();
 	}
 
+	public StringBuilder getInputBuffer() {
+		return inputBuffer;
+	}
+
+	public Integer getInt(UserSessionKey key) {
+		return (Integer) get(key);
+	}
+
+	public long getLoginTime() {
+		return loginTime;
+	}
+
+	public String getString(UserSessionKey key) {
+		return (String) get(key);
+	}
+
+	public User getUser() {
+		return user;
+	}
+
+	public boolean hasLoggedIn() {
+		return hasLoggedIn;
+	}
+
+	public boolean isConnected() {
+		return channel.isOpen();
+	}
+
+	public void put(UserSessionKey key, Object object) {
+		objectMap.put(key, object);
+	}
+
 	public void send(String message) {
 		try {
 			if (isConnected()) {
-				ByteBuffer buffer = BufferUtils.createBuffer(MorphyStringUtils
-						.replaceNewlines(message + "\nfics% "));
+				ByteBuffer buffer = BufferUtils
+						.createBuffer(SocketConnectionService.getInstance()
+								.formatMessage(this, message + "\nfics% "));
 				channel.write(buffer);
 			} else {
 				if (LOG.isInfoEnabled()) {
@@ -152,15 +144,23 @@ public class SocketChannelUserSession implements UserSession {
 		}
 	}
 
-	public Boolean getBoolean(UserSessionKey key) {
-		return (Boolean) get(key);
+	public void setChannel(SocketChannel channel) {
+		this.channel = channel;
 	}
 
-	public Integer getInt(UserSessionKey key) {
-		return (Integer) get(key);
+	public void setHasLoggedIn(boolean hasLoggedIn) {
+		this.hasLoggedIn = hasLoggedIn;
 	}
 
-	public String getString(UserSessionKey key) {
-		return (String) get(key);
+	public void setInputBuffer(StringBuilder inputBuffer) {
+		this.inputBuffer = inputBuffer;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
+
+	public void touchLastReceivedTime() {
+		lastReceivedTime = System.currentTimeMillis();
 	}
 }

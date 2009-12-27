@@ -28,12 +28,15 @@ public class AddGnotifyCommand extends AbstractCommand {
 
 	public void process(String arguments, UserSession userSession) {
 		String userName = arguments;
-			if (userSession.getUser().getLists().get(PersonalList.gnotify).contains(userName)) { 
-				userSession.send("[" + userName + "] is already on your gnotify list."); 
-				return;
-			}
-			userSession.getUser().getLists().get(PersonalList.gnotify).add(userName);
-			userSession.send("[" + userName + "] added to your gnotify list.");
+		if (userSession.getUser().getLists().get(PersonalList.gnotify)
+				.contains(userName)) {
+			userSession.send("[" + userName
+					+ "] is already on your gnotify list.");
+			return;
+		}
+		userSession.getUser().getLists().get(PersonalList.gnotify)
+				.add(userName);
+		userSession.send("[" + userName + "] added to your gnotify list.");
 	}
 
 }

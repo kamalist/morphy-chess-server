@@ -28,12 +28,14 @@ public class AddNotifyCommand extends AbstractCommand {
 
 	public void process(String arguments, UserSession userSession) {
 		String userName = arguments;
-			if (userSession.getUser().getLists().get(PersonalList.notify).contains(userName)) { 
-				userSession.send("[" + userName + "] is already on your notify list."); 
-				return;
-			}
-			userSession.getUser().getLists().get(PersonalList.notify).add(userName);
-			userSession.send("[" + userName + "] added to your notify list.");
+		if (userSession.getUser().getLists().get(PersonalList.notify).contains(
+				userName)) {
+			userSession.send("[" + userName
+					+ "] is already on your notify list.");
+			return;
+		}
+		userSession.getUser().getLists().get(PersonalList.notify).add(userName);
+		userSession.send("[" + userName + "] added to your notify list.");
 	}
 
 }

@@ -17,11 +17,11 @@
  */
 package morphy.command;
 
-import org.apache.commons.lang.StringUtils;
-
 import morphy.service.CommandService;
 import morphy.user.UserSession;
 import morphy.utils.MorphyStringUtils;
+
+import org.apache.commons.lang.StringUtils;
 
 public class HelpCommand extends AbstractCommand {
 	public HelpCommand() {
@@ -61,6 +61,7 @@ public class HelpCommand extends AbstractCommand {
 				builder.append("Level: " + command.getContext().getUserLevel()
 						+ "\n");
 				builder.append("Descriptiopn:\n");
+				builder.append(command.getContext().getHelp());
 
 				StringBuilder postBuilder = new StringBuilder(200);
 				postBuilder.append("\nAliases: "
@@ -73,11 +74,7 @@ public class HelpCommand extends AbstractCommand {
 						+ command.getContext().getLastModifiedBy() + " on "
 						+ command.getContext().getLastModifiedBy());
 
-				userSession.send(MorphyStringUtils.replaceNewlines(builder
-						.toString())
-						+ command.getContext().getHelp()
-						+ MorphyStringUtils.replaceNewlines(postBuilder
-								.toString()));
+				userSession.send(builder.toString());
 			}
 		}
 

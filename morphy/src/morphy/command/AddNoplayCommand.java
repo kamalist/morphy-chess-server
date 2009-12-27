@@ -28,12 +28,14 @@ public class AddNoplayCommand extends AbstractCommand {
 
 	public void process(String arguments, UserSession userSession) {
 		String userName = arguments;
-			if (userSession.getUser().getLists().get(PersonalList.noplay).contains(userName)) { 
-				userSession.send("[" + userName + "] is already on your noplay list."); 
-				return;
-			}
-			userSession.getUser().getLists().get(PersonalList.noplay).add(userName);
-			userSession.send("[" + userName + "] added to your noplay list.");
+		if (userSession.getUser().getLists().get(PersonalList.noplay).contains(
+				userName)) {
+			userSession.send("[" + userName
+					+ "] is already on your noplay list.");
+			return;
+		}
+		userSession.getUser().getLists().get(PersonalList.noplay).add(userName);
+		userSession.send("[" + userName + "] added to your noplay list.");
 	}
 
 }

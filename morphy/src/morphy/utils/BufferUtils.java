@@ -25,7 +25,7 @@ import morphy.service.PreferenceService;
 
 public class BufferUtils {
 	public static ByteBuffer createBuffer(String message) {
-		ByteBuffer buffer = ByteBuffer.allocate(message.length()*4);
+		ByteBuffer buffer = ByteBuffer.allocate(message.length() * 4);
 		try {
 			buffer
 					.put(message

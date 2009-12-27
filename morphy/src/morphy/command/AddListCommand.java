@@ -34,35 +34,49 @@ public class AddListCommand extends AbstractCommand {
 	public void process(String arguments, UserSession userSession) {
 		String[] args = arguments.split(" ");
 		if (args.length != 2) {
-			userSession.send(getContext().getUsage()); 
-			return; 
+			userSession.send(getContext().getUsage());
+			return;
 		}
 		String listName = args[0].toLowerCase();
 		String value = args[1];
 		PersonalList list = null;
 		try {
 			list = PersonalList.valueOf(listName);
-		} catch(Exception e) { userSession.send("\"" + listName + "\" does not match any list name."); return; }
+		} catch (Exception e) {
+			userSession.send("\"" + listName
+					+ "\" does not match any list name.");
+			return;
+		}
 		List<String> myList = userSession.getUser().getLists().get(list);
-		if (myList == null) { 
+		if (myList == null) {
 			myList = new ArrayList<String>(User.MAX_LIST_SIZE);
 			userSession.getUser().getLists().put(list, myList);
 		}
-		if (!myList.contains(value)) {			
-			if (list == PersonalList.channel) { 
+		if (!myList.contains(value)) {
+			if (list == PersonalList.channel) {
 				ChannelService cS = ChannelService.getInstance();
 				try {
-				int intVal = Integer.parseInt(value);
-				if (intVal < Channel.MINIMUM || intVal > Channel.MAXIMUM) throw new NumberFormatException();
-				Channel c = cS.getChannel(intVal);
-				c.addListener(userSession);
-				} catch(NumberFormatException e) { userSession.send("The channel to add must be a number between " + Channel.MINIMUM + " and " + Channel.MAXIMUM + "."); return; }
+					int intVal = Integer.parseInt(value);
+					if (intVal < Channel.MINIMUM || intVal > Channel.MAXIMUM)
+						throw new NumberFormatException();
+					Channel c = cS.getChannel(intVal);
+					c.addListener(userSession);
+				} catch (NumberFormatException e) {
+					userSession
+							.send("The channel to add must be a number between "
+									+ Channel.MINIMUM
+									+ " and "
+									+ Channel.MAXIMUM + ".");
+					return;
+				}
 			}
-			
+
 			myList.add(value);
-			userSession.send("[" + value + "] added to your " + listName + " list.");
+			userSession.send("[" + value + "] added to your " + listName
+					+ " list.");
 		} else {
-			userSession.send("[" + value + "] is already on your " + listName + " list.");
+			userSession.send("[" + value + "] is already on your " + listName
+					+ " list.");
 		}
 	}
 

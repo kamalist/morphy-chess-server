@@ -36,29 +36,33 @@ public class TellCommand extends AbstractCommand {
 			String userName = arguments.substring(0, spaceIndex);
 			String message = arguments.substring(spaceIndex + 1, arguments
 					.length());
-			
+
 			if (userName.matches("[0-9]+")) {
 				ChannelService channelService = ChannelService.getInstance();
 				int number = Integer.parseInt(userName);
 				Channel c = channelService.getChannel(number);
-				if (c == null || number < Channel.MINIMUM || number > Channel.MAXIMUM)
-					{ userSession.send("Bad channel number."); } 
-				else { 
+				if (c == null || number < Channel.MINIMUM
+						|| number > Channel.MAXIMUM) {
+					userSession.send("Bad channel number.");
+				} else {
 					int sentTo = channelService.tell(c, message, userSession);
-					userSession.send("(told " + sentTo + " players in channel " + c.getNumber() + " \"" + c.getName() + "\")");
+					userSession.send("(told " + sentTo + " players in channel "
+							+ c.getNumber() + " \"" + c.getName() + "\")");
 				}
-			}
-			else {	
+			} else {
 				UserSession personToTell = UserService.getInstance()
 						.getUserSession(userName);
 				if (personToTell == null) {
 					userSession.send("User " + userName + " is not logged in.");
 				} else {
-					if (personToTell.getUser().isOnList(PersonalList.censor,userSession.getUser().getUserName())) {
-						userSession.send("Player \"" + userSession.getUser().getUserName() + "\" is censoring you.");
+					if (personToTell.getUser().isOnList(PersonalList.censor,
+							userSession.getUser().getUserName())) {
+						userSession.send("Player \""
+								+ userSession.getUser().getUserName()
+								+ "\" is censoring you.");
 						return;
 					}
-					
+
 					personToTell.send(userSession.getUser().getUserName()
 							+ " tells you: " + message);
 					userSession.send("(told "

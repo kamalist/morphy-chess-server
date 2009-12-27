@@ -29,30 +29,14 @@ import morphy.user.UserSession;
 public class Channel implements Comparable<Channel> {
 	public static final int MINIMUM = 0;
 	public static final int MAXIMUM = 255;
-	
+
 	protected int number;
 	protected String name;
 	protected String description;
 	protected UserLevel level;
 	protected PlayerTitle[] titles;
-	
+
 	private List<UserSession> listeners;
-
-	public void setListeners(List<UserSession> listeners) {
-		this.listeners = listeners;
-	}
-
-	public List<UserSession> getListeners() {
-		return listeners;
-	}
-	
-	public void addListener(UserSession ses) {
-		getListeners().add(ses);
-	}
-	
-	public void removeListener(UserSession ses) {
-		getListeners().remove(ses);
-	}
 
 	public Channel(int number, String name, String description,
 			UserLevel level, PlayerTitle[] titles) {
@@ -63,6 +47,30 @@ public class Channel implements Comparable<Channel> {
 		this.titles = titles;
 		Arrays.sort(titles);
 		setListeners(new ArrayList<UserSession>());
+	}
+
+	public void addListener(UserSession ses) {
+		getListeners().add(ses);
+	}
+
+	public int compareTo(Channel channel) {
+		return new Integer(number).compareTo(new Integer(channel.number));
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public List<UserSession> getListeners() {
+		return listeners;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public int getNumber() {
+		return number;
 	}
 
 	public boolean hasAccess(User user) {
@@ -87,31 +95,23 @@ public class Channel implements Comparable<Channel> {
 		return result;
 	}
 
-	public int compareTo(Channel channel) {
-		return new Integer(number).compareTo(new Integer(channel.number));
+	public void removeListener(UserSession ses) {
+		getListeners().remove(ses);
 	}
 
-	public int getNumber() {
-		return number;
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
-	public void setNumber(int number) {
-		this.number = number;
-	}
-
-	public String getName() {
-		return name;
+	public void setListeners(List<UserSession> listeners) {
+		this.listeners = listeners;
 	}
 
 	public void setName(String name) {
 		this.name = name;
 	}
 
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
+	public void setNumber(int number) {
+		this.number = number;
 	}
 }
