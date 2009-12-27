@@ -76,7 +76,7 @@ public class UserService implements Service {
 	}
 
 	public void sendAnnouncement(String message) {
-		String announcement = "Announcement: " + message;
+		String announcement = "    **ANNOUNCEMENT** " + message;
 		for (UserSession session : getLoggedInUsers()) {
 			session.send(announcement);
 		}
