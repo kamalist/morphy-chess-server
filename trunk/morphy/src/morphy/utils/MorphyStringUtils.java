@@ -344,4 +344,36 @@ public class MorphyStringUtils {
 		}
 		return valuesString;
 	}
+	
+	public static String formatTime(long millis,boolean showSeconds) {
+		StringBuilder b = new StringBuilder();
+		final int days = (int) (millis) / (1000 * 60 * 60 * 24);
+		if (days > 0) {
+			b.append(days + " day");
+			if (days != 1) b.append("s");
+			b.append(", ");
+		}
+		
+		final int hours = (int) ( ( millis) / (1000 * 60 * 60) % 24 );
+		if (hours > 0) {
+			b.append(hours  + " hr");
+			if (hours != 1) b.append("s");
+			b.append(", ");
+		}
+		
+		final int minutes = (int) ( (millis) / (1000 * 60) % 60 );
+		if (minutes > 0) {
+			b.append(minutes  + " min");
+			if (minutes != 1) b.append("s");
+		}
+		
+		if (showSeconds) {
+			if (days > 0 || hours > 0 || minutes > 0) b.append(", ");
+			final int seconds = (int) ( (millis / 1000) ); 
+			b.append(seconds + " sec");
+			if (seconds != 1) { b.append("s"); }
+		}
+		
+		return b.toString();
+	}
 }
