@@ -31,7 +31,8 @@ public class User {
 	protected UserVars userVars = new UserVars();
 	
 	private Map<PersonalList,List<String>> personalLists;
-	private void setLists(Map<PersonalList, List<String>> lists) {
+	
+	void setLists(Map<PersonalList, List<String>> lists) {
 		this.personalLists = lists;
 	}
 	public Map<PersonalList, List<String>> getLists() {
@@ -39,9 +40,11 @@ public class User {
 	}
 
 	private Map<UserInfoList,List<String>> userInfoLists;
-	private void setUserInfoLists(Map<UserInfoList,List<String>> userInfoLists) {
+	
+	void setUserInfoLists(Map<UserInfoList,List<String>> userInfoLists) {
 		this.userInfoLists = userInfoLists;
 	}
+	
 	public Map<UserInfoList,List<String>> getUserInfoLists() {
 		return userInfoLists;
 	}
@@ -60,9 +63,7 @@ public class User {
 	}
 
 	public User() {
-		setLists(new HashMap<PersonalList,List<String>>());
 		setUserInfoLists(new HashMap<UserInfoList,List<String>>());
-		setLists(new HashMap<PersonalList, List<String>>(User.MAX_LIST_SIZE));
 	}
 
 	public PlayerType getPlayerType() {

@@ -369,7 +369,7 @@ public class MorphyStringUtils {
 		
 		if (showSeconds) {
 			if (days > 0 || hours > 0 || minutes > 0) b.append(", ");
-			final int seconds = (int) ( (millis / 1000) ); 
+			final int seconds = (int) ( (millis / 1000) % 60 ); 
 			b.append(seconds + " sec");
 			if (seconds != 1) { b.append("s"); }
 		}
