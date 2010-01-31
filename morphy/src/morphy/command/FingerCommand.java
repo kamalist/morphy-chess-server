@@ -59,7 +59,9 @@ public class FingerCommand extends AbstractCommand {
 			userSession.getUser().getUserInfoLists().put(UserInfoList.notes,notes);
 		}
 		for(int i=0;i< (notes.size()) ;i++) {
-			str.append(format(i) + ": " + notes.get(i));
+			String note = notes.get(i);
+			if (!note.equals(""))
+				str.append(format(i+1) + ": " + note + "\n");
 		}
 		
 		userSession.send(str.toString());
