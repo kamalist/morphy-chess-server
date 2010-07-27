@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -44,9 +44,11 @@ public class InchannelCommand extends AbstractCommand {
 				ChannelService channelService = ChannelService.getInstance();
 				int number = Integer.parseInt(userName);
 				Channel c = channelService.getChannel(number);
-				if (c == null || number < Channel.MINIMUM
-						|| number > Channel.MAXIMUM) {
+				if (number < Channel.MINIMUM || number > Channel.MAXIMUM) {
 					userSession.send("Bad channel number.");
+				} else if (c == null) { 
+					userSession.send("Although that channel is valid, " +
+							"it does not exist yet.");
 				} else {
 					int numUsers = c.getListeners().size();
 					StringBuilder str = new StringBuilder(100);

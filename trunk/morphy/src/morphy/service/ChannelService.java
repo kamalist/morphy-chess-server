@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,14 +22,16 @@ import java.util.List;
 
 import morphy.channel.Channel;
 import morphy.user.PersonalList;
-import morphy.user.PlayerTitle;
 import morphy.user.UserLevel;
 import morphy.user.UserSession;
+import morphy.utils.john.ServerList;
 
 public class ChannelService implements Service {
 	public static final int MAX_NUM_CHANNELS = 30;
 
 	private static final ChannelService singletonInstance = new ChannelService();
+	private ServerListManagerService listManager = ServerListManagerService
+			.getInstance();
 
 	public static ChannelService getInstance() {
 		return singletonInstance;
@@ -39,7 +41,10 @@ public class ChannelService implements Service {
 
 	private ChannelService() {
 		addChannel(new Channel(1, "Help", "The help channel.",
-				UserLevel.Player, PlayerTitle.values()));
+				UserLevel.Player, null));
+		addChannel(new Channel(5, "Service Representitives", "SRs",
+				UserLevel.Player, new ServerList[] { listManager.getList("SR"),
+						listManager.getList("admin") }));
 		// getChannel(1).addListener();
 	}
 
@@ -75,7 +80,8 @@ public class ChannelService implements Service {
 				continue;
 			}
 			person.send(sender.getUser().getUserName()
-					+ PlayerTitle.toString(sender.getUser().getTitles()) + "("
+					+ UserService.getInstance().getTags(
+							sender.getUser().getUserName()) + "("
 					+ channel.getNumber() + "): " + message);
 			sentTo++;
 		}
