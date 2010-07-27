@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,10 +17,15 @@
  */
 package morphy.service;
 
+import java.sql.ResultSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 
 import morphy.user.UserSession;
+import morphy.utils.john.DBConnection;
+import morphy.utils.john.ServerList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,6 +35,14 @@ public class UserService implements Service {
 
 	private static final UserService singletonInstance = new UserService();
 
+	public String generateAnonymousHandle() {
+		StringBuilder s = new StringBuilder();
+		for(int i=0;i<4;i++) {
+			s.append((char)new Random().nextInt(26));
+		}
+		return "Guest" + s.toString();
+	}
+	
 	public static UserService getInstance() {
 		return singletonInstance;
 	}
@@ -80,5 +93,32 @@ public class UserService implements Service {
 		for (UserSession session : getLoggedInUsers()) {
 			session.send(announcement);
 		}
+	}
+	
+	public boolean isRegistered(String username) {
+		try {
+			DBConnection conn = new DBConnection();
+			boolean hasResults = conn.executeQuery("SELECT id FROM users WHERE username = '" + username + "'");
+			if (hasResults) {
+				ResultSet results = conn.getStatement().getResultSet();
+				return results.next();
+			}
+		} catch(Exception e) { 
+			e.printStackTrace(System.err);
+		}
+		return false;
+	}
+	
+	public String getTags(String username) {
+		StringBuilder tags = new StringBuilder();
+		ServerListManagerService service = ServerListManagerService.getInstance();
+		List<ServerList> list = service.getLists();
+		for(ServerList sl : list) {
+			if (service.isOnList(sl, username)) {
+				tags.append(sl.getTag());
+			}
+		}
+		
+		return username + tags.toString();
 	}
 }
