@@ -1,8 +1,4 @@
 
 
-
-            ANNOUNCEMENTS,ADS,SCHEDULES,ETC GO HERE.
-            
-            
-
+ANNOUNCEMENTS,ADS,SCHEDULES,ETC GO HERE.
 

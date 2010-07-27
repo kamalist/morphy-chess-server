@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ public class HelpCommand extends AbstractCommand {
 
 		if (argument.length() == 0) {
 			StringBuilder result = new StringBuilder(1000);
-			result.append("Help is avalailable on the following commands:\n");
+			result.append("Help is available on the following commands:\n");
 			result
 					.append("(Type help commandName for help on the command)\n\n");
 			int counter = 0;
@@ -60,7 +60,7 @@ public class HelpCommand extends AbstractCommand {
 						+ "\n");
 				builder.append("Level: " + command.getContext().getUserLevel()
 						+ "\n");
-				builder.append("Descriptiopn:\n");
+				builder.append("Description:\n");
 				builder.append(command.getContext().getHelp());
 
 				StringBuilder postBuilder = new StringBuilder(200);
@@ -70,7 +70,7 @@ public class HelpCommand extends AbstractCommand {
 				postBuilder.append("See Also: "
 						+ MorphyStringUtils.toDelimitedString(command
 								.getContext().getSeeAlso(), " ") + "\n");
-				postBuilder.append("Last Modofied By: "
+				postBuilder.append("Last Modified By: "
 						+ command.getContext().getLastModifiedBy() + " on "
 						+ command.getContext().getLastModifiedBy());
 

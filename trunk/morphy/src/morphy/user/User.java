@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  */
 package morphy.user;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,10 +28,21 @@ public class User {
 	protected String userName;
 	protected UserLevel userLevel;
 	protected PlayerType playerType;
-	protected PlayerTitle[] titles = new PlayerTitle[0];
 	protected UserVars userVars = new UserVars();
+	protected Formula formula;
 	
 	private Map<PersonalList,List<String>> personalLists;
+	
+	public User() {
+		setUserInfoLists(new HashMap<UserInfoList,List<String>>());
+		for(UserInfoList u : UserInfoList.values()) {
+			getUserInfoLists().put(u,new ArrayList<String>());
+		}
+		setLists(new HashMap<PersonalList,List<String>>());
+		for(PersonalList u : PersonalList.values()) {
+			getLists().put(u,new ArrayList<String>());
+		}
+	}
 	
 	void setLists(Map<PersonalList, List<String>> lists) {
 		this.personalLists = lists;
@@ -62,16 +74,9 @@ public class User {
 		return false;
 	}
 
-	public User() {
-		setUserInfoLists(new HashMap<UserInfoList,List<String>>());
-	}
 
 	public PlayerType getPlayerType() {
 		return playerType;
-	}
-
-	public PlayerTitle[] getTitles() {
-		return titles;
 	}
 
 	public UserLevel getUserLevel() {
@@ -88,10 +93,6 @@ public class User {
 
 	public void setPlayerType(PlayerType playerType) {
 		this.playerType = playerType;
-	}
-
-	public void setTitles(PlayerTitle[] titles) {
-		this.titles = titles;
 	}
 
 	public void setUserLevel(UserLevel userLevel) {

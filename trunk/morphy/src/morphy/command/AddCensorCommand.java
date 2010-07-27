@@ -28,6 +28,10 @@ public class AddCensorCommand extends AbstractCommand {
 
 	public void process(String arguments, UserSession userSession) {
 		String userName = arguments;
+		if (userName.equals("")) {
+			userSession.send(getContext().getUsage());
+		}
+		
 		if (userSession.getUser().getLists().get(PersonalList.censor).contains(
 				userName)) {
 			userSession.send("[" + userName

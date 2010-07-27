@@ -20,6 +20,8 @@ package morphy.service;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.channels.CancelledKeyException;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -34,7 +36,6 @@ import java.util.Set;
 import morphy.Morphy;
 import morphy.properties.PreferenceKeys;
 import morphy.service.ScreenService.Screen;
-import morphy.user.PlayerTitle;
 import morphy.user.PlayerType;
 import morphy.user.SocketChannelUserSession;
 import morphy.user.User;
@@ -42,6 +43,8 @@ import morphy.user.UserLevel;
 import morphy.user.UserSession;
 import morphy.utils.BufferUtils;
 import morphy.utils.MorphyStringUtils;
+import morphy.utils.SocketUtils;
+import morphy.utils.john.DBConnection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -72,9 +75,9 @@ public class SocketConnectionService implements Service {
 					Set<SelectionKey> keys = serverSocketSelector
 							.selectedKeys();
 
-					if (LOG.isInfoEnabled()) {
-						LOG.info("Selected " + keys.size() + " keys.");
-					}
+//					if (LOG.isInfoEnabled()) {
+//						LOG.info("Selected " + keys.size() + " keys.");
+//					}
 
 					Iterator<SelectionKey> i = keys.iterator();
 
@@ -82,27 +85,31 @@ public class SocketConnectionService implements Service {
 						SelectionKey key = i.next();
 						i.remove();
 
-						if (key.isAcceptable()) {
-							final SocketChannel channel = serverSocketChannel
-									.accept();
-							channel.configureBlocking(false);
-							channel.register(serverSocketSelector,
-									SelectionKey.OP_READ);
+						try {
+							if (key.isAcceptable()) {
+								final SocketChannel channel = serverSocketChannel
+										.accept();
+								channel.configureBlocking(false);
+								channel.register(serverSocketSelector,
+										SelectionKey.OP_READ);
 
-							ThreadService.getInstance().run(new Runnable() {
-								public void run() {
-									onNewChannel(channel);
-								}
-							});
-						}
-						if (key.isReadable()) {
-							final SocketChannel channel = (SocketChannel) key
-									.channel();
-							ThreadService.getInstance().run(new Runnable() {
-								public void run() {
-									onNewInput(channel);
-								}
-							});
+								ThreadService.getInstance().run(new Runnable() {
+									public void run() {
+										onNewChannel(channel);
+									}
+								});
+							}
+							if (key.isReadable()) {
+								final SocketChannel channel = (SocketChannel) key
+										.channel();
+								ThreadService.getInstance().run(new Runnable() {
+									public void run() {
+										onNewInput(channel);
+									}
+								});
+							}
+						} catch (CancelledKeyException e) {
+							// logging the user out now.
 						}
 					}
 				}
@@ -178,19 +185,44 @@ public class SocketConnectionService implements Service {
 			String message) {
 		if (message.trim().matches("\\w{3,15}")) {
 			String name = message;
-			if (UserService.getInstance().isLoggedIn(name)) {
+			if (LOG.isInfoEnabled()) {
+				LOG.info("name="+name);
+			}
+			
+			UserService instance = UserService.getInstance();
+			
+			if (name.equalsIgnoreCase("guest")) {
+				do {
+					name = instance.generateAnonymousHandle();
+				} while(UserService.getInstance().isLoggedIn(name));
+				
+				userSession.send("Logging you in as \"" + name + "\"; you may use this name to play unrated games.\n" + 
+								 "(After logging in, do \"help register\" for more info on how to register.)\n\n" +
+								 "" +
+								 "Press return to enter the server as \"" + name + "\":\n");
+			}
+			
+			if (instance.isRegistered(name)) {
+				userSession.send("\"" + name + "\" is a registered name.  If it is yours, type the password.\n" +
+								 "If not, just hit return to try another name.\n\n" +
+								 "" +
+								 "password: ");
+			}
+			
+			if (instance.isLoggedIn(name)) {
 				sendWithoutPrompt("User " + name
 						+ " matches someone already logged in. Good bye.",
 						userSession);
+				if (LOG.isInfoEnabled())
+					LOG.info("userSession.disconnect(); called");
 				userSession.disconnect();
 			} else {
 				userSession.getUser().setUserName(name);
 				userSession.getUser().setPlayerType(PlayerType.Human);
-				userSession.getUser().setTitles(new PlayerTitle[0]);
 				userSession.getUser().setUserLevel(UserLevel.Player);
 				UserService.getInstance().addLoggedInUser(userSession);
 				userSession.setHasLoggedIn(true);
-				StringBuilder loginMessage = new StringBuilder(1000);
+				StringBuilder loginMessage = new StringBuilder(100);
 				loginMessage.append(formatMessage(userSession,
 						"**** Starting FICS session as " + name + " ****\n"));
 				loginMessage.append(ScreenService.getInstance().getScreen(
@@ -198,6 +230,27 @@ public class SocketConnectionService implements Service {
 				userSession.send(loginMessage.toString());
 				UserService.getInstance().sendAnnouncement(
 						name + " has logged in.");
+				DBConnection conn = new DBConnection();
+				conn.executeQuery("UPDATE users SET lastlogin = CURRENT_TIMESTAMP, ipaddress = '" + SocketUtils.getIpAddress(userSession.getChannel().socket()).substring(1) + "'");
+				boolean b = conn.executeQuery("SELECT adminLevel FROM users WHERE username = '" + name + "'");
+				if (b) {
+					try {
+						java.sql.ResultSet r = conn.getStatement().getResultSet();
+						if (r.next()) {
+							String level = r.getString(1);
+							UserLevel val = UserLevel.valueOf(level);
+							userSession.getUser().setUserLevel(val);
+							if (val == UserLevel.HeadAdmin) {
+								userSession.send("  ** LOGGED IN AS HEAD ADMIN **");
+							}
+						}
+					} catch(java.sql.SQLException e) {
+						if (LOG.isErrorEnabled()) {
+							LOG.error("Unable to set user level from database for name \"" + name + "\"");
+							LOG.error(e);
+						}
+					}
+				}
 			}
 		} else {
 			sendWithoutPrompt("Invalid user name: " + message + " Good Bye",
@@ -209,7 +262,12 @@ public class SocketConnectionService implements Service {
 	protected String readMessage(SocketChannel channel) {
 		try {
 			ByteBuffer buffer = ByteBuffer.allocate(maxCommunicationSizeBytes);
-			int charsRead = channel.read(buffer);
+			int charsRead = -1;
+			try {
+				charsRead = channel.read(buffer);
+			} catch(ClosedChannelException cce) {
+				channel.close();
+			}
 			if (charsRead == -1) {
 				return null;
 			} else if (charsRead > 0) {
@@ -245,6 +303,8 @@ public class SocketConnectionService implements Service {
 					LOG.info("Tried to send message to a logged off user "
 							+ session.getUser().getUserName() + " " + message);
 				}
+				if (LOG.isInfoEnabled())
+					LOG.info("userSession.disconnect(); called");
 				session.disconnect();
 			}
 		} catch (Throwable t) {
@@ -294,13 +354,13 @@ public class SocketConnectionService implements Service {
 					synchronized (session.getInputBuffer()) {
 						String message = readMessage(channel);
 						if (message == null) {
-							session.disconnect();
+							//session.disconnect();
 						} else if (message.length() > 0) {
-							if (LOG.isInfoEnabled()) {
-								LOG.info("Read:  "
-										+ session.getUser().getUserName() + " "
-										+ message);
-							}
+//							if (LOG.isInfoEnabled()) {
+//								LOG.info("Read: "
+//										+ session.getUser().getUserName() + " "
+//										+ message);
+//							}
 							session.getInputBuffer().append(message);
 
 							int carrageReturnIndex = -1;

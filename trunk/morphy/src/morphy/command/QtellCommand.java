@@ -30,7 +30,7 @@ public class QtellCommand extends AbstractCommand {
 		}
 
 		userSession.send("*qtell " + userName + " "
-				+ ((sendTo.isConnected()) ? "1" : "0"));
+				+ ((sendTo.isConnected()) ? "0" : "1"));
 	}
 
 }

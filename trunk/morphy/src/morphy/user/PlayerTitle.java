@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,9 +17,17 @@
  */
 package morphy.user;
 
+@Deprecated
+/**
+ * Deprecated in favor of people being put on lists.
+ */
 public enum PlayerTitle {
-	SR, CA, CM, FM, IM, GM, WIM, WGM;
+	SR, CA, TM, FM, IM, GM, WFM, WIM, WGM;
 
+	@Deprecated
+	/**
+	 * Refer to UserService.getTags().
+	 */
 	public static String toString(PlayerTitle[] titles) {
 		StringBuilder str = new StringBuilder(20);
 		for (int i = 0; i < titles.length; i++) {

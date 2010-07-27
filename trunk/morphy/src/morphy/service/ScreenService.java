@@ -42,7 +42,8 @@ public class ScreenService {
 
 	private ScreenService() {
 		screenToMessage.put(Screen.Login, FileUtils
-				.fileAsString(Morphy.RESOURCES_DIR + "/screenFiles/login.txt"));
+				.fileAsString(Morphy.RESOURCES_DIR + "/screenFiles/login.txt").replaceAll("\\n","\r\n"));
+		System.out.println(screenToMessage.get(Screen.Login));
 		screenToMessage
 				.put(Screen.Logout, FileUtils.fileAsString(Morphy.RESOURCES_DIR
 						+ "/screenFiles/logout.txt"));

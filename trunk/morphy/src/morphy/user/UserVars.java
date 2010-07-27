@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,14 +17,17 @@
  */
 package morphy.user;
 
+import java.util.HashMap;
+
 public class UserVars {
-	public boolean isShoutOn = true;
-
-	public boolean isShoutOn() {
-		return isShoutOn;
+	private HashMap<String,String> variables = new HashMap<String,String>();
+	
+	public UserVars() {
+		variables.put("time","2");
 	}
-
-	public void setShoutOn(boolean isShoutOn) {
-		this.isShoutOn = isShoutOn;
+	
+	public HashMap<String,String> getVariables() {
+		return variables;
 	}
+	
 }

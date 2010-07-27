@@ -30,19 +30,26 @@ public class SetCommand extends AbstractCommand {
 					notes = new ArrayList<String>(UserInfoList.MAX_NOTES);
 					userSession.getUser().getUserInfoLists().put(UserInfoList.notes,notes);
 				
-					for(int i=0;i<UserInfoList.MAX_NOTES;i++) {
-						notes.add( ( (i==val) ? message : "") );
-					}
-				} else {
 					if (notes.size() == 0) {
-						while(notes.size() < 10)
+						while(notes.size() < 10) {
 							notes.add("");
+						}
 					}
-					notes.set(val-1,message);
 				}
 				
-				userSession.send("Plan line " + val + " changed to '" + message + "'.");
-			} else {
+				notes.set(val-1,message);
+				
+				//Plan line 6 changed to 'hi'.
+				//Plan line 6 cleared. 
+				String returnmess = (message.equals("") ? 
+						"Plan line " + val + " cleared." : 
+						"Plan line " + val + " changed to '" + message + "'.");
+				userSession.send(returnmess);
+			} else if (setWhat.matches("f[1-9]")) {
+				// var notes
+			} /*else if (false) {
+			
+			}*/ else {
 				userSession.send( String.format("No such variable \"%s\".", ( ""+val ) ) );
 			}
 		}

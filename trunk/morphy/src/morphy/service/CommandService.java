@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,9 +34,11 @@ import morphy.command.Command;
 import morphy.command.FingerCommand;
 import morphy.command.HelpCommand;
 import morphy.command.InchannelCommand;
+import morphy.command.QtellCommand;
 import morphy.command.QuitCommand;
 import morphy.command.SetCommand;
 import morphy.command.ShoutCommand;
+import morphy.command.ShowListCommand;
 import morphy.command.TellCommand;
 import morphy.command.WhoCommand;
 import morphy.user.SocketChannelUserSession;
@@ -48,17 +50,31 @@ import org.apache.commons.logging.LogFactory;
 public class CommandService implements Service {
 	protected static Log LOG = LogFactory.getLog(CommandService.class);
 	
-	private static final Class<?>[] socketCommandsClasses = { HelpCommand.class,
-			QuitCommand.class, ShoutCommand.class, TellCommand.class,
-			WhoCommand.class,
-
-			InchannelCommand.class, AddCensorCommand.class,
-			AddGnotifyCommand.class, AddNopartnerCommand.class,
-			AddNoplayCommand.class, AddNotifyCommand.class,
-			AddRemoteCommand.class,
-			FingerCommand.class,
-			SetCommand.class
-			// AddListCommand.class,RemoveListCommand.class,ShowListCommand.class
+	private static final Class<?>[] socketCommandsClasses = { 
+	 	AddCensorCommand.class,
+	 	AddGnotifyCommand.class, 
+	 	AddNopartnerCommand.class,
+		AddNoplayCommand.class,
+		AddNotifyCommand.class,
+		AddRemoteCommand.class,
+	
+		FingerCommand.class,
+		
+		HelpCommand.class,
+		InchannelCommand.class,
+		
+		QtellCommand.class,
+		QuitCommand.class,
+		
+		SetCommand.class,
+		ShoutCommand.class,
+		ShowListCommand.class,
+		
+		TellCommand.class,
+		
+		WhoCommand.class,
+		
+		// AddListCommand.class,RemoveListCommand.class
 	};
 
 	protected List<Command> commands = new ArrayList<Command>(100);
@@ -124,6 +140,9 @@ public class CommandService implements Service {
 					+ " mappings " + (System.currentTimeMillis() - startTime)
 					+ "ms");
 		}
+		
+		//debug();
+		
 	}
 
 	public void dispose() {
@@ -138,7 +157,7 @@ public class CommandService implements Service {
 	}
 
 	public Command[] getCommands() {
-		return commands.toArray(new Command[0]);
+		return commands.toArray(new Command[commands.size()]);
 	}
 
 	public void processCommand(String command,
@@ -161,9 +180,22 @@ public class CommandService implements Service {
 		if (socketCommand == null) {
 			userSession.send(keyword + ": Command not found.");
 		} else if (socketCommand.willProcess(userSession)) {
-			socketCommand.process(content, userSession);
+//			if (keyword.matches("^[qui]$")) {
+			if (keyword.equals("q") || keyword.equals("qu")) {
+				userSession.send("" + UserService.getInstance().getTags(userSession.getUser().getUserName()) + 
+						" tells you: The command 'quit' cannot be abbreviated.");
+			} else {
+				socketCommand.process(content, userSession);
+			}
 		} else {
 			userSession.send(keyword + ": Command not found.");
+		}
+	}
+	
+	public void debug() {
+		java.util.Set<String> keys = firstWordToCommandMap.keySet();
+		for(String s : keys) {
+			System.out.println(s);
 		}
 	}
 }
