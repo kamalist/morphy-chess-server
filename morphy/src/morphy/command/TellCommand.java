@@ -53,12 +53,12 @@ public class TellCommand extends AbstractCommand {
 				UserSession personToTell = UserService.getInstance()
 						.getUserSession(userName);
 				if (personToTell == null) {
-					userSession.send("User " + userName + " is not logged in.");
+					userSession.send("" + userName.toLowerCase() + " is not logged in.");
 				} else {
 					if (personToTell.getUser().isOnList(PersonalList.censor,
 							userSession.getUser().getUserName())) {
 						userSession.send("Player \""
-								+ userSession.getUser().getUserName()
+								+ personToTell.getUser().getUserName()
 								+ "\" is censoring you.");
 						return;
 					}

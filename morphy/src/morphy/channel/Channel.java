@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,34 +18,43 @@
 package morphy.channel;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import morphy.user.PlayerTitle;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import morphy.service.ServerListManagerService;
 import morphy.user.User;
 import morphy.user.UserLevel;
 import morphy.user.UserSession;
+import morphy.utils.john.ServerList;
 
 public class Channel implements Comparable<Channel> {
-	public static final int MINIMUM = 0;
-	public static final int MAXIMUM = 255;
+	protected static Log LOG = LogFactory.getLog(Channel.class);
+	
+	public static final int MINIMUM = 0x0;  // 0
+	public static final int MAXIMUM = 0xFF; // 255
 
 	protected int number;
 	protected String name;
 	protected String description;
 	protected UserLevel level;
-	protected PlayerTitle[] titles;
+	protected ServerList[] canJoin;
+	private ServerListManagerService listManager = ServerListManagerService.getInstance();
 
 	private List<UserSession> listeners;
 
 	public Channel(int number, String name, String description,
-			UserLevel level, PlayerTitle[] titles) {
+			UserLevel level, ServerList[] canJoin) {
+		if ((number < MINIMUM || number > MAXIMUM) && LOG.isWarnEnabled()) {
+			LOG.warn("Channel number provided is out of bounds. MIN=" + MINIMUM + " MAX=" + MAXIMUM);
+		}
+		
 		this.number = number;
 		this.name = name;
 		this.description = description;
 		this.level = level;
-		this.titles = titles;
-		Arrays.sort(titles);
+		this.canJoin = canJoin;
 		setListeners(new ArrayList<UserSession>());
 	}
 
@@ -75,21 +84,14 @@ public class Channel implements Comparable<Channel> {
 
 	public boolean hasAccess(User user) {
 		boolean result = false;
-		if (level == null && titles == null) {
+		if (level == null && canJoin == null) {
 			result = true;
 		} else {
 			if (level != null) {
 				result = user.getUserLevel().ordinal() >= level.ordinal();
 			}
-			if (!result && titles != null && user.getTitles() != null
-					&& user.getTitles().length > 0) {
-				for (PlayerTitle title : user.getTitles()) {
-					if (Arrays.binarySearch(titles, title) != -1) {
-						result = true;
-						break;
-					}
-				}
-
+			if (!result && canJoin != null) {
+				result = listManager.isOnAnyList(canJoin,user.getUserName());
 			}
 		}
 		return result;
