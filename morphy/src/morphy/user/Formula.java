@@ -17,6 +17,34 @@
  */
 package morphy.user;
 
-public enum PersonalList {
-	censor, gnotify, noplay, notify, channel, nopartner, remote, idlenotify;
+public class Formula {
+	protected String[] validKeywords = { "bughouse", "rating", "time",
+			"increment", "myrating", "crazyhouse", "blitz", "lightning",
+			"standard", "timeseal", "registered", "abuser" };
+	
+	
+	public static boolean isValidFormula(String formula) {
+		// if any word outside of formula is not in validKeywords, (except comment) it is a bad formula.
+		// if two variants are &&'d together (blitz && bughouse) it is invalid.
+		// comment symbol is #.
+		
+		return false;
+	}
+
+	public String formula;
+
+	public Formula() {
+
+	}
+
+	public Formula(String formula) {
+		this.formula = formula;
+	}
+
+	/**
+	 * Parameters to be determined.
+	 */
+	public boolean matches() {
+		return true;
+	}
 }

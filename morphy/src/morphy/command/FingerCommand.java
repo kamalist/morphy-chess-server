@@ -1,11 +1,28 @@
+/*
+ *   Morphy Open Source Chess Server
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *  
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package morphy.command;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import morphy.service.UserService;
-import morphy.user.PlayerTitle;
 import morphy.user.UserInfoList;
+import morphy.user.UserLevel;
 import morphy.user.UserSession;
 import morphy.utils.MorphyStringUtils;
 
@@ -32,27 +49,34 @@ public class FingerCommand extends AbstractCommand {
 		}
 		
 		StringBuilder str = new StringBuilder(200);
-		UserSession query = UserService.getInstance().getUserSession(user);
+		UserService userService = UserService.getInstance();
+		UserSession query = userService.getUserSession(user);
 		
-		str.append("Finger of " + query.getUser().getUserName() + PlayerTitle.toString(query.getUser().getTitles()) + ":\n\n");
+		str.append("Finger of " + userService.getTags(query.getUser().getUserName()) + ":\n\n");
 		
 		long loggedInMillis = System.currentTimeMillis() - query.getLoginTime();
 		long idleTimeMillis = query.getIdleTimeMillis();
 		str.append("On for: "
 				+ MorphyStringUtils.formatTime(loggedInMillis, !false)
 				+ "\tIdle: "
-				//+ MorphyStringUtils.formatTime(System.currentTimeMillis()
-						//- query.getIdleTimeMillis(), true));
 				+ ((idleTimeMillis == 0) ? (idleTimeMillis + " secs") : MorphyStringUtils.formatTime(idleTimeMillis, true)));
 		str.append("\n");
 		str.append(String.format("%15s %7s %7s %7s %7s %7s %7s","rating","RD","win","loss","draw","total","best") + "\n");
 		
 		// variants, ratings
 		
-		// total time online, etc		
+		// total time online, etc
 		
 		str.append("\n\n");
-		str.append("Timeseal: On\n\n");
+		UserLevel lvl = query.getUser().getUserLevel();
+		if (lvl == UserLevel.Admin || lvl == UserLevel.SuperAdmin || lvl == UserLevel.HeadAdmin) {
+			str.append("Administrator Level: ");
+			if (lvl == UserLevel.Admin) str.append("Administrator");
+			if (lvl == UserLevel.SuperAdmin) str.append("Senior Administrator");
+			if (lvl == UserLevel.HeadAdmin) str.append("Head Administrator");
+			str.append("\n");
+		}
+		str.append("Timeseal 1: On\n\n");
 		List<String> notes = query.getUser().getUserInfoLists().get(UserInfoList.notes);
 		if (notes == null) {
 			notes = new ArrayList<String>(UserInfoList.MAX_NOTES);

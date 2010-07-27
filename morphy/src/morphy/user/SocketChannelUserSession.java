@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -65,11 +65,14 @@ public class SocketChannelUserSession implements UserSession {
 						"Error disconnecting socket channel", t);
 			}
 		}
-		UserService.getInstance().removeLoggedInUser(this);
-		SocketConnectionService.getInstance().removeUserSession(this);
-
-		if (LOG.isInfoEnabled()) {
-			LOG.info("Disconnected user " + user.getUserName());
+		
+		if (user.getUserName() != null) {
+			UserService.getInstance().removeLoggedInUser(this);
+			SocketConnectionService.getInstance().removeUserSession(this);
+	
+			if (LOG.isInfoEnabled()) {
+				LOG.info("Disconnected user " + user.getUserName());
+			}
 		}
 	}
 
@@ -134,6 +137,8 @@ public class SocketChannelUserSession implements UserSession {
 					LOG.info("Tried to send message to a logged off user "
 							+ user.getUserName() + " " + message);
 				}
+				if (LOG.isInfoEnabled())
+					LOG.info("userSession.disconnect(); called");
 				disconnect();
 			}
 		} catch (Throwable t) {

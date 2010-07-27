@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import java.io.File;
 import morphy.service.ChannelService;
 import morphy.service.CommandService;
 import morphy.service.PreferenceService;
+import morphy.service.ServerListManagerService;
 import morphy.service.Service;
 import morphy.service.SocketConnectionService;
 import morphy.service.ThreadService;
@@ -102,7 +103,7 @@ public class Morphy {
 					LOG.error("Error shutting down service", t);
 				}
 			}
-			LOG.info("Shut down moprhy.");
+			LOG.info("Shut down Morphy.");
 		}
 	}
 
@@ -113,6 +114,7 @@ public class Morphy {
 		services = new Service[] { PreferenceService.getInstance(),
 				ThreadService.getInstance(), CommandService.getInstance(),
 				SocketConnectionService.getInstance(),
-				ChannelService.getInstance(), UserService.getInstance() };
+				ChannelService.getInstance(), UserService.getInstance(),
+				ServerListManagerService.getInstance() };
 	}
 }

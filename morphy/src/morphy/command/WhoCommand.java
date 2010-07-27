@@ -30,7 +30,7 @@ public class WhoCommand extends AbstractCommand {
 	public void process(String arguments, UserSession userSession) {
 		UserSession[] users = UserService.getInstance().getLoggedInUsers();
 
-		StringBuilder output = new StringBuilder(2000);
+		StringBuilder output = new StringBuilder(150);
 		output.append("List of users logged in:\n");
 		int counter = 0;
 		for (int i = 0; i < users.length; i++) {
@@ -41,7 +41,7 @@ public class WhoCommand extends AbstractCommand {
 				counter = 0;
 			}
 		}
-		output.append("\n(" + users.length + " users.)");
+		output.append("\n" + users.length + " users displayed (of " + users.length + "). (*) indicates system administrator.");
 		userSession.send(output.toString());
 	}
 }

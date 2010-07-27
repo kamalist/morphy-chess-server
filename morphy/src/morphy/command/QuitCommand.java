@@ -25,7 +25,6 @@ public class QuitCommand extends AbstractCommand {
 	}
 
 	public void process(String arguments, UserSession userSession) {
-		userSession.send("Logging you out.");
 		userSession.disconnect();
 	}
 

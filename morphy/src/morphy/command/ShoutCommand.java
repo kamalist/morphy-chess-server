@@ -32,7 +32,7 @@ public class ShoutCommand extends AbstractCommand {
 		final String message = userSession.getUser().getUserName()
 				+ " shouts: " + arguments;
 		for (UserSession session : sessions) {
-			if (session.getUser().getUserVars().isShoutOn()) {
+			if (true) { // session.getUser().getUserVars().isShoutOn()
 				if (session == userSession) {
 					continue;
 				} else {
