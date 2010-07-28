@@ -18,15 +18,23 @@
 package morphy.user;
 
 public class Formula {
-	protected String[] validKeywords = { "bughouse", "rating", "time",
-			"increment", "myrating", "crazyhouse", "blitz", "lightning",
-			"standard", "timeseal", "registered", "abuser" };
-	
+	protected String[] validKeywords = { "abuser", "assessdraw", "assessloss",
+			"assesswin", "black", "blitz", "bughouse", "computer",
+			"crazyhouse", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9",
+			"inc", "lightning", "losers", "maxtime", "mymaxtime", "myrating",
+			"nocolor", "nonstandard", "private", "ratingdiff", "rating",
+			"rated", "registered", "suicide", "standard", "time", "timeseal",
+			"unrated", "untimed", "white", "wild" };
 	
 	public static boolean isValidFormula(String formula) {
 		// if any word outside of formula is not in validKeywords, (except comment) it is a bad formula.
 		// if two variants are &&'d together (blitz && bughouse) it is invalid.
 		// comment symbol is #.
+		// also look for stupid things like rated && !rated.
+		// things like !> is not valid. <= should be used instead.
+		// if formula starts with #, or always will evaluate to true (e.g. '1') allow anything.
+		// if formula is something that will always evaluate to false (e.g. rating>9999) disallow everything.
+		
 		
 		return false;
 	}

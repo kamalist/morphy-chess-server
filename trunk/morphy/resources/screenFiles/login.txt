@@ -1,4 +1,4 @@
-Welcome to the Morphy open source chess server.
+Welcome to the Morphy Open Source Chess Server.
 
 COOL ASCII ART GOES HERE
 
