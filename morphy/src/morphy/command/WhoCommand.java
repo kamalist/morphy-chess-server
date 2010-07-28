@@ -28,14 +28,15 @@ public class WhoCommand extends AbstractCommand {
 	}
 
 	public void process(String arguments, UserSession userSession) {
-		UserSession[] users = UserService.getInstance().getLoggedInUsers();
+		UserService us = UserService.getInstance();
+		UserSession[] users = us.getLoggedInUsers();
 
 		StringBuilder output = new StringBuilder(150);
 		output.append("List of users logged in:\n");
 		int counter = 0;
 		for (int i = 0; i < users.length; i++) {
 			output.append(StringUtils.rightPad(
-					users[i].getUser().getUserName(), 20));
+					us.getTags(users[i].getUser().getUserName()), 20));
 			if (counter >= 4) {
 				output.append("\n");
 				counter = 0;

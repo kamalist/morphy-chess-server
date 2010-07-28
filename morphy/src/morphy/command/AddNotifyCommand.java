@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,6 +28,12 @@ public class AddNotifyCommand extends AbstractCommand {
 
 	public void process(String arguments, UserSession userSession) {
 		String userName = arguments;
+		
+		if (userName.equals("")) {
+			userSession.send(getContext().getUsage());
+			return;
+		}
+		
 		if (userSession.getUser().getLists().get(PersonalList.notify).contains(
 				userName)) {
 			userSession.send("[" + userName

@@ -38,7 +38,7 @@ public class UserService implements Service {
 	public String generateAnonymousHandle() {
 		StringBuilder s = new StringBuilder();
 		for(int i=0;i<4;i++) {
-			s.append((char)new Random().nextInt(26));
+			s.append((char)(65+new Random().nextInt(26)));
 		}
 		return "Guest" + s.toString();
 	}
@@ -98,7 +98,7 @@ public class UserService implements Service {
 	public boolean isRegistered(String username) {
 		try {
 			DBConnection conn = new DBConnection();
-			boolean hasResults = conn.executeQuery("SELECT id FROM users WHERE username = '" + username + "'");
+			boolean hasResults = conn.executeQuery("SELECT `id` FROM `users` WHERE `username` = '" + username + "'");
 			if (hasResults) {
 				ResultSet results = conn.getStatement().getResultSet();
 				return results.next();

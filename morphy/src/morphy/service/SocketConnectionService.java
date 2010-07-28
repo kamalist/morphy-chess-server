@@ -194,7 +194,7 @@ public class SocketConnectionService implements Service {
 			if (name.equalsIgnoreCase("guest")) {
 				do {
 					name = instance.generateAnonymousHandle();
-				} while(UserService.getInstance().isLoggedIn(name));
+				} while(instance.isLoggedIn(name));
 				
 				userSession.send("Logging you in as \"" + name + "\"; you may use this name to play unrated games.\n" + 
 								 "(After logging in, do \"help register\" for more info on how to register.)\n\n" +
@@ -207,6 +207,7 @@ public class SocketConnectionService implements Service {
 								 "If not, just hit return to try another name.\n\n" +
 								 "" +
 								 "password: ");
+				
 			}
 			
 			if (instance.isLoggedIn(name)) {
@@ -220,40 +221,65 @@ public class SocketConnectionService implements Service {
 				userSession.getUser().setUserName(name);
 				userSession.getUser().setPlayerType(PlayerType.Human);
 				userSession.getUser().setUserLevel(UserLevel.Player);
-				UserService.getInstance().addLoggedInUser(userSession);
 				userSession.setHasLoggedIn(true);
-				StringBuilder loginMessage = new StringBuilder(100);
-				loginMessage.append(formatMessage(userSession,
-						"**** Starting FICS session as " + name + " ****\n"));
-				loginMessage.append(ScreenService.getInstance().getScreen(
-						Screen.SuccessfulLogin));
-				userSession.send(loginMessage.toString());
-				UserService.getInstance().sendAnnouncement(
-						name + " has logged in.");
+				instance.addLoggedInUser(userSession);
+				
+				boolean isHeadAdmin = false;
+				
 				DBConnection conn = new DBConnection();
-				conn.executeQuery("UPDATE users SET lastlogin = CURRENT_TIMESTAMP, ipaddress = '" + SocketUtils.getIpAddress(userSession.getChannel().socket()).substring(1) + "'");
-				boolean b = conn.executeQuery("SELECT adminLevel FROM users WHERE username = '" + name + "'");
+				conn
+						.executeQuery("UPDATE `users` SET `lastlogin` = CURRENT_TIMESTAMP, `ipaddress` = '"
+								+ SocketUtils.getIpAddress(
+										userSession.getChannel().socket())
+										.substring(1) + "'");
+
+				boolean b = conn
+						.executeQuery("SELECT `adminLevel` FROM `users` WHERE `username` = '"
+								+ name + "'");
 				if (b) {
 					try {
-						java.sql.ResultSet r = conn.getStatement().getResultSet();
+						java.sql.ResultSet r = conn.getStatement()
+								.getResultSet();
 						if (r.next()) {
 							String level = r.getString(1);
 							UserLevel val = UserLevel.valueOf(level);
 							userSession.getUser().setUserLevel(val);
+							if (val == UserLevel.Admin
+									|| val == UserLevel.SuperAdmin
+									|| val == UserLevel.HeadAdmin) {
+								ServerListManagerService s = ServerListManagerService
+										.getInstance();
+								s.getElements().get(s.getList("admin")).add(
+										name);
+							}
+
 							if (val == UserLevel.HeadAdmin) {
-								userSession.send("  ** LOGGED IN AS HEAD ADMIN **");
+								isHeadAdmin = true;
 							}
 						}
-					} catch(java.sql.SQLException e) {
+					} catch (java.sql.SQLException e) {
 						if (LOG.isErrorEnabled()) {
-							LOG.error("Unable to set user level from database for name \"" + name + "\"");
+							LOG
+									.error("Unable to set user level from database for name \""
+											+ name + "\"");
 							LOG.error(e);
 						}
 					}
 				}
+
+				StringBuilder loginMessage = new StringBuilder(100);
+				loginMessage.append(formatMessage(userSession,
+						"**** Starting FICS session as " + instance.getTags(name) + " ****\n"));
+				if (isHeadAdmin) loginMessage.append("  ** LOGGED IN AS HEAD ADMIN **\n");
+				loginMessage.append(ScreenService.getInstance().getScreen(
+						Screen.SuccessfulLogin));
+				userSession.send(loginMessage.toString());
+				instance.sendAnnouncement(name + " has logged in.");
+				
+				System.out.println(userSession.isConnected());
 			}
 		} else {
-			sendWithoutPrompt("Invalid user name: " + message + " Good Bye",
+			sendWithoutPrompt("Invalid user name: " + message + " Good Bye.\n",
 					userSession);
 			userSession.disconnect();
 		}
@@ -317,6 +343,10 @@ public class SocketConnectionService implements Service {
 	}
 
 	private void onNewChannel(SocketChannel channel) {
+		if (LOG.isInfoEnabled()) {
+			LOG.info("onNewChannel();");
+		}
+		
 		try {
 			SocketChannelUserSession session = new SocketChannelUserSession(
 					new User(), channel);
@@ -356,11 +386,11 @@ public class SocketConnectionService implements Service {
 						if (message == null) {
 							//session.disconnect();
 						} else if (message.length() > 0) {
-//							if (LOG.isInfoEnabled()) {
-//								LOG.info("Read: "
-//										+ session.getUser().getUserName() + " "
-//										+ message);
-//							}
+							if (LOG.isInfoEnabled()) {
+								LOG.info("Read: "
+										+ session.getUser().getUserName() + " "
+										+ message);
+							}
 							session.getInputBuffer().append(message);
 
 							int carrageReturnIndex = -1;
@@ -371,7 +401,6 @@ public class SocketConnectionService implements Service {
 										.trim();
 								session.getInputBuffer().delete(0,
 										carrageReturnIndex + 1);
-
 								if (!session.hasLoggedIn()) {
 									handleLoginPromptText(session, command);
 								} else {

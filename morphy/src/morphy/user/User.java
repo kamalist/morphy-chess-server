@@ -28,7 +28,7 @@ public class User {
 	protected String userName;
 	protected UserLevel userLevel;
 	protected PlayerType playerType;
-	protected UserVars userVars = new UserVars();
+	protected UserVars userVars = new UserVars(this);
 	protected Formula formula;
 	
 	private Map<PersonalList,List<String>> personalLists;

@@ -70,7 +70,7 @@ public class FingerCommand extends AbstractCommand {
 		str.append("\n\n");
 		UserLevel lvl = query.getUser().getUserLevel();
 		if (lvl == UserLevel.Admin || lvl == UserLevel.SuperAdmin || lvl == UserLevel.HeadAdmin) {
-			str.append("Administrator Level: ");
+			str.append("Admin Level: ");
 			if (lvl == UserLevel.Admin) str.append("Administrator");
 			if (lvl == UserLevel.SuperAdmin) str.append("Senior Administrator");
 			if (lvl == UserLevel.HeadAdmin) str.append("Head Administrator");

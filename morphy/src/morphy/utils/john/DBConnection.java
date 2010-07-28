@@ -22,13 +22,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import morphy.service.UserService;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class DBConnection {
-	protected static Log LOG = LogFactory.getLog(UserService.class);
+	protected static Log LOG = LogFactory.getLog(DBConnection.class);
 	
 	private enum DBType { MySQL,Derby; }
 	
@@ -67,11 +65,24 @@ public class DBConnection {
 		return statement;
 	}
 	
+	public Connection getConnection() {
+		try {
+			return statement.getConnection();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace(System.err);
+		}
+		return null;
+	}
+	
 	/**
 	 * Shorthand for getStatement().execute(query).
 	 */
 	public boolean executeQuery(String query) {
 		try {
+			if (LOG.isInfoEnabled()) {
+				LOG.info("Executed query: " + query);
+			}
 			return statement.execute(query);
 		} catch(SQLException se) {
 			if (LOG.isErrorEnabled()) {

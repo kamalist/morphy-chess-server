@@ -26,6 +26,7 @@ import java.util.TreeMap;
 import morphy.Morphy;
 import morphy.command.AddCensorCommand;
 import morphy.command.AddGnotifyCommand;
+import morphy.command.AddListCommand;
 import morphy.command.AddNopartnerCommand;
 import morphy.command.AddNoplayCommand;
 import morphy.command.AddNotifyCommand;
@@ -53,6 +54,7 @@ public class CommandService implements Service {
 	private static final Class<?>[] socketCommandsClasses = { 
 	 	AddCensorCommand.class,
 	 	AddGnotifyCommand.class, 
+	 	AddListCommand.class,
 	 	AddNopartnerCommand.class,
 		AddNoplayCommand.class,
 		AddNotifyCommand.class,

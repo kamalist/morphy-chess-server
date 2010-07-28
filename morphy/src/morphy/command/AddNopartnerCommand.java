@@ -28,6 +28,12 @@ public class AddNopartnerCommand extends AbstractCommand {
 
 	public void process(String arguments, UserSession userSession) {
 		String userName = arguments;
+		
+		if (userName.equals("")) {
+			userSession.send(getContext().getUsage());
+			return;
+		}
+		
 		if (userSession.getUser().getLists().get(PersonalList.nopartner)
 				.contains(userName)) {
 			userSession.send("[" + userName
