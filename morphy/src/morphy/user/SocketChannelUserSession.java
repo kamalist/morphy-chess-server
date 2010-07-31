@@ -22,7 +22,6 @@ import java.nio.channels.SocketChannel;
 import java.util.Map;
 import java.util.TreeMap;
 
-import morphy.Morphy;
 import morphy.service.ScreenService;
 import morphy.service.SocketConnectionService;
 import morphy.service.UserService;
@@ -61,7 +60,8 @@ public class SocketChannelUserSession implements UserSession {
 				send(ScreenService.getInstance().getScreen(Screen.Logout));
 				channel.close();
 			} catch (Throwable t) {
-				Morphy.getInstance().onError(
+				if (LOG.isErrorEnabled()) 
+					LOG.error(
 						"Error disconnecting socket channel", t);
 			}
 		}
@@ -142,7 +142,8 @@ public class SocketChannelUserSession implements UserSession {
 				disconnect();
 			}
 		} catch (Throwable t) {
-			Morphy.getInstance().onError(
+			if (LOG.isErrorEnabled())
+				LOG.error(
 					"Error sending message to user " + user.getUserName() + " "
 							+ message, t);
 			disconnect();

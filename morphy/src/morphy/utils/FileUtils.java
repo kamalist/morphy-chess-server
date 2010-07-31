@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,8 +23,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-
-import morphy.Morphy;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -207,8 +205,8 @@ public class FileUtils {
 			}
 			return result.toString();
 		} catch (IOException e) {
-			Morphy.getInstance().onError(
-					"Error reading file: " + f.getAbsolutePath(), e);
+			if (LOG.isErrorEnabled())
+				LOG.error("Error reading file: " + f.getAbsolutePath(), e);
 			return null;
 		} finally {
 			try {

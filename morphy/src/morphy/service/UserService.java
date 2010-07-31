@@ -110,6 +110,9 @@ public class UserService implements Service {
 	}
 	
 	public String getTags(String username) {
+		if (!getUserSession(username).getUser().isRegistered())
+			return username + "(U)";
+		
 		StringBuilder tags = new StringBuilder();
 		ServerListManagerService service = ServerListManagerService.getInstance();
 		List<ServerList> list = service.getLists();

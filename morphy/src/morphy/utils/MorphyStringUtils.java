@@ -108,6 +108,7 @@ public class MorphyStringUtils {
 		if (string == null || string.length() == 0) {
 			return "\n\r";
 		} else {
+			// what if input is \n\r? will it then become \n\n\r?
 			String result = string.replace("\n", "\n\r");
 			return result;
 		}

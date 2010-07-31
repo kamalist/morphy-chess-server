@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import morphy.Morphy;
 import morphy.command.AddCensorCommand;
 import morphy.command.AddGnotifyCommand;
 import morphy.command.AddListCommand;
@@ -97,10 +96,9 @@ public class CommandService implements Service {
 				Command command = (Command) clazz.newInstance();
 				commands.add(command);
 			} catch (Throwable t) {
-				Morphy.getInstance()
-						.onError(
-								"Error inializing SocketCommand: "
-										+ clazz.getName(), t);
+				if (LOG.isErrorEnabled())
+					LOG.error("Error inializing SocketCommand: "
+								+ clazz.getName(), t);
 			}
 		}
 		Collections.sort(commands);
