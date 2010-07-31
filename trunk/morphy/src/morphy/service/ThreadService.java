@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -47,14 +47,15 @@ public class ThreadService implements Service {
 			try {
 				runnable.run();
 			} catch (Throwable t) {
-				Morphy.getInstance().onError(
+				if (LOG.isErrorEnabled())
+					LOG.error(
 						"Error in ThreadService Runnable.", t);
 			}
 		}
 
 	}
 
-	private static final Log LOG = LogFactory.getLog(ThreadService.class);
+	protected static final Log LOG = LogFactory.getLog(ThreadService.class);
 
 	public static final String THREAD_DUMP_FILE_PATH = Morphy.USER_DIRECTORY
 			+ "/logs/threaddump_" + System.currentTimeMillis() + ".txt";
@@ -145,14 +146,17 @@ public class ThreadService implements Service {
 				if (!Morphy.getInstance().isShutdown()) {
 					LOG.error("Error executing runnable: ", rej);
 					threadDump();
-					Morphy.getInstance().onError(
-							"ThreadServie has no more threads. A thread dump can be found at "
+					if (LOG.isErrorEnabled())
+						LOG.error(
+							"ThreadService has no more threads. A thread dump can be found at "
 									+ THREAD_DUMP_FILE_PATH, rej);
 				}
 			}
 		} else {
-			LOG.info("Vetoing runnable in ThreadService, raptor is disposed. "
-					+ runnable);
+			if (LOG.isInfoEnabled()) {
+				LOG.info("Vetoing runnable in ThreadService."
+						+ runnable);
+			}
 		}
 	}
 
@@ -178,7 +182,8 @@ public class ThreadService implements Service {
 					LOG.error("Error executing runnable in scheduleOneShot: ",
 							rej);
 					threadDump();
-					Morphy.getInstance().onError(
+					if (LOG.isErrorEnabled())
+						LOG.error(
 							"ThreadServie has no more threads. A thread dump can be found at "
 									+ THREAD_DUMP_FILE_PATH);
 				}

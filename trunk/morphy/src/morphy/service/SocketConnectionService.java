@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -75,9 +75,9 @@ public class SocketConnectionService implements Service {
 					Set<SelectionKey> keys = serverSocketSelector
 							.selectedKeys();
 
-//					if (LOG.isInfoEnabled()) {
-//						LOG.info("Selected " + keys.size() + " keys.");
-//					}
+					// if (LOG.isInfoEnabled()) {
+					// LOG.info("Selected " + keys.size() + " keys.");
+					// }
 
 					Iterator<SelectionKey> i = keys.iterator();
 
@@ -114,8 +114,11 @@ public class SocketConnectionService implements Service {
 					}
 				}
 			} catch (Throwable t) {
-				Morphy.getInstance().onError(
-						"Error reading selector in SocketConnectionService", t);
+				if (LOG.isErrorEnabled())
+					LOG
+							.error(
+									"Error reading selector in SocketConnectionService",
+									t);
 			}
 		}
 	};
@@ -148,8 +151,8 @@ public class SocketConnectionService implements Service {
 					+ serverSocketChannel.socket().getInetAddress() + " "
 					+ serverSocketChannel.socket().getLocalPort());
 		} catch (Throwable t) {
-			Morphy.getInstance().onError(
-					"Error initializing SocketConnectionService", t);
+			if (LOG.isErrorEnabled())
+				LOG.error("Error initializing SocketConnectionService", t);
 		}
 	}
 
@@ -157,8 +160,8 @@ public class SocketConnectionService implements Service {
 		try {
 			serverSocketChannel.close();
 		} catch (Throwable t) {
-			Morphy.getInstance().onError(
-					"Error disposing SocketConnectionService", t);
+			if (LOG.isErrorEnabled())
+				LOG.error("Error disposing SocketConnectionService", t);
 		}
 	}
 
@@ -186,30 +189,38 @@ public class SocketConnectionService implements Service {
 		if (message.trim().matches("\\w{3,15}")) {
 			String name = message;
 			if (LOG.isInfoEnabled()) {
-				LOG.info("name="+name);
+				LOG.info("name=" + name);
 			}
-			
+
 			UserService instance = UserService.getInstance();
+			
+			boolean isGuest = false;
 			
 			if (name.equalsIgnoreCase("guest")) {
 				do {
 					name = instance.generateAnonymousHandle();
-				} while(instance.isLoggedIn(name));
-				
-				userSession.send("Logging you in as \"" + name + "\"; you may use this name to play unrated games.\n" + 
-								 "(After logging in, do \"help register\" for more info on how to register.)\n\n" +
-								 "" +
-								 "Press return to enter the server as \"" + name + "\":\n");
+				} while (instance.isLoggedIn(name));
+
+				userSession
+						.send("Logging you in as \""
+								+ name
+								+ "\"; you may use this name to play unrated games.\n"
+								+ "(After logging in, do \"help register\" for more info on how to register.)\n\n"
+								+ "" + "Press return to enter the server as \""
+								+ name + "\":\n");
 			}
 			
+			isGuest = !instance.isRegistered(name);
+
 			if (instance.isRegistered(name)) {
-				userSession.send("\"" + name + "\" is a registered name.  If it is yours, type the password.\n" +
-								 "If not, just hit return to try another name.\n\n" +
-								 "" +
-								 "password: ");
-				
+				userSession
+						.send("\""
+								+ name
+								+ "\" is a registered name.  If it is yours, type the password.\n"
+								+ "If not, just hit return to try another name.\n\n"
+								+ "" + "password: ");
 			}
-			
+
 			if (instance.isLoggedIn(name)) {
 				sendWithoutPrompt("User " + name
 						+ " matches someone already logged in. Good bye.",
@@ -221,11 +232,12 @@ public class SocketConnectionService implements Service {
 				userSession.getUser().setUserName(name);
 				userSession.getUser().setPlayerType(PlayerType.Human);
 				userSession.getUser().setUserLevel(UserLevel.Player);
+				userSession.getUser().setRegistered(!isGuest);
 				userSession.setHasLoggedIn(true);
 				instance.addLoggedInUser(userSession);
-				
+
 				boolean isHeadAdmin = false;
-				
+
 				DBConnection conn = new DBConnection();
 				conn
 						.executeQuery("UPDATE `users` SET `lastlogin` = CURRENT_TIMESTAMP, `ipaddress` = '"
@@ -269,14 +281,14 @@ public class SocketConnectionService implements Service {
 
 				StringBuilder loginMessage = new StringBuilder(100);
 				loginMessage.append(formatMessage(userSession,
-						"**** Starting FICS session as " + instance.getTags(name) + " ****\n"));
-				if (isHeadAdmin) loginMessage.append("  ** LOGGED IN AS HEAD ADMIN **\n");
+						"**** Starting FICS session as " 
+								+ instance.getTags(name) + " ****\n"));
+				if (isHeadAdmin)
+					loginMessage.append("  ** LOGGED IN AS HEAD ADMIN **\n");
 				loginMessage.append(ScreenService.getInstance().getScreen(
 						Screen.SuccessfulLogin));
 				userSession.send(loginMessage.toString());
 				instance.sendAnnouncement(name + " has logged in.");
-				
-				System.out.println(userSession.isConnected());
 			}
 		} else {
 			sendWithoutPrompt("Invalid user name: " + message + " Good Bye.\n",
@@ -291,7 +303,7 @@ public class SocketConnectionService implements Service {
 			int charsRead = -1;
 			try {
 				charsRead = channel.read(buffer);
-			} catch(ClosedChannelException cce) {
+			} catch (ClosedChannelException cce) {
 				channel.close();
 			}
 			if (charsRead == -1) {
@@ -310,9 +322,9 @@ public class SocketConnectionService implements Service {
 				return "";
 			}
 		} catch (Throwable t) {
-			Morphy.getInstance().onError(
-					"Error reading SocketChannel "
-							+ channel.socket().getLocalAddress(), t);
+			if (LOG.isErrorEnabled())
+				LOG.error("Error reading SocketChannel "
+						+ channel.socket().getLocalAddress(), t);
 			return null;
 		}
 	}
@@ -334,10 +346,9 @@ public class SocketConnectionService implements Service {
 				session.disconnect();
 			}
 		} catch (Throwable t) {
-			Morphy.getInstance().onError(
-					"Error sending message to user "
-							+ session.getUser().getUserName() + " " + message,
-					t);
+			if (LOG.isErrorEnabled())
+				LOG.error("Error sending message to user "
+						+ session.getUser().getUserName() + " " + message, t);
 			session.disconnect();
 		}
 	}
@@ -346,7 +357,7 @@ public class SocketConnectionService implements Service {
 		if (LOG.isInfoEnabled()) {
 			LOG.info("onNewChannel();");
 		}
-		
+
 		try {
 			SocketChannelUserSession session = new SocketChannelUserSession(
 					new User(), channel);
@@ -361,9 +372,11 @@ public class SocketConnectionService implements Service {
 						+ channel.socket().getInetAddress());
 			}
 		} catch (Throwable t) {
-			Morphy.getInstance().onError(
-					"Error writing to SocketChannel "
-							+ channel.socket().getInetAddress(), t);
+			if (LOG.isErrorEnabled()) {
+				LOG.error("Error writing to SocketChannel "
+						+ channel.socket().getInetAddress(), t);
+			}
+
 			disposeSocketChannel(channel);
 		}
 	}
@@ -375,16 +388,17 @@ public class SocketConnectionService implements Service {
 						.socket());
 
 				if (session == null) {
-					Morphy
-							.getInstance()
-							.onError(
-									"Received a read on a socket not being managed. This is likely a bug.");
+					if (LOG.isErrorEnabled()) {
+						LOG
+								.error("Received a read on a socket not being managed. This is likely a bug.");
+					}
+
 					disposeSocketChannel(channel);
 				} else {
 					synchronized (session.getInputBuffer()) {
 						String message = readMessage(channel);
 						if (message == null) {
-							//session.disconnect();
+							// session.disconnect();
 						} else if (message.length() > 0) {
 							if (LOG.isInfoEnabled()) {
 								LOG.info("Read: "
@@ -401,7 +415,11 @@ public class SocketConnectionService implements Service {
 										.trim();
 								session.getInputBuffer().delete(0,
 										carrageReturnIndex + 1);
-								if (!session.hasLoggedIn()) {
+
+								if (command.equals("") || command.equals("\n")
+										|| command.equals("\n\r")) {
+									session.send("");
+								} else if (!session.hasLoggedIn()) {
 									handleLoginPromptText(session, command);
 								} else {
 									CommandService.getInstance()
@@ -413,8 +431,12 @@ public class SocketConnectionService implements Service {
 				}
 			}
 		} catch (Throwable t) {
-			Morphy.getInstance().onError(
-					"Error reading socket channel or processing command ", t);
+			if (LOG.isErrorEnabled()) {
+				LOG.error(
+						"Error reading socket channel or processing command ",
+						t);
+			}
+
 		}
 	}
 }

@@ -30,6 +30,7 @@ public class User {
 	protected PlayerType playerType;
 	protected UserVars userVars = new UserVars(this);
 	protected Formula formula;
+	protected boolean isRegistered;
 	
 	private Map<PersonalList,List<String>> personalLists;
 	
@@ -105,5 +106,13 @@ public class User {
 
 	public void setUserVars(UserVars userVars) {
 		this.userVars = userVars;
+	}
+
+	public boolean isRegistered() {
+		return isRegistered;
+	}
+
+	public void setRegistered(boolean isRegistered) {
+		this.isRegistered = isRegistered;
 	}
 }

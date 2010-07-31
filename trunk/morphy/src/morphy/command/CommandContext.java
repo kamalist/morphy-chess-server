@@ -121,8 +121,8 @@ public class CommandContext {
 								+ commandFileName);
 			}
 		} catch (Throwable t) {
-			Morphy.getInstance().onError(
-					"Error reading help file: " + commandFileName, t);
+			if (LOG.isErrorEnabled())
+					LOG.error("Error reading help file: " + commandFileName, t);
 		} finally {
 			if (reader != null) {
 				try {
