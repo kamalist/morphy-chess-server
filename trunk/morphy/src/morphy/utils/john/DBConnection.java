@@ -92,6 +92,21 @@ public class DBConnection {
 		}
 	}
 	
+	public String[] getArray(java.sql.ResultSet r,int columnIndex) {
+		try {
+			if (columnIndex == 0) columnIndex = 1;
+			
+			java.util.List<String> arr = new java.util.ArrayList<String>();
+			while(r.next()) {
+				arr.add(r.getString(columnIndex));
+			}
+			return arr.toArray(new String[arr.size()]);
+		} catch(SQLException e) {
+			e.printStackTrace(System.err);
+		}
+		return null;
+	}
+	
 	public void closeConnection() {
 		try { 
 			if (type == DBType.Derby)

@@ -18,6 +18,7 @@
 package morphy;
 
 import java.io.File;
+import java.util.TimeZone;
 
 import morphy.service.ChannelService;
 import morphy.service.CommandService;
@@ -27,6 +28,7 @@ import morphy.service.Service;
 import morphy.service.SocketConnectionService;
 import morphy.service.ThreadService;
 import morphy.service.UserService;
+import morphy.utils.john.TimeZoneUtils;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -111,6 +113,16 @@ public class Morphy {
 		if (LOG.isInfoEnabled()) {
 			LOG.info("Initializing Morphy");
 		}
+		
+		Thread t = new Thread() {
+			public void run() {
+				if (LOG.isInfoEnabled()) {
+					LOG.info("Using timezone " + TimeZoneUtils.getAbbreviation(TimeZone.getDefault()));
+				}	
+			}
+		};
+		t.start();
+		
 		services = new Service[] { PreferenceService.getInstance(),
 				ThreadService.getInstance(), CommandService.getInstance(),
 				SocketConnectionService.getInstance(),

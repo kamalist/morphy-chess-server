@@ -31,16 +31,23 @@ import morphy.command.AddNoplayCommand;
 import morphy.command.AddNotifyCommand;
 import morphy.command.AddRemoteCommand;
 import morphy.command.Command;
+import morphy.command.DateCommand;
 import morphy.command.FingerCommand;
 import morphy.command.HelpCommand;
+import morphy.command.ISetCommand;
+import morphy.command.IVariablesCommand;
 import morphy.command.InchannelCommand;
+import morphy.command.ItShoutCommand;
 import morphy.command.QtellCommand;
 import morphy.command.QuitCommand;
+import morphy.command.RemoveListCommand;
 import morphy.command.SetCommand;
 import morphy.command.ShoutCommand;
 import morphy.command.ShowListCommand;
 import morphy.command.TellCommand;
+import morphy.command.VariablesCommand;
 import morphy.command.WhoCommand;
+import morphy.command.ZNotifyCommand;
 import morphy.user.SocketChannelUserSession;
 
 import org.apache.commons.lang.StringUtils;
@@ -52,20 +59,28 @@ public class CommandService implements Service {
 	
 	private static final Class<?>[] socketCommandsClasses = { 
 	 	AddCensorCommand.class,
-	 	AddGnotifyCommand.class, 
+	 	AddGnotifyCommand.class,
 	 	AddListCommand.class,
 	 	AddNopartnerCommand.class,
 		AddNoplayCommand.class,
 		AddNotifyCommand.class,
 		AddRemoteCommand.class,
 	
+		DateCommand.class,
+		
 		FingerCommand.class,
 		
 		HelpCommand.class,
+		
 		InchannelCommand.class,
+		ISetCommand.class,
+		ItShoutCommand.class,
+		IVariablesCommand.class,
 		
 		QtellCommand.class,
 		QuitCommand.class,
+		
+		RemoveListCommand.class,
 		
 		SetCommand.class,
 		ShoutCommand.class,
@@ -73,9 +88,11 @@ public class CommandService implements Service {
 		
 		TellCommand.class,
 		
+		VariablesCommand.class,
+		
 		WhoCommand.class,
 		
-		// AddListCommand.class,RemoveListCommand.class
+		ZNotifyCommand.class
 	};
 
 	protected List<Command> commands = new ArrayList<Command>(100);

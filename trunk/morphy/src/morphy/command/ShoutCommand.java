@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008,2009  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,9 +27,19 @@ public class ShoutCommand extends AbstractCommand {
 	}
 
 	public void process(String arguments, UserSession userSession) {
+		if (arguments.equals("")) {
+			userSession.send(getContext().getUsage());
+			return;
+		}
+		
+		if (!userSession.getUser().isRegistered()) {
+			userSession.send("Only registered players can use the shout command.");
+			return;
+		}
+		
 		UserSession[] sessions = UserService.getInstance().getLoggedInUsers();
 		int sentTo = 0;
-		final String message = userSession.getUser().getUserName()
+		final String message = UserService.getInstance().getTags(userSession.getUser().getUserName())
 				+ " shouts: " + arguments;
 		for (UserSession session : sessions) {
 			if (true) { // session.getUser().getUserVars().isShoutOn()

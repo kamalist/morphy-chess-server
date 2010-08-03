@@ -17,8 +17,11 @@
  */
 package morphy.user;
 
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.util.HashMap;
 
+import morphy.Morphy;
 import morphy.utils.john.DBConnection;
 
 public class UserVars {
@@ -26,14 +29,22 @@ public class UserVars {
 	private HashMap<String,String> variables = new HashMap<String,String>();
 	
 	public UserVars(User user) {
+		if (user.getUserName() == null) return;
+		
 		this.user = user;
-		initialize();
+		loadFromDB();
+		// if id is set, obviously a record in the db exists.
+		if (variables.get("id") == null) {
+			initialize();
+			if (user.isRegistered())
+				dumpToDB();
+		}
 	}
 	
 	private void initialize() {
 		// set defaults
 		variables.put("time","2");
-		variables.put("increment","12");
+		variables.put("inc","12");
 		variables.put("rated","1");
 		variables.put("open","1");
 		variables.put("bugopen","0");
@@ -76,14 +87,42 @@ public class UserVars {
 		variables.put("height","24");
 		variables.put("ptime","0");
 		variables.put("tzone","SERVER");
-		variables.put("Lang","English");
+		variables.put("lang","English");
 		variables.put("notakeback","0");
-		variables.put("Prompt","fics%");
-		variables.put("Interface","NULL");
+		variables.put("prompt","fics%");
+		variables.put("interface","NULL");
 	}
 	
 	public User getUser() {
 		return user;
+	}
+	
+	public void loadFromDB() {
+		DBConnection conn = new DBConnection();
+		conn.executeQuery("SELECT * FROM `user_vars` WHERE `user_id` = (SELECT `id` FROM `users` WHERE `username` = '" + getUser().getUserName() + "')");
+		try {
+			ResultSet r = conn.getStatement().getResultSet();
+			ResultSetMetaData meta = r.getMetaData();
+			int count = meta.getColumnCount();
+			if (r.next()) {
+				for(int i=0;i<count;i++) {
+					String variable = meta.getColumnName(i+1);
+					String value = r.getString(i+1);
+					variables.put(variable,value);
+				}
+			}
+			
+		} catch(java.sql.SQLException e) {
+			Morphy.getInstance().onError("SQLException thrown in class UserVars method loadFromDB();",e);
+		}
+	}
+	
+	public void update(String variable,String value) {
+		variables.put(variable,value);
+		
+		String query = "UPDATE `user_vars` SET `" + variable + "` = '" + value + "' WHERE `user_id` = (SELECT `id` FROM `users` WHERE `username` = '" + getUser().getUserName() + "')";
+		DBConnection conn = new DBConnection();
+		conn.executeQuery(query);
 	}
 	
 	public HashMap<String,String> getVariables() {
@@ -113,15 +152,15 @@ public class UserVars {
 
 		conn.executeQuery(query.toString());
 		
-		query = new StringBuilder("UPDATE `user_vars` SET ");
-		
-		for(int i=0;i<keys.length;i++) {
-			((StringBuilder)query).append("`" + keys[i] + "` = '" + values[i] + "'");
-			if (i != keys.length-1) ((StringBuilder)query).append(", ");
-		}
-		((StringBuilder)query).append(" WHERE user_id = (SELECT `id` FROM `users` WHERE `username` = '" + username + "')");
-
-		conn.executeQuery(query.toString());
+//		query = new StringBuilder("UPDATE `user_vars` SET ");
+//		
+//		for(int i=0;i<keys.length;i++) {
+//			((StringBuilder)query).append("`" + keys[i] + "` = '" + values[i] + "'");
+//			if (i != keys.length-1) ((StringBuilder)query).append(", ");
+//		}
+//		((StringBuilder)query).append(" WHERE user_id = (SELECT `id` FROM `users` WHERE `username` = '" + username + "')");
+//
+//		conn.executeQuery(query.toString());
 			
 	}
 }
