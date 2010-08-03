@@ -233,6 +233,7 @@ public class SocketConnectionService implements Service {
 				userSession.getUser().setPlayerType(PlayerType.Human);
 				userSession.getUser().setUserLevel(UserLevel.Player);
 				userSession.getUser().setRegistered(!isGuest);
+				userSession.getUser().setUserVars(new morphy.user.UserVars(userSession.getUser()));
 				userSession.setHasLoggedIn(true);
 				instance.addLoggedInUser(userSession);
 
@@ -268,6 +269,7 @@ public class SocketConnectionService implements Service {
 							if (val == UserLevel.HeadAdmin) {
 								isHeadAdmin = true;
 							}
+							conn.closeConnection();
 						}
 					} catch (java.sql.SQLException e) {
 						if (LOG.isErrorEnabled()) {
@@ -288,7 +290,16 @@ public class SocketConnectionService implements Service {
 				loginMessage.append(ScreenService.getInstance().getScreen(
 						Screen.SuccessfulLogin));
 				userSession.send(loginMessage.toString());
-				instance.sendAnnouncement(name + " has logged in.");
+				
+				try {
+					conn = new DBConnection();
+					conn.executeQuery("SELECT u.username,u.adminLevel FROM users u INNER JOIN user_vars uv ON (u.id = uv.user_id) WHERE uv.pin = 1");
+					instance.batchSend(conn.getArray(conn.getStatement()
+							.getResultSet(), 1), String.format(
+							"[%s [[%s] has connected.]", userSession.getUser()
+									.getUserName(), userSession.getChannel()
+									.socket().getInetAddress().toString().substring(1)));
+				} catch(java.sql.SQLException e) { e.printStackTrace(System.err); }
 			}
 		} else {
 			sendWithoutPrompt("Invalid user name: " + message + " Good Bye.\n",
@@ -405,6 +416,7 @@ public class SocketConnectionService implements Service {
 										+ session.getUser().getUserName() + " "
 										+ message);
 							}
+							session.touchLastReceivedTime();
 							session.getInputBuffer().append(message);
 
 							int carrageReturnIndex = -1;

@@ -18,6 +18,7 @@
 package morphy.service;
 
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -35,6 +36,10 @@ public class UserService implements Service {
 
 	private static final UserService singletonInstance = new UserService();
 
+	public static UserService getInstance() {
+		return singletonInstance;
+	}
+	
 	public String generateAnonymousHandle() {
 		StringBuilder s = new StringBuilder();
 		for(int i=0;i<4;i++) {
@@ -43,8 +48,25 @@ public class UserService implements Service {
 		return "Guest" + s.toString();
 	}
 	
-	public static UserService getInstance() {
-		return singletonInstance;
+	public String[] completeHandle(String partial) {
+		String[] allkeys = userNameToSessionMap.keySet().toArray(new String[0]);
+		
+		List<String> matches = new ArrayList<String>();
+		for(String s : allkeys) {
+			if (s.startsWith(partial))
+				matches.add(s);
+		}
+		
+		return matches.toArray(new String[matches.size()]);
+	}
+	
+	public void batchSend(String[] usernames,String message) {
+		for(String username : usernames) {
+			UserSession s = getUserSession(username);
+			if (s.isConnected()) {
+				s.send(message);
+			}
+		}
 	}
 
 	Map<String, UserSession> userNameToSessionMap = new TreeMap<String, UserSession>();
@@ -62,6 +84,14 @@ public class UserService implements Service {
 
 	public void dispose() {
 		userNameToSessionMap.clear();
+	}
+	
+	/**
+	 * Checks if a username is valid. That would be either registered or 
+	 * currently online as a guest.
+	 */
+	public boolean isValidUsername(String username) {
+		return isRegistered(username) || isLoggedIn(username);
 	}
 
 	public int getLoggedInUserCount() {
@@ -103,7 +133,7 @@ public class UserService implements Service {
 				ResultSet results = conn.getStatement().getResultSet();
 				return results.next();
 			}
-		} catch(Exception e) { 
+		} catch(Exception e) {
 			e.printStackTrace(System.err);
 		}
 		return false;

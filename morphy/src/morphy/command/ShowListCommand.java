@@ -21,9 +21,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import morphy.service.ServerListManagerService;
 import morphy.user.PersonalList;
 import morphy.user.User;
 import morphy.user.UserSession;
+import morphy.utils.john.ServerList;
 
 public class ShowListCommand extends AbstractCommand {
 	public ShowListCommand() {
@@ -34,10 +36,24 @@ public class ShowListCommand extends AbstractCommand {
 		if (arguments.indexOf(" ") != -1)
 			arguments = arguments.substring(0, arguments.indexOf(" "));
 		String listName = arguments.toLowerCase();
+		ServerListManagerService serv = ServerListManagerService.getInstance();
 		if (listName.equals("")) {
-			PersonalList[] arr = PersonalList.values();
 			StringBuilder str = new StringBuilder();
 			str.append("Lists:\n\n");
+			
+			List<ServerList> list = serv.getLists();
+			for (int i = 0; i < list.size(); i++) {
+				if (!list.get(i).getTag().equals("")) {
+					
+					str.append(String.format("%-20s is %s", list.get(i).getName(),
+						"PUBLIC"));
+					if (i != list.size() - 1)
+						str.append("\n");
+				}
+			}
+			str.append("\n");
+			
+			PersonalList[] arr = PersonalList.values();
 			for (int i = 0; i < arr.length; i++) {
 				str.append(String.format("%-20s is %s", arr[i].name(),
 						"PERSONAL"));
@@ -49,23 +65,30 @@ public class ShowListCommand extends AbstractCommand {
 		}
 
 		PersonalList list = null;
+		ServerList serverList = null;
 		try {
 			list = PersonalList.valueOf(listName);
 		} catch (Exception e) {
-			userSession.send("\"" + listName
-					+ "\" does not match any list name.");
+			serverList = serv.getList(listName);
+			if (serverList == null)
+				userSession.send("\"" + listName
+						+ "\" does not match any list name.");
 			return;
 		}
-		List<String> myList = userSession.getUser().getLists().get(list);
-		if (myList == null) {
-			myList = new ArrayList<String>(User.MAX_LIST_SIZE);
-			userSession.getUser().getLists().put(list, myList);
+		List<String> myList = null;
+		if (list != null) {
+			myList = userSession.getUser().getLists().get(list);
+			if (myList == null) {
+				myList = new ArrayList<String>(User.MAX_LIST_SIZE);
+				userSession.getUser().getLists().put(list, myList);
+			}
+		} else {
+			myList = serv.getElements().get(serverList);
 		}
-		StringBuilder str = new StringBuilder(50);
 		Collections.sort(myList);
-		str
-				.append("-- " + listName + " list: " + myList.size()
-						+ " names --\n");
+		StringBuilder str = new StringBuilder(50);
+		str.append("-- " + listName + " list: " + myList.size()
+					+ " names --\n");
 		for (int i = 0; i < myList.size(); i++) {
 			str.append(myList.get(i));
 			if (i != myList.size() - 1)

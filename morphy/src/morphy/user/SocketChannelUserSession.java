@@ -31,7 +31,8 @@ import morphy.utils.BufferUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class SocketChannelUserSession implements UserSession {
+public class SocketChannelUserSession implements UserSession,
+		Comparable<UserSession> {
 	protected static Log LOG = LogFactory
 			.getLog(SocketChannelUserSession.class);
 
@@ -60,16 +61,15 @@ public class SocketChannelUserSession implements UserSession {
 				send(ScreenService.getInstance().getScreen(Screen.Logout));
 				channel.close();
 			} catch (Throwable t) {
-				if (LOG.isErrorEnabled()) 
-					LOG.error(
-						"Error disconnecting socket channel", t);
+				if (LOG.isErrorEnabled())
+					LOG.error("Error disconnecting socket channel", t);
 			}
 		}
-		
+
 		if (user.getUserName() != null) {
 			UserService.getInstance().removeLoggedInUser(this);
 			SocketConnectionService.getInstance().removeUserSession(this);
-	
+
 			if (LOG.isInfoEnabled()) {
 				LOG.info("Disconnected user " + user.getUserName());
 			}
@@ -89,8 +89,8 @@ public class SocketChannelUserSession implements UserSession {
 	}
 
 	public long getIdleTimeMillis() {
-		return lastReceivedTime == 0 ? 0 : lastReceivedTime
-				- System.currentTimeMillis();
+		return lastReceivedTime == 0 ? 0 : System.currentTimeMillis()
+				- lastReceivedTime;
 	}
 
 	public StringBuilder getInputBuffer() {
@@ -143,9 +143,8 @@ public class SocketChannelUserSession implements UserSession {
 			}
 		} catch (Throwable t) {
 			if (LOG.isErrorEnabled())
-				LOG.error(
-					"Error sending message to user " + user.getUserName() + " "
-							+ message, t);
+				LOG.error("Error sending message to user " + user.getUserName()
+						+ " " + message, t);
 			disconnect();
 		}
 	}
@@ -168,5 +167,10 @@ public class SocketChannelUserSession implements UserSession {
 
 	public void touchLastReceivedTime() {
 		lastReceivedTime = System.currentTimeMillis();
+	}
+
+	public int compareTo(UserSession o) {
+		return getUser().getUserName().compareToIgnoreCase(
+				o.getUser().getUserName());
 	}
 }

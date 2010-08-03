@@ -29,7 +29,7 @@ import morphy.utils.MorphyStringUtils;
 public class FingerCommand extends AbstractCommand {
 
 	public FingerCommand() {
-		super("Finger");
+		super("finger");
 	}
 	
 	public void process(String arguments, UserSession userSession) {
@@ -39,17 +39,34 @@ public class FingerCommand extends AbstractCommand {
 			return;
 		}
 		
+		UserService userService = UserService.getInstance();
 		
 		String user = arguments.substring(0,((pos == -1) ? arguments.length() : pos));
+		
+		String[] matches = UserService.getInstance().completeHandle(user);
+		if (matches.length > 1) {
+			userSession.send("Ambiguous handle \"" + user + "\". Matches: " + toString(matches));
+			return;
+		}
+		if (matches.length == 1)
+			user = matches[0];
+		
+		if (!UserService.getInstance().isValidUsername(user)) {
+			userSession.send("There is no player matching the name " + user + ".");
+			return;
+		}
+			
+		boolean showRatings = true;
+		boolean showNotes = true;
+		
 		if (pos != -1) {
 		String flags = arguments.substring(pos);
 			//finger [user] [/[b][s][l][w][B][S]] [r][n]
-			if (flags.contains("r")) { } // don't show notes
-			if (flags.contains("n")) { } // don't show ratings
+			if (flags.contains("r")) { showNotes = false; } // don't show notes
+			if (flags.contains("n")) { showRatings = false; } // don't show ratings
 		}
 		
 		StringBuilder str = new StringBuilder(200);
-		UserService userService = UserService.getInstance();
 		UserSession query = userService.getUserSession(user);
 		
 		str.append("Finger of " + userService.getTags(query.getUser().getUserName()) + ":\n\n");
@@ -61,12 +78,16 @@ public class FingerCommand extends AbstractCommand {
 				+ "\tIdle: "
 				+ ((idleTimeMillis == 0) ? (idleTimeMillis + " secs") : MorphyStringUtils.formatTime(idleTimeMillis, true)));
 		str.append("\n");
-		str.append(String.format("%15s %7s %7s %7s %7s %7s %7s","rating","RD","win","loss","draw","total","best") + "\n");
 		
-		// variants, ratings
+		if (showRatings) {
+			str.append(String.format("%15s %7s %7s %7s %7s %7s %7s","rating","RD","win","loss","draw","total","best") + "\n");
+			
+			// variants, ratings
+		}
+		
 		
 		// total time online, etc
-		
+			
 		str.append("\n\n");
 		UserLevel lvl = query.getUser().getUserLevel();
 		if (lvl == UserLevel.Admin || lvl == UserLevel.SuperAdmin || lvl == UserLevel.HeadAdmin) {
@@ -77,15 +98,18 @@ public class FingerCommand extends AbstractCommand {
 			str.append("\n");
 		}
 		str.append("Timeseal 1: On\n\n");
-		List<String> notes = query.getUser().getUserInfoLists().get(UserInfoList.notes);
-		if (notes == null) {
-			notes = new ArrayList<String>(UserInfoList.MAX_NOTES);
-			userSession.getUser().getUserInfoLists().put(UserInfoList.notes,notes);
-		}
-		for(int i=0;i< (notes.size()) ;i++) {
-			String note = notes.get(i);
-			if (!note.equals(""))
-				str.append(format(i+1) + ": " + note + "\n");
+		
+		if (showNotes) {
+			List<String> notes = query.getUser().getUserInfoLists().get(UserInfoList.notes);
+			if (notes == null) {
+				notes = new ArrayList<String>(UserInfoList.MAX_NOTES);
+				userSession.getUser().getUserInfoLists().put(UserInfoList.notes,notes);
+			}
+			for(int i=0;i< (notes.size()) ;i++) {
+				String note = notes.get(i);
+				if (!note.equals(""))
+					str.append(format(i+1) + ": " + note + "\n");
+			}
 		}
 		
 		userSession.send(str.toString());
@@ -96,5 +120,13 @@ public class FingerCommand extends AbstractCommand {
 		 return " " + x; 
 		else 
 		 return "" + x;
+	}
+	
+	private String toString(String[] s) {
+		String tmp = java.util.Arrays.toString(s);
+		tmp = tmp.replaceAll("[","");
+		tmp = tmp.replaceAll(",","");
+		tmp = tmp.replaceAll("[","");
+		return tmp;
 	}
 }
