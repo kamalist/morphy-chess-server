@@ -108,6 +108,10 @@ public class DBConnection {
 	}
 	
 	public void closeConnection() {
+		if (LOG.isInfoEnabled()) {
+			LOG.info("closeConnection() called");
+		}
+		
 		try { 
 			if (type == DBType.Derby)
 				DriverManager.getConnection("jdbc:derby:;shutdown=true");
@@ -119,8 +123,10 @@ public class DBConnection {
 		}
 		
 		try {
-			if (type == DBType.MySQL)
+			if (type == DBType.MySQL) {
+				statement.getConnection().close();
 				statement.close();
+			}
 		} catch(SQLException e) {
 			if (LOG.isErrorEnabled()) {
 				LOG.error(e);
