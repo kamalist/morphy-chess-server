@@ -57,10 +57,10 @@ public class SetCommand extends AbstractCommand {
 		String message = arguments.substring(pos).trim();
 		
 		variables[] v = findAllMatches(VariablesCommand.variables.values(),setWhat);
-		System.out.println(java.util.Arrays.toString(v));
+		//System.out.println(java.util.Arrays.toString(v));
 		
-		// finger notes
 		if (StringUtils.isNumeric(setWhat)) {
+			// finger notes
 			int val = Integer.parseInt(setWhat);
 			
 			if (val >= 1 && val <= UserInfoList.MAX_NOTES) {
@@ -348,7 +348,9 @@ public class SetCommand extends AbstractCommand {
 							if (!is0or1(message)) throw new BadValueException("notakeback");
 							returnmessage = "You will " + nowOrNot + " allow takebacks.";
 							break;
-							
+						case myinterface: returnmessage = ""; break;
+						case prompt: returnmessage = "Prompt set to \"" + message + "\""; break;
+						
 						default:
 							returnmessage = var.getName() + " " + setOrUnset + ".";
 					}

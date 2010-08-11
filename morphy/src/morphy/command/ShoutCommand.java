@@ -42,7 +42,8 @@ public class ShoutCommand extends AbstractCommand {
 		final String message = UserService.getInstance().getTags(userSession.getUser().getUserName())
 				+ " shouts: " + arguments;
 		for (UserSession session : sessions) {
-			if (true) { // session.getUser().getUserVars().isShoutOn()
+			if (session.getUser().getUserVars().getVariables().get("shout")
+					.equals("1")) {
 				if (session == userSession) {
 					continue;
 				} else {
@@ -57,6 +58,10 @@ public class ShoutCommand extends AbstractCommand {
 		}
 
 		final String shoutedMessage = "(shouted to " + sentTo + " players)";
-		userSession.send(message + "\n" + shoutedMessage);
+		if (userSession.getUser().getUserVars().getVariables().get("echo")
+				.equals("1"))
+			userSession.send(message + "\n" + shoutedMessage);
+		else
+			userSession.send(shoutedMessage);
 	}
 }

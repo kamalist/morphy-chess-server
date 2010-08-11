@@ -17,11 +17,11 @@
  */
 package morphy.service;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.CancelledKeyException;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -186,8 +186,11 @@ public class SocketConnectionService implements Service {
 
 	protected void handleLoginPromptText(SocketChannelUserSession userSession,
 			String message) {
-		if (message.trim().matches("\\w{3,15}")) {
-			String name = message;
+		String name = message;
+		if (name.equalsIgnoreCase("g"))
+			name = "guest";
+		
+		if (name.matches("\\w{3,15}")) {
 			if (LOG.isInfoEnabled()) {
 				LOG.info("name=" + name);
 			}
@@ -196,7 +199,7 @@ public class SocketConnectionService implements Service {
 			
 			boolean isGuest = false;
 			
-			if (name.equalsIgnoreCase("guest")) {
+			if (name.equalsIgnoreCase("g") || name.equalsIgnoreCase("guest")) {
 				do {
 					name = instance.generateAnonymousHandle();
 				} while (instance.isLoggedIn(name));
@@ -211,24 +214,52 @@ public class SocketConnectionService implements Service {
 			}
 			
 			isGuest = !instance.isRegistered(name);
-
-			if (instance.isRegistered(name)) {
+			
+			if (isGuest) {
+				userSession.send("\"" + name + "\" is not a registered name. You may use this name to play unrated games.\n" +
+						"(After logging in, do \"help register\" for more info on how to register.)\n\n" +
+						"" +
+						"Press return to enter the server as \"" + name + "\":");
+				//return;
+			} else {
 				userSession
 						.send("\""
 								+ name
 								+ "\" is a registered name.  If it is yours, type the password.\n"
 								+ "If not, just hit return to try another name.\n\n"
 								+ "" + "password: ");
+				
+				try {
+					DBConnection conn = new DBConnection();
+					conn.executeQuery("SELECT `password` FROM `users` WHERE `username` = '" + name + "'");
+					java.sql.ResultSet r = conn.getStatement().getResultSet();
+					if (r.next()) {
+						String actualpass = r.getString(1);
+						
+						if (!actualpass.equals(actualpass)) {
+							userSession.send("**** Invalid password! ****\n\n" +
+									"If you cannot remember your password, please log in with \"g\" and ask for help\n" +
+									"in channel 4. Type \"tell 4 I've forgotten my password\". If that is not\n" +
+									"possible, please email: support@freechess.org\n\n" +
+									"\tIf you are not a registered player, enter guest or a unique ID.\n" +
+									"\t\t(If your return key does not work, use cntrl-J)\n\n");
+							//userSession.disconnect();
+						}
+					}
+					conn.closeConnection();
+				} catch(java.sql.SQLException e) {
+					e.printStackTrace(System.err);
+				}
 			}
 
-			if (instance.isLoggedIn(name)) {
-				sendWithoutPrompt("User " + name
-						+ " matches someone already logged in. Good bye.",
-						userSession);
-				if (LOG.isInfoEnabled())
-					LOG.info("userSession.disconnect(); called");
-				userSession.disconnect();
-			} else {
+			if (true) {
+				if (instance.isLoggedIn(name)) {
+					userSession.send(name + " is already logged in - kicking them out.");
+					
+					UserSession sess = instance.getUserSession(name);
+					sess.send("**** " + name + " has arrived - you can't both be logged in. ****");
+					sess.disconnect();
+				}
 				userSession.getUser().setUserName(name);
 				userSession.getUser().setPlayerType(PlayerType.Human);
 				userSession.getUser().setUserLevel(UserLevel.Player);
@@ -242,9 +273,7 @@ public class SocketConnectionService implements Service {
 				DBConnection conn = new DBConnection();
 				conn
 						.executeQuery("UPDATE `users` SET `lastlogin` = CURRENT_TIMESTAMP, `ipaddress` = '"
-								+ SocketUtils.getIpAddress(
-										userSession.getChannel().socket())
-										.substring(1) + "'");
+								+ SocketUtils.getIpAddress(userSession.getChannel().socket()) + "'");
 
 				boolean b = conn
 						.executeQuery("SELECT `adminLevel` FROM `users` WHERE `username` = '"
@@ -269,7 +298,6 @@ public class SocketConnectionService implements Service {
 							if (val == UserLevel.HeadAdmin) {
 								isHeadAdmin = true;
 							}
-							conn.closeConnection();
 						}
 					} catch (java.sql.SQLException e) {
 						if (LOG.isErrorEnabled()) {
@@ -280,6 +308,7 @@ public class SocketConnectionService implements Service {
 						}
 					}
 				}
+				conn.closeConnection();
 
 				StringBuilder loginMessage = new StringBuilder(100);
 				loginMessage.append(formatMessage(userSession,
@@ -291,15 +320,19 @@ public class SocketConnectionService implements Service {
 						Screen.SuccessfulLogin));
 				userSession.send(loginMessage.toString());
 				
-				try {
-					conn = new DBConnection();
-					conn.executeQuery("SELECT u.username,u.adminLevel FROM users u INNER JOIN user_vars uv ON (u.id = uv.user_id) WHERE uv.pin = 1");
-					instance.batchSend(conn.getArray(conn.getStatement()
-							.getResultSet(), 1), String.format(
-							"[%s [[%s] has connected.]", userSession.getUser()
-									.getUserName(), userSession.getChannel()
-									.socket().getInetAddress().toString().substring(1)));
-				} catch(java.sql.SQLException e) { e.printStackTrace(System.err); }
+				UserSession[] sessions = UserService.getInstance().fetchAllUsersWithVariable("pin","1");
+				
+				for(UserSession s : sessions) {
+					UserLevel adminLevel = s.getUser().getUserLevel();
+					
+					if (adminLevel == UserLevel.Admin || adminLevel == UserLevel.SuperAdmin || adminLevel == UserLevel.HeadAdmin) {
+						s.send(String.format("[%s [[%s] has connected.]",
+									userSession.getUser().getUserName(),
+									SocketUtils.getIpAddress(userSession.getChannel().socket())));
+					} else {
+						s.send(String.format("[%s has connected.]",userSession.getUser().getUserName()));
+					}
+				}
 			}
 		} else {
 			sendWithoutPrompt("Invalid user name: " + message + " Good Bye.\n",
@@ -314,8 +347,11 @@ public class SocketConnectionService implements Service {
 			int charsRead = -1;
 			try {
 				charsRead = channel.read(buffer);
-			} catch (ClosedChannelException cce) {
+			} catch (IOException cce) {
 				channel.close();
+				if (LOG.isInfoEnabled()) {
+					LOG.info("Closed channel " + channel);
+				}
 			}
 			if (charsRead == -1) {
 				return null;
@@ -393,6 +429,8 @@ public class SocketConnectionService implements Service {
 	}
 
 	private void onNewInput(SocketChannel channel) {
+		if (!channel.isOpen()) return;
+		
 		try {
 			if (channel.isConnected()) {
 				SocketChannelUserSession session = socketToSession.get(channel
@@ -400,23 +438,30 @@ public class SocketConnectionService implements Service {
 
 				if (session == null) {
 					if (LOG.isErrorEnabled()) {
-						LOG
-								.error("Received a read on a socket not being managed. This is likely a bug.");
+						LOG.error("Received a read on a socket not being managed. This is likely a bug.");
 					}
 
 					disposeSocketChannel(channel);
 				} else {
 					synchronized (session.getInputBuffer()) {
 						String message = readMessage(channel);
-						if (message == null) {
-							// session.disconnect();
+						if (message == null && channel.isOpen()) {
+							session.disconnect();
+						} else if (message == null) {
+							session.disconnect();
 						} else if (message.length() > 0) {
 							if (LOG.isInfoEnabled()) {
 								LOG.info("Read: "
 										+ session.getUser().getUserName() + " "
 										+ message);
 							}
-							session.touchLastReceivedTime();
+							
+							if (message.startsWith("$$")) {
+								message = message.substring(2);
+							} else {
+								session.touchLastReceivedTime();
+							}
+							
 							session.getInputBuffer().append(message);
 
 							int carrageReturnIndex = -1;

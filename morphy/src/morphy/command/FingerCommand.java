@@ -17,6 +17,7 @@
  */
 package morphy.command;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,6 +49,7 @@ public class FingerCommand extends AbstractCommand {
 			userSession.send("Ambiguous handle \"" + user + "\". Matches: " + toString(matches));
 			return;
 		}
+		
 		if (matches.length == 1)
 			user = matches[0];
 		
@@ -86,8 +88,20 @@ public class FingerCommand extends AbstractCommand {
 		}
 		
 		
-		// total time online, etc
-			
+		
+		
+		if (userSession.getUser().getUserName().equals(query.getUser().getUserName()) || false) {
+			if(userSession.getUser().isRegistered()) {
+				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd, HH:mm z yyyy");
+				
+				str.append("\n\nEmail      : " + query.getUser().getEmail() + "\n\n");
+				str.append("Total time online: xxxx\n" +
+					"% of life online:  xx.x  (since " + sdf.format(query.getUser().getRegisteredSince()) + ")");
+				} else {
+				str.append("Total time online: " + MorphyStringUtils.formatTime(loggedInMillis, true) + "\n");
+			}
+		}
+
 		str.append("\n\n");
 		UserLevel lvl = query.getUser().getUserLevel();
 		if (lvl == UserLevel.Admin || lvl == UserLevel.SuperAdmin || lvl == UserLevel.HeadAdmin) {
@@ -95,9 +109,9 @@ public class FingerCommand extends AbstractCommand {
 			if (lvl == UserLevel.Admin) str.append("Administrator");
 			if (lvl == UserLevel.SuperAdmin) str.append("Senior Administrator");
 			if (lvl == UserLevel.HeadAdmin) str.append("Head Administrator");
-			str.append("\n");
+			str.append("\n\n");
 		}
-		str.append("Timeseal 1: On\n\n");
+		str.append("Timeseal 1 : [Timeseal not yet supported in Morphy.]\n\n");
 		
 		if (showNotes) {
 			List<String> notes = query.getUser().getUserInfoLists().get(UserInfoList.notes);
@@ -124,9 +138,9 @@ public class FingerCommand extends AbstractCommand {
 	
 	private String toString(String[] s) {
 		String tmp = java.util.Arrays.toString(s);
-		tmp = tmp.replaceAll("[","");
-		tmp = tmp.replaceAll(",","");
-		tmp = tmp.replaceAll("[","");
+		tmp = tmp.replace("[","");
+		tmp = tmp.replace(",","");
+		tmp = tmp.replace("[","");
 		return tmp;
 	}
 }

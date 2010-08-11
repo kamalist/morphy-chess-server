@@ -37,23 +37,44 @@ public class TellCommand extends AbstractCommand {
 			String message = arguments.substring(spaceIndex + 1, arguments
 					.length());
 
-			if (userName.matches("[0-9]+")) {
+			if (userName.matches("[0-9]+") || userName.matches("0x[0-9a-fA-F]+")) {
+				
 				ChannelService channelService = ChannelService.getInstance();
-				int number = Integer.parseInt(userName);
+				int number = 0x0;
+				if (userName.startsWith("0x"))
+					{ number = Integer.parseInt(userName.substring(2),16); }
+				else
+					{ number = Integer.parseInt(userName); }
 				Channel c = channelService.getChannel(number);
-				if (c == null || number < Channel.MINIMUM
-						|| number > Channel.MAXIMUM) {
-					userSession.send("Bad channel number.");
-				} else {
+				if (number < Channel.MINIMUM || number > Channel.MAXIMUM) {
+					userSession.send("The range of channels is " + Channel.MINIMUM + " to " + Channel.MAXIMUM +".");
+				} else if (c == null) {
+					userSession.send("That channel should, but does not, exist.");
+				}
+				else {
 					int sentTo = channelService.tell(c, message, userSession);
-					userSession.send("(told " + sentTo + " players in channel "
-							+ c.getNumber() + " \"" + c.getName() + "\")");
+					String tosend = "(told " + sentTo + " players in channel "
+							+ c.getNumber() + " \"" + c.getName() + "\")";
+					if (!c.getListeners().contains(userSession)) {
+						tosend += " (You're not listening.)";
+					}
+							
+					userSession.send(tosend);
 				}
 			} else {
+				String[] matches = UserService.getInstance().completeHandle(userName);
+				if (matches.length > 1) {
+					userSession.send("Ambiguous handle \"" + userName + "\". Matches: " + toString(matches));
+					return;
+				} else if (matches.length == 1) {
+					userName = matches[0];
+				}
+				
 				UserSession personToTell = UserService.getInstance()
 						.getUserSession(userName);
 				if (personToTell == null) {
 					userSession.send("" + userName.toLowerCase() + " is not logged in.");
+					return;
 				} else {
 					if (personToTell.getUser().isOnList(PersonalList.censor,
 							userSession.getUser().getUserName())) {
@@ -70,5 +91,13 @@ public class TellCommand extends AbstractCommand {
 				}
 			}
 		}
+	}
+	
+	private String toString(String[] s) {
+		String tmp = java.util.Arrays.toString(s);
+		tmp = tmp.replace("[","");
+		tmp = tmp.replace(",","");
+		tmp = tmp.replace("[","");
+		return tmp;
 	}
 }

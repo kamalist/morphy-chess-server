@@ -19,7 +19,9 @@ package morphy.user;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.List;
 import java.util.Map;
+import java.util.Timer;
 import java.util.TreeMap;
 
 import morphy.service.ScreenService;
@@ -43,7 +45,8 @@ public class SocketChannelUserSession implements UserSession,
 	protected boolean hasLoggedIn = false;
 	protected long loginTime = System.currentTimeMillis();
 	protected Map<UserSessionKey, Object> objectMap = new TreeMap<UserSessionKey, Object>();
-
+	protected Timer idleLogoutTimer = new Timer();
+	
 	public SocketChannelUserSession(User user, SocketChannel channel) {
 		this.user = user;
 		this.channel = channel;
@@ -54,11 +57,37 @@ public class SocketChannelUserSession implements UserSession,
 					+ channel.socket().getInetAddress());
 		}
 	}
+	
+	public void scheduleIdleTimeout() {
+		// admins don't idle out
+		if (UserService.getInstance().isAdmin(getUser().getUserName()))
+			return;
+		
+		final int millis = 60*60*1000;
+		
+		if (idleLogoutTimer != null)
+			idleLogoutTimer.cancel();
+		
+		idleLogoutTimer = new Timer();
+		idleLogoutTimer.schedule(new java.util.TimerTask() {
+			public void run() {
+					if (getIdleTimeMillis() >= millis-1) {
+						send("**** Auto-logout because you were idle for 60 minutes ****");
+						disconnect();
+					} else {
+						idleLogoutTimer.purge();
+						scheduleIdleTimeout();
+					}
+			} }, 60*60*1000);
+	}
 
 	public void disconnect() {
 		if (isConnected()) {
 			try {
+				String v = getNotifyNames();
+				if (!v.equals("")) send("Your departure was noted by the following: " + v);
 				send(ScreenService.getInstance().getScreen(Screen.Logout));
+				getUser().getUserVars().dumpToDB();
 				channel.close();
 			} catch (Throwable t) {
 				if (LOG.isErrorEnabled())
@@ -72,6 +101,11 @@ public class SocketChannelUserSession implements UserSession,
 
 			if (LOG.isInfoEnabled()) {
 				LOG.info("Disconnected user " + user.getUserName());
+			}	
+			
+			UserSession[] sessions = UserService.getInstance().fetchAllUsersWithVariable("pin","1");
+			for(UserSession s : sessions) {
+				s.send(String.format("[%s has disconnected.]",getUser().getUserName()));
 			}
 		}
 	}
@@ -137,8 +171,6 @@ public class SocketChannelUserSession implements UserSession,
 					LOG.info("Tried to send message to a logged off user "
 							+ user.getUserName() + " " + message);
 				}
-				if (LOG.isInfoEnabled())
-					LOG.info("userSession.disconnect(); called");
 				disconnect();
 			}
 		} catch (Throwable t) {
@@ -167,10 +199,28 @@ public class SocketChannelUserSession implements UserSession,
 
 	public void touchLastReceivedTime() {
 		lastReceivedTime = System.currentTimeMillis();
+		//scheduleIdleTimeout();
 	}
 
 	public int compareTo(UserSession o) {
 		return getUser().getUserName().compareToIgnoreCase(
 				o.getUser().getUserName());
+	}
+	
+	private String getNotifyNames() {
+		StringBuilder b = new StringBuilder();
+		final UserSession[] arr = UserService.getInstance().getLoggedInUsers();
+		java.util.Arrays.sort(arr);
+		for(int i=0;i<arr.length;i++) {
+			UserSession s = arr[i];
+			List<String> l = s.getUser().getLists().get(PersonalList.notify);
+			if (l.contains(getUser().getUserName())) {
+				b.append(s.getUser().getUserName());
+				
+				if (i != l.size()-1)
+					b.append(" ");
+			}
+		}
+		return b.toString();
 	}
 }

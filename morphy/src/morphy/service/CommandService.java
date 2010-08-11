@@ -29,7 +29,9 @@ import morphy.command.AddListCommand;
 import morphy.command.AddNopartnerCommand;
 import morphy.command.AddNoplayCommand;
 import morphy.command.AddNotifyCommand;
+import morphy.command.AddPlayerCommand;
 import morphy.command.AddRemoteCommand;
+import morphy.command.AdminCommand;
 import morphy.command.Command;
 import morphy.command.DateCommand;
 import morphy.command.FingerCommand;
@@ -38,6 +40,7 @@ import morphy.command.ISetCommand;
 import morphy.command.IVariablesCommand;
 import morphy.command.InchannelCommand;
 import morphy.command.ItShoutCommand;
+import morphy.command.NukeCommand;
 import morphy.command.QtellCommand;
 import morphy.command.QuitCommand;
 import morphy.command.RemoveListCommand;
@@ -64,7 +67,9 @@ public class CommandService implements Service {
 	 	AddNopartnerCommand.class,
 		AddNoplayCommand.class,
 		AddNotifyCommand.class,
+		AddPlayerCommand.class,
 		AddRemoteCommand.class,
+		AdminCommand.class,
 	
 		DateCommand.class,
 		
@@ -76,6 +81,8 @@ public class CommandService implements Service {
 		ISetCommand.class,
 		ItShoutCommand.class,
 		IVariablesCommand.class,
+		
+		NukeCommand.class,
 		
 		QtellCommand.class,
 		QuitCommand.class,
