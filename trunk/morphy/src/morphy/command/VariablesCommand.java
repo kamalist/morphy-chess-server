@@ -102,7 +102,10 @@ public class VariablesCommand extends AbstractCommand {
 				String.format("minmovetime=%-4d             tolerance=%-4d     noescape=%-4d      notakeback=%d\n\n",
 						toInt(variables.get("minmovetime")),toInt(variables.get("tolerance")),toInt(variables.get("noescape")),toInt(variables.get("notakeback"))));
 		builder.append(String.format("Prompt: %s\n",variables.get("prompt")));
-		builder.append(String.format("Interface: \"%s\"",variables.get("interface")));
+		
+		String v = variables.get("interface");
+		if (!v.equals("NULL"))
+			builder.append(String.format("Interface: \"%s\"",v));
 		
 		userSession.send(builder.toString());
 	}
@@ -121,7 +124,7 @@ public class VariablesCommand extends AbstractCommand {
 	
 	public static enum variables {
 		myinterface("interface", String.class), myprivate("private",
-				String.class), time, inc, rated, open, bugopen, tourney, provshow, autoflag, minmovetime, prompt, jprivate, kibitz, automail, pgn, mailmess, messreply, unobserve, shout, cshout, availinfo, kiblevel, tell, ctell, chanoff, silence, echo, tolerance, pin, notifiedby, highlight, availmin, availmax, gin, seek, showownseek, examine, noescape, style, flip, bell, width, height, ptime, tzone(
+				String.class), time, inc, rated, open, bugopen, tourney, provshow, autoflag, minmovetime, prompt ("prompt",String.class), jprivate, kibitz, automail, pgn, mailmess, messreply, unobserve, shout, cshout, availinfo, kiblevel, tell, ctell, chanoff, silence, echo, tolerance, pin, notifiedby, highlight, availmin, availmax, gin, seek, showownseek, examine, noescape, style, flip, bell, width, height, ptime, tzone(
 				"tzone", String.class), lang("Lang", String.class), notakeback;
 
 		variables() {

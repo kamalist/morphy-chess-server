@@ -23,7 +23,7 @@ public class SocketUtils {
 
 	public static String getIpAddress(Socket socket) {
 		// In the future this will produce a better ip address string.
-		return socket.getInetAddress().toString();
+		return socket.getInetAddress().toString().substring(1);
 	}
 
 }

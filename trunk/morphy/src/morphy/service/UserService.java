@@ -39,34 +39,61 @@ public class UserService implements Service {
 	public static UserService getInstance() {
 		return singletonInstance;
 	}
-	
+
+	public boolean isAdmin(String username) {
+		final ServerListManagerService s = ServerListManagerService
+				.getInstance();
+		return s.isOnList(s.getList("admin"), username);
+	}
+
 	public String generateAnonymousHandle() {
 		StringBuilder s = new StringBuilder();
-		for(int i=0;i<4;i++) {
-			s.append((char)(65+new Random().nextInt(26)));
+		for (int i = 0; i < 4; i++) {
+			s.append((char) (65 + new Random().nextInt(26)));
 		}
 		return "Guest" + s.toString();
 	}
 	
+	public String generatePassword(int minlen,int maxlen) {
+		StringBuilder s = new StringBuilder();
+		for (int i = minlen; i < maxlen; i++) {
+			s.append((char) (65 + new Random().nextInt(26)));
+		}
+		return s.toString();
+	}
+
 	public String[] completeHandle(String partial) {
 		String[] allkeys = userNameToSessionMap.keySet().toArray(new String[0]);
-		
+
 		List<String> matches = new ArrayList<String>();
-		for(String s : allkeys) {
+		for (String s : allkeys) {
 			if (s.startsWith(partial))
 				matches.add(s);
 		}
-		
+
 		return matches.toArray(new String[matches.size()]);
 	}
-	
-	public void batchSend(String[] usernames,String message) {
-		for(String username : usernames) {
+
+	public void batchSend(String[] usernames, String message) {
+		for (String username : usernames) {
 			UserSession s = getUserSession(username);
 			if (s.isConnected()) {
 				s.send(message);
 			}
 		}
+	}
+
+	public UserSession[] fetchAllUsersWithVariable(String variable, String value) {
+		List<UserSession> list = new ArrayList<UserSession>();
+
+		UserSession[] arr = getLoggedInUsers();
+		for (UserSession u : arr) {
+			if (u.getUser().getUserVars().getVariables().get(variable).equals(
+					value))
+				list.add(u);
+		}
+
+		return list.toArray(new UserSession[list.size()]);
 	}
 
 	Map<String, UserSession> userNameToSessionMap = new TreeMap<String, UserSession>();
@@ -85,9 +112,9 @@ public class UserService implements Service {
 	public void dispose() {
 		userNameToSessionMap.clear();
 	}
-	
+
 	/**
-	 * Checks if a username is valid. That would be either registered or 
+	 * Checks if a username is valid. That would be either registered or
 	 * currently online as a guest.
 	 */
 	public boolean isValidUsername(String username) {
@@ -124,34 +151,52 @@ public class UserService implements Service {
 			session.send(announcement);
 		}
 	}
-	
+
 	public boolean isRegistered(String username) {
-		try {
-			DBConnection conn = new DBConnection();
-			boolean hasResults = conn.executeQuery("SELECT `id` FROM `users` WHERE `username` = '" + username + "'");
-			if (hasResults) {
-				ResultSet results = conn.getStatement().getResultSet();
-				return results.next();
+		if (isLoggedIn(username)) {
+			return getUserSession(username).getUser().isRegistered();
+		} else {
+			try {
+				DBConnection conn = new DBConnection();
+				boolean hasResults = conn
+						.executeQuery("SELECT `id` FROM `users` WHERE `username` = '"
+								+ username + "'");
+				if (hasResults) {
+					ResultSet results = conn.getStatement().getResultSet();
+					if (results.next()) {
+						conn.closeConnection();
+						return true;
+					}
+				}
+				conn.closeConnection();
+			} catch (Exception e) {
+				e.printStackTrace(System.err);
 			}
-		} catch(Exception e) {
-			e.printStackTrace(System.err);
 		}
 		return false;
 	}
-	
+
 	public String getTags(String username) {
-		if (!getUserSession(username).getUser().isRegistered())
+		morphy.user.User u = getUserSession(username).getUser();
+		if (!u.isRegistered())
 			return username + "(U)";
-		
+
 		StringBuilder tags = new StringBuilder();
-		ServerListManagerService service = ServerListManagerService.getInstance();
+		ServerListManagerService service = ServerListManagerService
+				.getInstance();
 		List<ServerList> list = service.getLists();
-		for(ServerList sl : list) {
+		for (ServerList sl : list) {
 			if (service.isOnList(sl, username)) {
-				tags.append(sl.getTag());
+				if (sl.equals(service.getList("admin"))) {
+					if (u.getUserVars().getVariables().get("showadmintag").equals("1")) {
+						tags.append(sl.getTag());
+					}
+				} else {
+					tags.append(sl.getTag());
+				}
 			}
 		}
-		
+
 		return username + tags.toString();
 	}
 }

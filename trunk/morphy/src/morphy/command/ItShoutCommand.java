@@ -31,24 +31,26 @@ public class ItShoutCommand extends AbstractCommand {
 			userSession.send(getContext().getUsage());
 			return;
 		}
-		
+
 		if (!userSession.getUser().isRegistered()) {
 			userSession.send("Only registered players can use the it command.");
 			return;
 		}
-		
+
 		UserSession[] sessions = UserService.getInstance().getLoggedInUsers();
 		int sentTo = 0;
-		
+
 		if (arguments.startsWith("(")) {
 			userSession.send("You may not start your shout with a bracket.");
 			return;
 		}
-		
-		final String message = "--> " + UserService.getInstance().getTags(userSession.getUser().getUserName())
-				+ " " + arguments;
+
+		final String message = "--> "
+				+ UserService.getInstance().getTags(
+						userSession.getUser().getUserName()) + " " + arguments;
 		for (UserSession session : sessions) {
-			if (true) { // session.getUser().getUserVars().isShoutOn()
+			if (session.getUser().getUserVars().getVariables().get("shout")
+					.equals("1")) {
 				if (session == userSession) {
 					continue;
 				} else {
@@ -63,6 +65,10 @@ public class ItShoutCommand extends AbstractCommand {
 		}
 
 		final String shoutedMessage = "(shouted to " + sentTo + " players)";
-		userSession.send(message + "\n" + shoutedMessage);
+		if (userSession.getUser().getUserVars().getVariables().get("echo")
+				.equals("1"))
+			userSession.send(message + "\n" + shoutedMessage);
+		else
+			userSession.send(shoutedMessage);
 	}
 }

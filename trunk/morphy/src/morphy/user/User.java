@@ -22,6 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import morphy.Morphy;
+import morphy.utils.john.DBConnection;
+
 public class User {
 	public static final int MAX_LIST_SIZE = 50;
 
@@ -31,6 +34,10 @@ public class User {
 	protected UserVars userVars = new UserVars(this);
 	protected Formula formula;
 	protected boolean isRegistered;
+	
+	// the following variables are stored in the db and need to be filled in.
+	protected String email;
+	protected long registeredSince;
 	
 	private Map<PersonalList,List<String>> personalLists;
 	
@@ -42,6 +49,22 @@ public class User {
 		setLists(new HashMap<PersonalList,List<String>>());
 		for(PersonalList u : PersonalList.values()) {
 			getLists().put(u,new ArrayList<String>());
+		}
+	}
+	
+	private void loadFromDB() {
+		DBConnection c = new DBConnection();
+		c.executeQuery("SELECT `email`,UNIX_TIMESTAMP(`registeredSince`) FROM `users` WHERE `username` = '" + getUserName() + "'");
+		try {
+			java.sql.ResultSet r = c.getStatement().getResultSet();
+			if (r.next()) {
+				setEmail(r.getString(1));
+				long millis = Long.parseLong(r.getString(2)+"000");
+				setRegisteredSince(millis);
+			}
+			c.closeConnection();
+		} catch(java.sql.SQLException e) {
+			Morphy.getInstance().onError("Error reading user info from database in User.loadFromDB()",e);
 		}
 	}
 	
@@ -102,6 +125,8 @@ public class User {
 
 	public void setUserName(String userName) {
 		this.userName = userName;
+		
+		loadFromDB();
 	}
 
 	public void setUserVars(UserVars userVars) {
@@ -114,5 +139,21 @@ public class User {
 
 	public void setRegistered(boolean isRegistered) {
 		this.isRegistered = isRegistered;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public long getRegisteredSince() {
+		return registeredSince;
+	}
+
+	public void setRegisteredSince(long registeredSince) {
+		this.registeredSince = registeredSince;
 	}
 }

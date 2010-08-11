@@ -32,7 +32,15 @@ public class UserVars {
 		if (user.getUserName() == null) return;
 		
 		this.user = user;
+		
+		if (!user.isRegistered()) {
+			initialize();
+			return;
+		}
+		
 		loadFromDB();
+		variables.put("showadmintag","1");
+		
 		// if id is set, obviously a record in the db exists.
 		if (variables.get("id") == null) {
 			initialize();
@@ -112,6 +120,7 @@ public class UserVars {
 				}
 			}
 			
+		conn.closeConnection();
 		} catch(java.sql.SQLException e) {
 			Morphy.getInstance().onError("SQLException thrown in class UserVars method loadFromDB();",e);
 		}
@@ -120,9 +129,11 @@ public class UserVars {
 	public void update(String variable,String value) {
 		variables.put(variable,value);
 		
-		String query = "UPDATE `user_vars` SET `" + variable + "` = '" + value + "' WHERE `user_id` = (SELECT `id` FROM `users` WHERE `username` = '" + getUser().getUserName() + "')";
+		// variables are now only committed to database on logout.
+		/*String query = "UPDATE `user_vars` SET `" + variable + "` = '" + value + "' WHERE `user_id` = (SELECT `id` FROM `users` WHERE `username` = '" + getUser().getUserName() + "')";
 		DBConnection conn = new DBConnection();
 		conn.executeQuery(query);
+		conn.closeConnection();*/
 	}
 	
 	public HashMap<String,String> getVariables() {
@@ -151,6 +162,7 @@ public class UserVars {
 		query = "INSERT IGNORE INTO `user_vars` (`id`,`user_id`," + cols.toString() + ") VALUES (NULL,(SELECT `id` FROM `users` WHERE `username` = '" + username + "')," + vals.toString() + ")";
 
 		conn.executeQuery(query.toString());
+		conn.closeConnection();
 		
 //		query = new StringBuilder("UPDATE `user_vars` SET ");
 //		

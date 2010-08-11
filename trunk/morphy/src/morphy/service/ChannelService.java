@@ -45,10 +45,12 @@ public class ChannelService implements Service {
 		addChannel(new Channel(5, "Service Representitives", "SRs",
 				UserLevel.Player, new ServerList[] { listManager.getList("SR"),
 						listManager.getList("admin") }));
+		addChannel(new Channel(255,"","",UserLevel.Player,null));
 		// getChannel(1).addListener();
 	}
 
 	public void addChannel(Channel c) {
+		c.setName(c.getName().replace(" ","_"));
 		getChannels().add(c);
 	}
 
@@ -76,11 +78,12 @@ public class ChannelService implements Service {
 		int sentTo = 0;
 		for (UserSession person : channel.getListeners()) {
 			if (person.getUser().isOnList(PersonalList.censor,
-					sender.getUser().getUserName())) {
+					sender.getUser().getUserName()) || 
+					sender.getUser().getUserVars().getVariables()
+						.get("echo").equals("0")) {
 				continue;
 			}
-			person.send(sender.getUser().getUserName()
-					+ UserService.getInstance().getTags(
+			person.send(UserService.getInstance().getTags(
 							sender.getUser().getUserName()) + "("
 					+ channel.getNumber() + "): " + message);
 			sentTo++;
