@@ -40,6 +40,7 @@ public class UserVars {
 		
 		loadFromDB();
 		variables.put("showadmintag","1");
+		variables.put("busy","");
 		
 		// if id is set, obviously a record in the db exists.
 		if (variables.get("id") == null) {
@@ -141,6 +142,8 @@ public class UserVars {
 	}
 	
 	public void dumpToDB() {
+		if (getUser() == null || !getUser().isRegistered()) return;
+		
 		HashMap<String,String> variables = getVariables();
 		String[] keys = variables.keySet().toArray(new String[0]);
 		String[] values = variables.values().toArray(new String[0]);

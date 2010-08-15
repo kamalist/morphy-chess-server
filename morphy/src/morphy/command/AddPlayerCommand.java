@@ -28,10 +28,6 @@ public class AddPlayerCommand extends AbstractCommand {
 
 	public void process(String arguments, UserSession userSession) {
 		final UserService serv = UserService.getInstance();
-		if (!serv.isAdmin(userSession.getUser().getUserName())) {
-			userSession.send("addplayer: command not found.");
-			return;
-		}
 		
 		final String[] args = arguments.split(" ");
 		if (args.length < 3) {
@@ -44,15 +40,14 @@ public class AddPlayerCommand extends AbstractCommand {
 		String emailaddress = args[1];
 		String realname = "";
 		for(int i=2;i<args.length;i++) {
-			realname += args[i];
+			realname += " " + args[i];
 		}
 		
-		// TODO: add checks to make sure playername is between 3 and 17 characters.
-		if (playername.length() > 17) {
-			userSession.send("Player name is too long");
-			return;
-		} else if (playername.length() < 3) {
+		if (playername.length() < 3) {
 			userSession.send("Player name is too short");
+			return;
+		} else if (playername.length() > 17) {
+			userSession.send("Player name is too long");
 			return;
 		}
 		
@@ -63,12 +58,12 @@ public class AddPlayerCommand extends AbstractCommand {
 		
 		if (!emailaddress.contains("@")) { /* this verification is not FICS standard. */ }
 		
-		String password = serv.generatePassword(4,6);
+		String password = serv.generatePassword(6);
 		
 		// do add comment, insert to db, etc here.
 		
 		DBConnection dbconn = new DBConnection();
-		String query = "INSERT INTO `users` VALUES(NULL,'" + playername + "','" + password + "',NULL,'Player',0,'" + emailaddress + "')";
+		String query = "INSERT INTO `users` VALUES(NULL,'" + playername + "','" + password + "',NULL,CURRENT_TIMESTAMP,'Player',0,'" + emailaddress + "')";
 		dbconn.executeQuery(query);
 		dbconn.closeConnection();
 		

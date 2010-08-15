@@ -35,24 +35,25 @@ public class ShowListCommand extends AbstractCommand {
 	public void process(String arguments, UserSession userSession) {
 		if (arguments.indexOf(" ") != -1)
 			arguments = arguments.substring(0, arguments.indexOf(" "));
+
 		String listName = arguments.toLowerCase();
 		ServerListManagerService serv = ServerListManagerService.getInstance();
 		if (listName.equals("")) {
 			StringBuilder str = new StringBuilder();
 			str.append("Lists:\n\n");
-			
+
 			List<ServerList> list = serv.getLists();
 			for (int i = 0; i < list.size(); i++) {
-				if (!list.get(i).getTag().equals("")) {
-					
-					str.append(String.format("%-20s is %s", list.get(i).getName(),
-						"PUBLIC"));
+				ServerList l = list.get(i);
+				if (l.isPublic() && !l.getName().equals("admin")) {
+					str.append(String.format("%-20s is %s", l.getName()
+							.toLowerCase(), "PUBLIC"));
 					if (i != list.size() - 1)
 						str.append("\n");
 				}
 			}
 			str.append("\n");
-			
+
 			PersonalList[] arr = PersonalList.values();
 			for (int i = 0; i < arr.length; i++) {
 				str.append(String.format("%-20s is %s", arr[i].name(),
@@ -70,10 +71,11 @@ public class ShowListCommand extends AbstractCommand {
 			list = PersonalList.valueOf(listName);
 		} catch (Exception e) {
 			serverList = serv.getList(listName);
-			if (serverList == null)
+			if (serverList == null) {
 				userSession.send("\"" + listName
 						+ "\" does not match any list name.");
-			return;
+				return;
+			}
 		}
 		List<String> myList = null;
 		if (list != null) {
@@ -82,16 +84,31 @@ public class ShowListCommand extends AbstractCommand {
 				myList = new ArrayList<String>(User.MAX_LIST_SIZE);
 				userSession.getUser().getLists().put(list, myList);
 			}
-		} else {
+		} else if (serverList != null) {
 			myList = serv.getElements().get(serverList);
 		}
 		Collections.sort(myList);
-		StringBuilder str = new StringBuilder(50);
-		str.append("-- " + listName + " list: " + myList.size()
-					+ " names --\n");
-		for (int i = 0; i < myList.size(); i++) {
-			str.append(myList.get(i));
-			if (i != myList.size() - 1)
+		showList(userSession, listName, myList
+				.toArray(new String[myList.size()]));
+	}
+
+	private void showList(UserSession userSession, String listName,
+			String[] elements) {
+		String what = "names";
+		if (listName.equals("filter")) {
+			what = "ips";
+		} else if (listName.equals("channel")) {
+			what = "channels";
+		} else if (listName.equals("removedcom")) {
+			what = "commands";
+		}
+
+		StringBuilder str = new StringBuilder(60);
+		str.append("-- " + listName + " list: " + elements.length + " " + what
+				+ " --\n");
+		for (int i = 0; i < elements.length; i++) {
+			str.append(elements[i]);
+			if (i != elements.length - 1)
 				str.append(" ");
 		}
 		userSession.send(str.toString());

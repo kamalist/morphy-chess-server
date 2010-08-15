@@ -46,7 +46,7 @@ public class FingerCommand extends AbstractCommand {
 		
 		String[] matches = UserService.getInstance().completeHandle(user);
 		if (matches.length > 1) {
-			userSession.send("Ambiguous handle \"" + user + "\". Matches: " + toString(matches));
+			userSession.send("Ambiguous handle \"" + user + "\". Matches: " + MorphyStringUtils.toDelimitedString(matches," "));
 			return;
 		}
 		
@@ -70,16 +70,20 @@ public class FingerCommand extends AbstractCommand {
 		
 		StringBuilder str = new StringBuilder(200);
 		UserSession query = userService.getUserSession(user);
+		String busyString = query.getUser().getUserVars().getVariables().get("busy");
 		
-		str.append("Finger of " + userService.getTags(query.getUser().getUserName()) + ":\n\n");
+		str.append("Finger of " + userService.getTags(query.getUser().getUserName()) + ":\n");
+		if (!busyString.equals(""))
+			str.append("(" + query.getUser().getUserName() + " " + busyString + ")\n");
+		str.append("\n");
 		
 		long loggedInMillis = System.currentTimeMillis() - query.getLoginTime();
 		long idleTimeMillis = query.getIdleTimeMillis();
 		str.append("On for: "
-				+ MorphyStringUtils.formatTime(loggedInMillis, !false)
+				+ MorphyStringUtils.formatTime(loggedInMillis)
 				+ "\tIdle: "
-				+ ((idleTimeMillis == 0) ? (idleTimeMillis + " secs") : MorphyStringUtils.formatTime(idleTimeMillis, true)));
-		str.append("\n");
+				+ ((idleTimeMillis <= 999) ? (idleTimeMillis + " secs") : MorphyStringUtils.formatTime(idleTimeMillis)));
+		str.append("\n\n");
 		
 		if (showRatings) {
 			str.append(String.format("%15s %7s %7s %7s %7s %7s %7s","rating","RD","win","loss","draw","total","best") + "\n");
@@ -90,15 +94,17 @@ public class FingerCommand extends AbstractCommand {
 		
 		
 		
-		if (userSession.getUser().getUserName().equals(query.getUser().getUserName()) || false) {
-			if(userSession.getUser().isRegistered()) {
+		if (userSession.getUser().getUserName().equals(query.getUser().getUserName()) || 
+			userService.isAdmin(userSession.getUser().getUserName())) {
+			
+			if(query.getUser().isRegistered()) {
 				SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd, HH:mm z yyyy");
 				
 				str.append("\n\nEmail      : " + query.getUser().getEmail() + "\n\n");
 				str.append("Total time online: xxxx\n" +
 					"% of life online:  xx.x  (since " + sdf.format(query.getUser().getRegisteredSince()) + ")");
 				} else {
-				str.append("Total time online: " + MorphyStringUtils.formatTime(loggedInMillis, true) + "\n");
+				str.append("Total time online: " + MorphyStringUtils.formatTime(loggedInMillis) + "\n");
 			}
 		}
 
@@ -111,7 +117,7 @@ public class FingerCommand extends AbstractCommand {
 			if (lvl == UserLevel.HeadAdmin) str.append("Head Administrator");
 			str.append("\n\n");
 		}
-		str.append("Timeseal 1 : [Timeseal not yet supported in Morphy.]\n\n");
+		str.append("Timeseal 1 : Off\n\n");
 		
 		if (showNotes) {
 			List<String> notes = query.getUser().getUserInfoLists().get(UserInfoList.notes);
@@ -134,13 +140,5 @@ public class FingerCommand extends AbstractCommand {
 		 return " " + x; 
 		else 
 		 return "" + x;
-	}
-	
-	private String toString(String[] s) {
-		String tmp = java.util.Arrays.toString(s);
-		tmp = tmp.replace("[","");
-		tmp = tmp.replace(",","");
-		tmp = tmp.replace("[","");
-		return tmp;
 	}
 }

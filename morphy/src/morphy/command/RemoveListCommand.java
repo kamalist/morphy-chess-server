@@ -22,9 +22,11 @@ import java.util.List;
 
 import morphy.channel.Channel;
 import morphy.service.ChannelService;
+import morphy.service.ServerListManagerService;
 import morphy.user.PersonalList;
 import morphy.user.User;
 import morphy.user.UserSession;
+import morphy.utils.john.ServerList;
 
 public class RemoveListCommand extends AbstractCommand {
 	public RemoveListCommand() {
@@ -37,26 +39,41 @@ public class RemoveListCommand extends AbstractCommand {
 			userSession.send(getContext().getUsage());
 			return;
 		}
+		ServerListManagerService serv = ServerListManagerService.getInstance();
+
 		String listName = args[0].toLowerCase();
 		String value = args[1];
+
 		PersonalList list = null;
+		ServerList serverList = null;
 		try {
 			list = PersonalList.valueOf(listName);
 		} catch (Exception e) {
-			userSession.send("\"" + listName
-					+ "\" does not match any list name.");
-			return;
+			serverList = serv.getList(listName);
+			if (serverList == null) {
+				userSession.send("\"" + listName
+						+ "\" does not match any list name.");
+				return;
+			}
 		}
-		List<String> myList = userSession.getUser().getLists().get(list);
-		if (myList == null) {
-			myList = new ArrayList<String>(User.MAX_LIST_SIZE);
-			userSession.getUser().getLists().put(list, myList);
+
+		List<String> myList = null;
+
+		if (list != null) {
+			myList = userSession.getUser().getLists().get(list);
+			if (myList == null) {
+				myList = new ArrayList<String>(User.MAX_LIST_SIZE);
+				userSession.getUser().getLists().put(list, myList);
+			}
+		} else if (serverList != null) {
+			myList = serv.getElements().get(serverList);
 		}
 
 		if (value.equals("*")) {
 			myList.clear();
-			userSession.send("All players have been removed from your "
-					+ listName + " list.");
+			userSession.send("All players have been removed from "
+					+ ((list == null) ? "the" : "your") + " " + listName
+					+ " list.");
 			return;
 		}
 
@@ -64,11 +81,21 @@ public class RemoveListCommand extends AbstractCommand {
 			if (list == PersonalList.channel) {
 				ChannelService cS = ChannelService.getInstance();
 				try {
-					int intVal = Integer.parseInt(value);
+					boolean isBase16 = value.startsWith("0x");
+					if (isBase16)
+						value = value.substring(2);
+					int intVal = Integer.parseInt(value, isBase16 ? 16 : 10);
 					if (intVal < Channel.MINIMUM || intVal > Channel.MAXIMUM)
 						throw new NumberFormatException();
 					Channel c = cS.getChannel(intVal);
-					c.removeListener(userSession);
+					if (c == null) {
+						userSession
+								.send("That channel should, but does not, exist.");
+						return;
+					} else {
+						c.removeListener(userSession);
+					}
+
 				} catch (NumberFormatException e) {
 					userSession
 							.send("The channel to remove must be a number between "
@@ -80,10 +107,10 @@ public class RemoveListCommand extends AbstractCommand {
 			}
 
 			myList.remove(value);
-			userSession.send("[" + value + "] removed from your " + listName
+			userSession.send("[" + value + "] removed from " + ((list == null) ? "the" : "your") + " " + listName
 					+ " list.");
 		} else {
-			userSession.send("[" + value + "] is not in your " + listName
+			userSession.send("[" + value + "] is not " + ((list == null) ? "on the" : "in your") + " " + listName
 					+ " list.");
 		}
 	}

@@ -17,22 +17,15 @@
  */
 package morphy.command;
 
+import morphy.Morphy;
 import morphy.user.UserSession;
 
-public class AdminCommand extends AbstractCommand {
-	public AdminCommand() {
-		super("admin");
+public class ShutdownCommand extends AbstractCommand {
+	public ShutdownCommand() {
+		super("shutdown");
 	}
 
 	public void process(String arguments, UserSession userSession) {
-		morphy.user.UserVars uv = userSession.getUser().getUserVars();
-		String val = uv.getVariables().get("showadmintag");
-		if (val.equals("1")) {
-			uv.getVariables().put("showadmintag","0");
-			userSession.send("Admin mode (*) is now not shown.");
-		} else if (val.equals("0")) {
-			uv.getVariables().put("showadmintag","1");
-			userSession.send("Admin mode (*) is now shown.");
-		}
+		Morphy.getInstance().shutdown();
 	}
 }

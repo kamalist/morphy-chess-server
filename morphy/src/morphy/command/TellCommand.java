@@ -22,6 +22,7 @@ import morphy.service.ChannelService;
 import morphy.service.UserService;
 import morphy.user.PersonalList;
 import morphy.user.UserSession;
+import morphy.utils.MorphyStringUtils;
 
 public class TellCommand extends AbstractCommand {
 	public TellCommand() {
@@ -60,11 +61,12 @@ public class TellCommand extends AbstractCommand {
 					}
 							
 					userSession.send(tosend);
+					((morphy.user.SocketChannelUserSession)userSession).setLastChannelToldTo(c);
 				}
 			} else {
 				String[] matches = UserService.getInstance().completeHandle(userName);
 				if (matches.length > 1) {
-					userSession.send("Ambiguous handle \"" + userName + "\". Matches: " + toString(matches));
+					userSession.send("Ambiguous handle \"" + userName + "\". Matches: " + MorphyStringUtils.toDelimitedString(matches," "));
 					return;
 				} else if (matches.length == 1) {
 					userName = matches[0];
@@ -83,21 +85,40 @@ public class TellCommand extends AbstractCommand {
 								+ "\" is censoring you.");
 						return;
 					}
+					
+					if (!userSession.getUser().isRegistered()
+							&& personToTell.getUser().getUserVars()
+									.getVariables().get("tell").equals("0")) {
+						userSession
+								.send("Player \""
+										+ personToTell.getUser().getUserName()
+										+ "\" isn't listening to unregistered user's tells.");
+						return;
+					}
 
-					personToTell.send(UserService.getInstance().getTags(userSession.getUser().getUserName())
+					personToTell.send(UserService.getInstance().getTags(
+							userSession.getUser().getUserName())
 							+ " tells you: " + message);
-					userSession.send("(told "
-							+ personToTell.getUser().getUserName() + ")"); // 'who [busy string]' 'who has been idle for 5 mins'
+					String s = "(told "
+							+ personToTell.getUser().getUserName() + "";
+					String busyString = personToTell.getUser().getUserVars().getVariables().get("busy");
+					int minutes = (int)(personToTell.getIdleTimeMillis()/60000);
+					if (!busyString.equals("")) {
+						s += ", who " + busyString + " ";
+						
+						
+						int seconds = (int)(personToTell.getIdleTimeMillis()/1000);
+						if (minutes > 0) { s += "(idle: " + minutes + " mins)"; }
+						else { s += " (idle: " + seconds + " secs)"; }
+					} else if (minutes >= 5) {
+						s += ", who has been idle for " + minutes + " mins";
+					}
+					
+					userSession.send(s + ")");
+					
+					((morphy.user.SocketChannelUserSession)userSession).setLastPersonToldTo(personToTell);
 				}
 			}
 		}
-	}
-	
-	private String toString(String[] s) {
-		String tmp = java.util.Arrays.toString(s);
-		tmp = tmp.replace("[","");
-		tmp = tmp.replace(",","");
-		tmp = tmp.replace("[","");
-		return tmp;
 	}
 }

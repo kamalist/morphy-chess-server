@@ -50,8 +50,9 @@ public class SetCommand extends AbstractCommand {
 	}
 
 	public void process(String arguments, UserSession userSession) {
-		final int pos = arguments.indexOf(" ");
-		if (pos == -1) { userSession.send(getContext().getUsage()); return; }
+		int pos = arguments.indexOf(" ");
+		if (!arguments.startsWith("busy") && pos == -1) { userSession.send(getContext().getUsage()); return; }
+		if (arguments.equals("busy")) { pos = arguments.length(); }
 		
 		String setWhat = arguments.substring(0,pos).trim();
 		String message = arguments.substring(pos).trim();
@@ -350,6 +351,15 @@ public class SetCommand extends AbstractCommand {
 							break;
 						case myinterface: returnmessage = ""; break;
 						case prompt: returnmessage = "Prompt set to \"" + message + "\""; break;
+						case busy: {
+							if (message.equals("")) {
+								returnmessage = "Your \"busy\" string was cleared.";
+								break;
+							} else {
+								returnmessage = "Your \"busy\" string was set to \"" + message + "\".";
+								break;
+							}
+						}
 						
 						default:
 							returnmessage = var.getName() + " " + setOrUnset + ".";

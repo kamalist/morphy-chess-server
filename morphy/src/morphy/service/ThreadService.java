@@ -184,13 +184,13 @@ public class ThreadService implements Service {
 					threadDump();
 					if (LOG.isErrorEnabled())
 						LOG.error(
-							"ThreadServie has no more threads. A thread dump can be found at "
+							"ThreadService has no more threads. A thread dump can be found at "
 									+ THREAD_DUMP_FILE_PATH);
 				}
 				return null;
 			}
 		} else {
-			LOG.info("Veoting runnable " + runnable + " moprhy is shutdown.");
+			LOG.info("Vetoing runnable " + runnable + " because Morphy is shutdown.");
 			return null;
 		}
 	}

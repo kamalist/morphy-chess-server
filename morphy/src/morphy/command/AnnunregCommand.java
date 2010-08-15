@@ -20,29 +20,27 @@ package morphy.command;
 import morphy.service.UserService;
 import morphy.user.UserSession;
 
-public class NukeCommand extends AbstractCommand {
-	public NukeCommand() {
-		super("nuke");
+public class AnnunregCommand extends AbstractCommand {
+	public AnnunregCommand() {
+		super("annunreg");
 	}
 
-	public void process(String arguments, UserSession userSession) {		
-		arguments = arguments.trim();
-			
-		if (arguments.equals("") || arguments.indexOf(" ") != -1) {
+	public void process(String arguments, UserSession userSession) {
+		UserSession[] all = UserService.getInstance().getLoggedInUsers();
+		
+		if (arguments.equals("")) {
 			userSession.send(getContext().getUsage());
 			return;
 		}
 		
-		UserSession s = UserService.getInstance().getUserSession(arguments);
-		if (s != null) {
-			String str = "Nuking: " + arguments.toLowerCase() + "\n";
-			if (s.getUser().isRegistered())
-				str += "Please leave a comment explaining why " + arguments + " was nuked.";
-			userSession.send(str);
-			s.send("**** You have been kicked out by " + userSession.getUser().getUserName() + "! ****\n\n\n\n");
-			s.disconnect();
-		} else {
-			userSession.send(arguments.toLowerCase() + " isn't logged in.");
+		int sentTo = 0;
+		for(UserSession sess : all) {
+			if (!sess.getUser().isRegistered() || 
+				sess.getUser().getUserName().equals(userSession.getUser().getUserName())) {
+					sess.send("  ** UNREG ANNOUNCEMENT ** from " + userSession.getUser().getUserName() + ": " + arguments + "\n");
+					sentTo++;
+			}
 		}
+		userSession.send("(Announcement sent to " + sentTo + " unregistered players)");
 	}
 }

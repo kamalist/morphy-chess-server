@@ -346,27 +346,29 @@ public class MorphyStringUtils {
 		return valuesString;
 	}
 	
-	public static String formatTime(long millis,boolean showSeconds) {
+	public static String formatTime(long millis) {
 		StringBuilder b = new StringBuilder();
 		final int days = (int) (millis) / (1000 * 60 * 60 * 24);
-		if (days > 0) {
+		if (days > 1) {
 			b.append(days + " day");
 			if (days != 1) b.append("s");
 			b.append(", ");
 		}
 		
 		final int hours = (int) ( ( millis) / (1000 * 60 * 60) % 24 );
-		if (hours > 0) {
+		if (hours >= 1) {
 			b.append(hours  + " hr");
 			if (hours != 1) b.append("s");
 			b.append(", ");
 		}
 		
 		final int minutes = (int) ( (millis) / (1000 * 60) % 60 );
-		if (minutes > 0) {
+		if (minutes >= 1) {
 			b.append(minutes  + " min");
 			if (minutes != 1) b.append("s");
 		}
+		
+		boolean showSeconds = minutes < 1;
 		
 		if (showSeconds) {
 			if (days > 0 || hours > 0 || minutes > 0) b.append(", ");

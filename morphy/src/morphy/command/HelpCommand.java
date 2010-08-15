@@ -39,6 +39,8 @@ public class HelpCommand extends AbstractCommand {
 			int counter = 0;
 			Command[] commands = CommandService.getInstance().getCommands();
 			for (Command command : commands) {
+				if (!command.willProcess(userSession)) continue;
+				
 				result.append(StringUtils.rightPad(command.getContext()
 						.getName(), 15));
 				counter++;
@@ -50,9 +52,9 @@ public class HelpCommand extends AbstractCommand {
 			userSession.send(result.toString());
 		} else {
 			Command command = CommandService.getInstance().getCommand(argument);
-			if (command == null) {
-				userSession.send("No help avaliable for: " + argument);
-			} else {
+			if (command == null || !command.willProcess(userSession)) {
+				userSession.send("No help avaliable on \"" + argument + "\".");
+			} else {				
 				StringBuilder builder = new StringBuilder(200);
 				builder.append("Help for " + command.getContext().getName()
 						+ "\n");
@@ -72,8 +74,9 @@ public class HelpCommand extends AbstractCommand {
 								.getContext().getSeeAlso(), " ") + "\n");
 				postBuilder.append("Last Modified By: "
 						+ command.getContext().getLastModifiedBy() + " on "
-						+ command.getContext().getLastModifiedBy());
+						+ command.getContext().getLastModifiedDate());
 
+				builder.append(postBuilder.toString());
 				userSession.send(builder.toString());
 			}
 		}

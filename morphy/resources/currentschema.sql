@@ -53,7 +53,7 @@ CREATE TABLE `users` (
   `email` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username_UNIQUE` (`username`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -72,21 +72,6 @@ CREATE TABLE `list` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `new_table`
---
-
-DROP TABLE IF EXISTS `new_table`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `new_table` (
-  `id` int(11) NOT NULL,
-  `chnum` int(3) DEFAULT NULL,
-  `chname` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `user_ratings`
 --
 
@@ -95,12 +80,29 @@ DROP TABLE IF EXISTS `user_ratings`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `user_ratings` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` varchar(45) DEFAULT NULL,
-  `game_type` varchar(20) NOT NULL,
+  `user_id` int(6) DEFAULT NULL,
+  `rating` int(4) DEFAULT NULL,
+  `game_type` varchar(20) DEFAULT NULL,
   `RD` decimal(4,1) NOT NULL DEFAULT '350.0',
   `winCount` int(6) DEFAULT NULL,
   `drawCount` int(6) DEFAULT NULL,
   `lossCount` int(6) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `serverevent`
+--
+
+DROP TABLE IF EXISTS `serverevent`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `serverevent` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `comment` varchar(100) DEFAULT NULL,
+  `type` enum('Critical Error','Tolerable Error','Warning','Log') NOT NULL DEFAULT 'Log',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -130,6 +132,24 @@ CREATE TABLE `list_entry` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `list_id` int(11) DEFAULT NULL,
   `value` varchar(17) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `newsitems`
+--
+
+DROP TABLE IF EXISTS `newsitems`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `newsitems` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `posted_by_user_id` int(6) DEFAULT NULL,
+  `name` varchar(50) DEFAULT NULL,
+  `content` varchar(300) DEFAULT NULL,
+  `posted_timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `expires_timestamp` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -222,4 +242,4 @@ CREATE TABLE `user_vars` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2010-08-11 15:43:39
+-- Dump completed on 2010-08-14 23:23:11
