@@ -78,11 +78,25 @@ public class ChannelService implements Service {
 		int sentTo = 0;
 		for (UserSession person : channel.getListeners()) {
 			if (person.getUser().isOnList(PersonalList.censor,
-					sender.getUser().getUserName()) || 
-					sender.getUser().getUserVars().getVariables()
-						.get("echo").equals("0")) {
+					sender.getUser().getUserName())
+					|| (person.getUser().getUserName().equals(
+							sender.getUser().getUserName()) && sender.getUser()
+							.getUserVars().getVariables().get("echo").equals(
+									"0"))) {
 				continue;
 			}
+			
+			if (!sender.getUser().isRegistered()
+					&& person.getUser().getUserVars().getVariables().get(
+							"ctell").equals("0")) {
+				continue;
+			}
+			
+			if (person.getUser().getUserVars().getVariables().get("chanoff")
+					.equals("1")) {
+				continue;
+			}
+			
 			person.send(UserService.getInstance().getTags(
 							sender.getUser().getUserName()) + "("
 					+ channel.getNumber() + "): " + message);

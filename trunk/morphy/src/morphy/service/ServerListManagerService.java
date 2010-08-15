@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 
 import morphy.user.UserLevel;
 import morphy.utils.john.ServerList;
+import morphy.utils.john.ServerList.ListType;
 
 public class ServerListManagerService implements Service {
 	protected static Log LOG = LogFactory.getLog(ServerListManagerService.class);
@@ -61,28 +62,28 @@ public class ServerListManagerService implements Service {
 	private void initialize() {
 		lists = new ArrayList<ServerList>();
 		
-		lists.add(new ServerList("admin",UserLevel.HeadAdmin,"(*)"));
-		lists.add(new ServerList("removedcom",UserLevel.SuperAdmin,""));
-		lists.add(new ServerList("filter",UserLevel.SuperAdmin,""));
-		lists.add(new ServerList("ban",UserLevel.Admin,""));
-		lists.add(new ServerList("noteban",UserLevel.Admin,""));
-		lists.add(new ServerList("abuser",UserLevel.Admin,""));
-		lists.add(new ServerList("muzzle",UserLevel.Admin,""));
-		lists.add(new ServerList("SR",UserLevel.Admin,"(SR)"));
-		lists.add(new ServerList("TM",UserLevel.Admin,"(TM)"));
-		lists.add(new ServerList("CA",UserLevel.Admin,"(CA)"));
-		lists.add(new ServerList("FM",UserLevel.Admin,"(FM)"));
-		lists.add(new ServerList("IM",UserLevel.Admin,"(IM)"));
-		lists.add(new ServerList("GM",UserLevel.Admin,"(GM)"));
-		lists.add(new ServerList("WFM",UserLevel.Admin,"(WFM)"));
-		lists.add(new ServerList("WIM",UserLevel.Admin,"(WIM)"));
-		lists.add(new ServerList("WGM",UserLevel.Admin,"(WGM)"));
+		lists.add(new ServerList("admin",UserLevel.HeadAdmin,ListType.Username,"(*)",true));
+		lists.add(new ServerList("removedcom",UserLevel.SuperAdmin,ListType.String,"",false));
+		lists.add(new ServerList("filter",UserLevel.SuperAdmin,ListType.IPAddress,"",false));
+		lists.add(new ServerList("ban",UserLevel.Admin,ListType.Username,"",false));
+		lists.add(new ServerList("noteban",UserLevel.Admin,ListType.Username,"",false));
+		lists.add(new ServerList("abuser",UserLevel.Admin,ListType.Username,"",false));
+		lists.add(new ServerList("muzzle",UserLevel.Admin,ListType.Username,"",false));
 		
-		lists.add(new ServerList("Blind",UserLevel.Admin,"(B)"));
-		lists.add(new ServerList("Computer",UserLevel.Admin,"(C)"));
-		lists.add(new ServerList("Demo",UserLevel.Admin,"(D)"));
-		lists.add(new ServerList("Team",UserLevel.Admin,"(T)"));
-		lists.add(new ServerList("TD",UserLevel.SuperAdmin,"(TD)"));
+		lists.add(new ServerList("FM",UserLevel.Admin,ListType.Username,"(FM)",true));
+		lists.add(new ServerList("IM",UserLevel.Admin,ListType.Username,"(IM)",true));
+		lists.add(new ServerList("GM",UserLevel.Admin,ListType.Username,"(GM)",true));
+		lists.add(new ServerList("WFM",UserLevel.Admin,ListType.Username,"(WFM)",true));
+		lists.add(new ServerList("WIM",UserLevel.Admin,ListType.Username,"(WIM)",true));
+		lists.add(new ServerList("WGM",UserLevel.Admin,ListType.Username,"(WGM)",true));
+		lists.add(new ServerList("Blind",UserLevel.Admin,ListType.Username,"(B)",true));
+		lists.add(new ServerList("Team",UserLevel.Admin,ListType.Username,"(T)",true));
+		lists.add(new ServerList("Computer",UserLevel.Admin,ListType.Username,"(C)",true));
+		lists.add(new ServerList("TM",UserLevel.Admin,ListType.Username,"(TM)",true));
+		lists.add(new ServerList("CA",UserLevel.Admin,ListType.Username,"(CA)",true));
+		lists.add(new ServerList("SR",UserLevel.Admin,ListType.Username,"(SR)",true));
+		lists.add(new ServerList("Demo",UserLevel.Admin,ListType.Username,"(D)",false));
+		lists.add(new ServerList("TD",UserLevel.SuperAdmin,ListType.Username,"(TD)",true));
 		
 		elements = new HashMap<ServerList,List<String>>();
 		

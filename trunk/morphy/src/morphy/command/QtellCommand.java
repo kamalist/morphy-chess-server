@@ -27,6 +27,10 @@ public class QtellCommand extends AbstractCommand {
 	public QtellCommand() {
 		super("qtell");
 	}
+	
+	public boolean willProcess(UserSession userSession) {
+		return true;
+	}
 
 	public void process(String arguments, UserSession userSession) {
 		ServerListManagerService service = ServerListManagerService.getInstance();
@@ -44,8 +48,7 @@ public class QtellCommand extends AbstractCommand {
 		}
 		
 		String userName = arguments.substring(0, whiteSpacePos);
-		String message = arguments.substring(whiteSpacePos + 1, arguments
-				.length() - 1);
+		String message = arguments.substring(whiteSpacePos + 1, arguments.length());
 	
 		UserSession sendTo = UserService.getInstance().getUserSession(userName);
 		if (sendTo != null) {
@@ -53,7 +56,7 @@ public class QtellCommand extends AbstractCommand {
 		}
 	
 		userSession.send("*qtell " + userName + " "
-				+ ((sendTo.isConnected()) ? "0" : "1"));
+				+ ((sendTo.isConnected()) ? "0" : "1") + "*");
 	}
 
 }

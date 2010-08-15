@@ -186,6 +186,8 @@ public class SocketConnectionService implements Service {
 
 	protected void handleLoginPromptText(SocketChannelUserSession userSession,
 			String message) {
+		sendWithoutPrompt("\n",userSession);
+		
 		String name = message;
 		if (name.equalsIgnoreCase("g"))
 			name = "guest";
@@ -310,12 +312,12 @@ public class SocketConnectionService implements Service {
 				}
 				conn.closeConnection();
 
-				StringBuilder loginMessage = new StringBuilder(100);
+				StringBuilder loginMessage = new StringBuilder(200);
 				loginMessage.append(formatMessage(userSession,
 						"**** Starting FICS session as " 
 								+ instance.getTags(name) + " ****\n"));
 				if (isHeadAdmin)
-					loginMessage.append("  ** LOGGED IN AS HEAD ADMIN **\n");
+					loginMessage.append("\n  ** LOGGED IN AS HEAD ADMIN **\n");
 				loginMessage.append(ScreenService.getInstance().getScreen(
 						Screen.SuccessfulLogin));
 				userSession.send(loginMessage.toString());
@@ -410,9 +412,10 @@ public class SocketConnectionService implements Service {
 					new User(), channel);
 			socketToSession.put(channel.socket(), session);
 
-			ByteBuffer buffer = BufferUtils.createBuffer(ScreenService
-					.getInstance().getScreen(Screen.Login));
-			channel.write(buffer);
+//			ByteBuffer buffer = BufferUtils.createBuffer(ScreenService
+//					.getInstance().getScreen(Screen.Login));
+//			channel.write(buffer);
+			sendWithoutPrompt(ScreenService.getInstance().getScreen(Screen.Login),session);
 
 			if (LOG.isInfoEnabled()) {
 				LOG.info("Received socket connection "
@@ -460,6 +463,7 @@ public class SocketConnectionService implements Service {
 								message = message.substring(2);
 							} else {
 								session.touchLastReceivedTime();
+								session.getUser().getUserVars().getVariables().put("busy","");
 							}
 							
 							session.getInputBuffer().append(message);
@@ -480,7 +484,8 @@ public class SocketConnectionService implements Service {
 									handleLoginPromptText(session, command);
 								} else {
 									CommandService.getInstance()
-											.processCommand(command, session);
+											.processCommandAndCheckAliases(
+													command, session);
 								}
 							}
 						}

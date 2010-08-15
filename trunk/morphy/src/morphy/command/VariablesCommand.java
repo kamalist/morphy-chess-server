@@ -21,6 +21,7 @@ import org.apache.commons.lang.StringUtils;
 
 import morphy.service.UserService;
 import morphy.user.UserSession;
+import morphy.utils.MorphyStringUtils;
 
 public class VariablesCommand extends AbstractCommand {
 	public VariablesCommand() {
@@ -51,7 +52,7 @@ public class VariablesCommand extends AbstractCommand {
 		
 		String[] matches = UserService.getInstance().completeHandle(userName);
 		if (matches.length > 1) {
-			userSession.send("Ambiguous handle \"" + userName + "\". Matches: " + toString(matches));
+			userSession.send("Ambiguous handle \"" + userName + "\". Matches: " + MorphyStringUtils.toDelimitedString(matches," "));
 			return;
 		}
 		if (matches.length == 1)
@@ -114,18 +115,10 @@ public class VariablesCommand extends AbstractCommand {
 		return Integer.parseInt(s);
 	}
 	
-	private String toString(String[] s) {
-		String tmp = java.util.Arrays.toString(s);
-		tmp = tmp.replaceAll("[","");
-		tmp = tmp.replaceAll(",","");
-		tmp = tmp.replaceAll("[","");
-		return tmp;
-	}
-	
 	public static enum variables {
 		myinterface("interface", String.class), myprivate("private",
 				String.class), time, inc, rated, open, bugopen, tourney, provshow, autoflag, minmovetime, prompt ("prompt",String.class), jprivate, kibitz, automail, pgn, mailmess, messreply, unobserve, shout, cshout, availinfo, kiblevel, tell, ctell, chanoff, silence, echo, tolerance, pin, notifiedby, highlight, availmin, availmax, gin, seek, showownseek, examine, noescape, style, flip, bell, width, height, ptime, tzone(
-				"tzone", String.class), lang("Lang", String.class), notakeback;
+				"tzone", String.class), lang("Lang", String.class), notakeback, busy ("busy",String.class);
 
 		variables() {
 			this.name = this.name();

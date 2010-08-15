@@ -20,29 +20,18 @@ package morphy.command;
 import morphy.service.UserService;
 import morphy.user.UserSession;
 
-public class NukeCommand extends AbstractCommand {
-	public NukeCommand() {
-		super("nuke");
+public class AnnounceCommand extends AbstractCommand {
+	public AnnounceCommand() {
+		super("announce");
 	}
 
-	public void process(String arguments, UserSession userSession) {		
-		arguments = arguments.trim();
-			
-		if (arguments.equals("") || arguments.indexOf(" ") != -1) {
+	public void process(String arguments, UserSession userSession) {
+		if (arguments.equals("")) {
 			userSession.send(getContext().getUsage());
 			return;
 		}
 		
-		UserSession s = UserService.getInstance().getUserSession(arguments);
-		if (s != null) {
-			String str = "Nuking: " + arguments.toLowerCase() + "\n";
-			if (s.getUser().isRegistered())
-				str += "Please leave a comment explaining why " + arguments + " was nuked.";
-			userSession.send(str);
-			s.send("**** You have been kicked out by " + userSession.getUser().getUserName() + "! ****\n\n\n\n");
-			s.disconnect();
-		} else {
-			userSession.send(arguments.toLowerCase() + " isn't logged in.");
-		}
+		UserService.getInstance().sendAnnouncement(userSession.getUser().getUserName(),arguments);
+		userSession.send("(Announcement sent to " + UserService.getInstance().getLoggedInUserCount() + " players)");
 	}
 }

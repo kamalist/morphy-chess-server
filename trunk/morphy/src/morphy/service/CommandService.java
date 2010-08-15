@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import morphy.command.AddCensorCommand;
 import morphy.command.AddGnotifyCommand;
@@ -32,6 +34,8 @@ import morphy.command.AddNotifyCommand;
 import morphy.command.AddPlayerCommand;
 import morphy.command.AddRemoteCommand;
 import morphy.command.AdminCommand;
+import morphy.command.AnnounceCommand;
+import morphy.command.AnnunregCommand;
 import morphy.command.Command;
 import morphy.command.DateCommand;
 import morphy.command.FingerCommand;
@@ -47,6 +51,8 @@ import morphy.command.RemoveListCommand;
 import morphy.command.SetCommand;
 import morphy.command.ShoutCommand;
 import morphy.command.ShowListCommand;
+import morphy.command.ShutdownCommand;
+import morphy.command.SummonCommand;
 import morphy.command.TellCommand;
 import morphy.command.VariablesCommand;
 import morphy.command.WhoCommand;
@@ -57,19 +63,26 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+@SuppressWarnings("unused")
 public class CommandService implements Service {
 	protected static Log LOG = LogFactory.getLog(CommandService.class);
+	protected static Pattern listAliasPattern = Pattern
+			.compile("(\\+|-|=)(fm|im|gm|wfm|wim|wgm|blind|teams|computer|" +
+					"tm|ca|sr|td|censor|gnotify|noplay|" +
+					"notify|channel|idlenotify)");
 	
 	private static final Class<?>[] socketCommandsClasses = { 
-	 	AddCensorCommand.class,
-	 	AddGnotifyCommand.class,
+//	 	AddCensorCommand.class,
+//	 	AddGnotifyCommand.class,
 	 	AddListCommand.class,
-	 	AddNopartnerCommand.class,
-		AddNoplayCommand.class,
-		AddNotifyCommand.class,
-		AddPlayerCommand.class,
-		AddRemoteCommand.class,
+//	 	AddNopartnerCommand.class,
+//		AddNoplayCommand.class,
+//		AddNotifyCommand.class,
+//		AddPlayerCommand.class,
+//		AddRemoteCommand.class,
 		AdminCommand.class,
+		AnnounceCommand.class,
+		AnnunregCommand.class,
 	
 		DateCommand.class,
 		
@@ -92,6 +105,8 @@ public class CommandService implements Service {
 		SetCommand.class,
 		ShoutCommand.class,
 		ShowListCommand.class,
+		ShutdownCommand.class,
+		SummonCommand.class,
 		
 		TellCommand.class,
 		
@@ -168,7 +183,57 @@ public class CommandService implements Service {
 		//debug();
 		
 	}
+	
+	public void processCommandAndCheckAliases(String command,SocketChannelUserSession userSession) {
+		command = command.trim();
+		String keyword = null;
+		String content = null;
+		
+		int spaceIndex = command.indexOf(' ');
+		if (spaceIndex == -1) {
+			keyword = command.toLowerCase();
+			content = "";
+		} else {
+			keyword = command.substring(0, spaceIndex).toLowerCase();
+			content = command.substring(spaceIndex + 1);
+		}
+		
+		Matcher m = listAliasPattern.matcher(keyword);
+		if (m.matches()) {
+			String what = regexHelper(m.group(1));
+			String whatlist = m.group(2);
+			String s = what + " " + whatlist + " " + content;
+			processCommand(s,userSession);
+		} else if (keyword.equals("=") && content.equals("")) { 
+			processCommand("showlist",userSession);
+		} else if (keyword.equals(".")) {
+			morphy.user.UserSession sess = userSession.getLastPersonToldTo();
+			if (sess != null) {
+				processCommand("tell " + sess.getUser().getUserName() + " " + content,userSession);
+			} else { userSession.send("I don't know who to say that to."); return; }
+		} else if (keyword.equals(",")) {
+			morphy.channel.Channel c = userSession.getLastChannelToldTo();
+			if (c != null) {
+				processCommand("tell " + c.getNumber() + " " + content,userSession);
+			} else { userSession.send("I don't know who to say that to."); return; }
+		} else {
+			processCommand(command,userSession);
+		}
+	}
 
+	/**
+	 * Assists processCommandAndCheckAliases method.
+	 */
+	private String regexHelper(String s) {
+		if (s.equals("+"))
+			return "addlist";
+		if (s.equals("="))
+			return "showlist";
+		if (s.equals("-"))
+			return "removelist";
+		return null;
+	}
+	
 	public void dispose() {
 		commands.clear();
 		firstWordToCommandMap.clear();
@@ -204,10 +269,10 @@ public class CommandService implements Service {
 		if (socketCommand == null) {
 			userSession.send(keyword + ": Command not found.");
 		} else if (socketCommand.willProcess(userSession)) {
-//			if (keyword.matches("^[qui]$")) {
 			if (keyword.equals("q") || keyword.equals("qu")) {
 				userSession.send("" + UserService.getInstance().getTags(userSession.getUser().getUserName()) + 
 						" tells you: The command 'quit' cannot be abbreviated.");
+				return;
 			} else {
 				socketCommand.process(content, userSession);
 			}

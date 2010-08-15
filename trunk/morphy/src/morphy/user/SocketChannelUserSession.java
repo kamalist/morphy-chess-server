@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TreeMap;
 
+import morphy.channel.Channel;
 import morphy.service.ScreenService;
 import morphy.service.SocketConnectionService;
 import morphy.service.UserService;
@@ -46,6 +47,8 @@ public class SocketChannelUserSession implements UserSession,
 	protected long loginTime = System.currentTimeMillis();
 	protected Map<UserSessionKey, Object> objectMap = new TreeMap<UserSessionKey, Object>();
 	protected Timer idleLogoutTimer = new Timer();
+	protected Channel lastChannelToldTo = null;
+	protected UserSession lastPersonToldTo = null;
 	
 	public SocketChannelUserSession(User user, SocketChannel channel) {
 		this.user = user;
@@ -93,19 +96,19 @@ public class SocketChannelUserSession implements UserSession,
 				if (LOG.isErrorEnabled())
 					LOG.error("Error disconnecting socket channel", t);
 			}
-		}
-
-		if (user.getUserName() != null) {
-			UserService.getInstance().removeLoggedInUser(this);
-			SocketConnectionService.getInstance().removeUserSession(this);
-
-			if (LOG.isInfoEnabled()) {
-				LOG.info("Disconnected user " + user.getUserName());
-			}	
 			
-			UserSession[] sessions = UserService.getInstance().fetchAllUsersWithVariable("pin","1");
-			for(UserSession s : sessions) {
-				s.send(String.format("[%s has disconnected.]",getUser().getUserName()));
+			if (user.getUserName() != null) {
+				UserService.getInstance().removeLoggedInUser(this);
+				SocketConnectionService.getInstance().removeUserSession(this);
+
+				if (LOG.isInfoEnabled()) {
+					LOG.info("Disconnected user " + user.getUserName());
+				}	
+				
+				UserSession[] sessions = UserService.getInstance().fetchAllUsersWithVariable("pin","1");
+				for(UserSession s : sessions) {
+					s.send(String.format("[%s has disconnected.]",getUser().getUserName()));
+				}
 			}
 		}
 	}
@@ -199,7 +202,7 @@ public class SocketChannelUserSession implements UserSession,
 
 	public void touchLastReceivedTime() {
 		lastReceivedTime = System.currentTimeMillis();
-		//scheduleIdleTimeout();
+		scheduleIdleTimeout();
 	}
 
 	public int compareTo(UserSession o) {
@@ -222,5 +225,21 @@ public class SocketChannelUserSession implements UserSession,
 			}
 		}
 		return b.toString();
+	}
+
+	public Channel getLastChannelToldTo() {
+		return lastChannelToldTo;
+	}
+
+	public void setLastChannelToldTo(Channel lastChannelToldTo) {
+		this.lastChannelToldTo = lastChannelToldTo;
+	}
+
+	public UserSession getLastPersonToldTo() {
+		return lastPersonToldTo;
+	}
+
+	public void setLastPersonToldTo(UserSession lastPersonToldTo) {
+		this.lastPersonToldTo = lastPersonToldTo;
 	}
 }

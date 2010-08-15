@@ -45,6 +45,21 @@ public class UserService implements Service {
 				.getInstance();
 		return s.isOnList(s.getList("admin"), username);
 	}
+	
+	/**
+	 * Returns whether the player with the given username is idle.
+	 * Returns TRUE if the player is not online.
+	 * Otherwise returns if the user is over 5 mins idle or has the busy string set.
+	 */
+	public boolean isIdle(String username) {
+		UserSession s = getUserSession(username);
+		if (s == null)
+			return true;
+
+		return s.getIdleTimeMillis() > 1000 * 60 * 5
+				|| !s.getUser().getUserVars().getVariables().get("busy")
+						.equals("");
+	}
 
 	public String generateAnonymousHandle() {
 		StringBuilder s = new StringBuilder();
@@ -54,15 +69,17 @@ public class UserService implements Service {
 		return "Guest" + s.toString();
 	}
 	
-	public String generatePassword(int minlen,int maxlen) {
+	public String generatePassword(int maxlen) {
 		StringBuilder s = new StringBuilder();
-		for (int i = minlen; i < maxlen; i++) {
+		for (int i = 0; i < maxlen; i++) {
 			s.append((char) (65 + new Random().nextInt(26)));
 		}
-		return s.toString();
+		return s.toString().toLowerCase();
 	}
 
 	public String[] completeHandle(String partial) {
+		if (isLoggedIn(partial)) return new String[] { partial };
+		
 		String[] allkeys = userNameToSessionMap.keySet().toArray(new String[0]);
 
 		List<String> matches = new ArrayList<String>();
@@ -110,6 +127,11 @@ public class UserService implements Service {
 	}
 
 	public void dispose() {
+//		final UserSession[] arr = getLoggedInUsers();
+//		for(UserSession s : arr) {
+//			s.disconnect();
+//		}
+		
 		userNameToSessionMap.clear();
 	}
 
@@ -145,8 +167,8 @@ public class UserService implements Service {
 		}
 	}
 
-	public void sendAnnouncement(String message) {
-		String announcement = "    **ANNOUNCEMENT** " + message;
+	public void sendAnnouncement(String username,String message) {
+		String announcement = "  **ANNOUNCEMENT**" + (username.equals("")?"":" from " + username + ":")+ " " + message + "\n";
 		for (UserSession session : getLoggedInUsers()) {
 			session.send(announcement);
 		}

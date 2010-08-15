@@ -106,6 +106,7 @@ public class Morphy {
 				}
 			}
 			LOG.info("Shut down Morphy.");
+			System.exit(0);
 		}
 	}
 
@@ -117,7 +118,7 @@ public class Morphy {
 		Thread t = new Thread() {
 			public void run() {
 				if (LOG.isInfoEnabled()) {
-					LOG.info("Using timezone " + TimeZoneUtils.getAbbreviation(TimeZone.getDefault()));
+					LOG.info("Server located in timezone " + TimeZoneUtils.getAbbreviation(TimeZone.getDefault()));
 				}	
 			}
 		};

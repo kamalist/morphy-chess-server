@@ -35,6 +35,9 @@ public class DateCommand extends AbstractCommand {
 		// need to get user's timezone here from 'tzone' variable.
 		sdf.setTimeZone(TimeZoneUtils.getTimeZone(userSession.getUser()
 				.getUserVars().getVariables().get("tzone").toUpperCase()));
+		if (sdf.getTimeZone() == null)
+			sdf.setTimeZone(java.util.TimeZone.getDefault());
+		
 		b.append("Local time     - " + sdf.format(d) + "\n");
 		sdf.setTimeZone(java.util.TimeZone.getDefault());
 		b.append("Server time    - " + sdf.format(d) + "\n");

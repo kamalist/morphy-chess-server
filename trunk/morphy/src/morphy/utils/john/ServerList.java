@@ -20,9 +20,15 @@ package morphy.utils.john;
 import morphy.user.UserLevel;
 
 public class ServerList {
+	public enum ListType {
+		IPAddress,Username,Integer,String;
+	}
+	
 	private String name;
 	private UserLevel permissions;
 	private String tag;
+	private ListType type;
+	private boolean isPublic;
 
 	/**
 	 * Creates a new ServerList object.
@@ -30,10 +36,13 @@ public class ServerList {
 	 * @param permissions Permissions required to modify the list
 	 * @param tag Tag to be given to the player to show list status.
 	 */
-	public ServerList(String name,UserLevel permissions,String tag) {
+	public ServerList(String name, UserLevel permissions, ListType listType,
+			String tag,boolean isPublic) {
 		setName(name);
 		setPermissions(permissions);
+		setType(listType);
 		setTag(tag);
+		setPublic(isPublic);
 	}
 
 	protected void setName(String name) {
@@ -58,5 +67,21 @@ public class ServerList {
 
 	public String getTag() {
 		return tag;
+	}
+
+	protected void setType(ListType type) {
+		this.type = type;
+	}
+
+	public ListType getType() {
+		return type;
+	}
+
+	protected void setPublic(boolean isPublic) {
+		this.isPublic = isPublic;
+	}
+
+	public boolean isPublic() {
+		return isPublic;
 	}
 }
