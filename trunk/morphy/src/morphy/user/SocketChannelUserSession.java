@@ -49,6 +49,7 @@ public class SocketChannelUserSession implements UserSession,
 	protected Timer idleLogoutTimer = new Timer();
 	protected Channel lastChannelToldTo = null;
 	protected UserSession lastPersonToldTo = null;
+	protected boolean isPlaying = false;
 	
 	public SocketChannelUserSession(User user, SocketChannel channel) {
 		this.user = user;
@@ -103,7 +104,7 @@ public class SocketChannelUserSession implements UserSession,
 
 				if (LOG.isInfoEnabled()) {
 					LOG.info("Disconnected user " + user.getUserName());
-				}	
+				}
 				
 				UserSession[] sessions = UserService.getInstance().fetchAllUsersWithVariable("pin","1");
 				for(UserSession s : sessions) {
@@ -241,5 +242,13 @@ public class SocketChannelUserSession implements UserSession,
 
 	public void setLastPersonToldTo(UserSession lastPersonToldTo) {
 		this.lastPersonToldTo = lastPersonToldTo;
+	}
+
+	public boolean isPlaying() {
+		return isPlaying;
+	}
+
+	public void setPlaying(boolean isPlaying) {
+		this.isPlaying = isPlaying;
 	}
 }
