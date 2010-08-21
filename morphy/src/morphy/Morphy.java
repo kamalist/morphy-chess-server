@@ -22,6 +22,7 @@ import java.util.TimeZone;
 
 import morphy.service.ChannelService;
 import morphy.service.CommandService;
+import morphy.service.GameService;
 import morphy.service.PreferenceService;
 import morphy.service.ServerListManagerService;
 import morphy.service.Service;
@@ -128,6 +129,6 @@ public class Morphy {
 				ThreadService.getInstance(), CommandService.getInstance(),
 				SocketConnectionService.getInstance(),
 				ChannelService.getInstance(), UserService.getInstance(),
-				ServerListManagerService.getInstance() };
+				ServerListManagerService.getInstance(),GameService.getInstance() };
 	}
 }
