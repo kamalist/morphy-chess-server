@@ -192,7 +192,7 @@ public class SocketConnectionService implements Service {
 		if (name.equalsIgnoreCase("g"))
 			name = "guest";
 		
-		if (name.matches("\\w{3,15}")) {
+		if (name.matches("\\w{3,17}")) {
 			if (LOG.isInfoEnabled()) {
 				LOG.info("name=" + name);
 			}
@@ -206,35 +206,35 @@ public class SocketConnectionService implements Service {
 					name = instance.generateAnonymousHandle();
 				} while (instance.isLoggedIn(name));
 
-				userSession
-						.send("Logging you in as \""
-								+ name
-								+ "\"; you may use this name to play unrated games.\n"
-								+ "(After logging in, do \"help register\" for more info on how to register.)\n\n"
-								+ "" + "Press return to enter the server as \""
-								+ name + "\":\n");
+//				userSession
+//						.send("Logging you in as \""
+//								+ name
+//								+ "\"; you may use this name to play unrated games.\n"
+//								+ "(After logging in, do \"help register\" for more info on how to register.)\n\n"
+//								+ "" + "Press return to enter the server as \""
+//								+ name + "\":\n");
 			}
 			
 			isGuest = !instance.isRegistered(name);
 			
 			if (isGuest) {
-				userSession.send("\"" + name + "\" is not a registered name. You may use this name to play unrated games.\n" +
+				sendWithoutPrompt("\"" + name + "\" is not a registered name. You may use this name to play unrated games.\n" +
 						"(After logging in, do \"help register\" for more info on how to register.)\n\n" +
 						"" +
-						"Press return to enter the server as \"" + name + "\":");
+						"Press return to enter the server as \"" + name + "\":",userSession);
 				//return;
 			} else {
-				userSession
-						.send("\""
+				sendWithoutPrompt("\""
 								+ name
 								+ "\" is a registered name.  If it is yours, type the password.\n"
 								+ "If not, just hit return to try another name.\n\n"
-								+ "" + "password: ");
+								+ "" + "password: ",userSession);
 				
 				try {
-					DBConnection conn = new DBConnection();
-					conn.executeQuery("SELECT `password` FROM `users` WHERE `username` = '" + name + "'");
-					java.sql.ResultSet r = conn.getStatement().getResultSet();
+					DBConnection conn = DBConnectionService.getInstance().getDBConnection();
+					java.sql.Statement s = conn.getStatement();
+					s.execute("SELECT `password` FROM `users` WHERE `username` = '" + name + "'");
+					java.sql.ResultSet r = s.getResultSet();
 					if (r.next()) {
 						String actualpass = r.getString(1);
 						
@@ -248,92 +248,80 @@ public class SocketConnectionService implements Service {
 							//userSession.disconnect();
 						}
 					}
-					conn.closeConnection();
 				} catch(java.sql.SQLException e) {
 					e.printStackTrace(System.err);
 				}
 			}
 
-			if (true) {
-				if (instance.isLoggedIn(name)) {
-					userSession.send(name + " is already logged in - kicking them out.");
-					
-					UserSession sess = instance.getUserSession(name);
-					sess.send("**** " + name + " has arrived - you can't both be logged in. ****");
-					sess.disconnect();
-				}
-				userSession.getUser().setUserName(name);
-				userSession.getUser().setPlayerType(PlayerType.Human);
-				userSession.getUser().setUserLevel(UserLevel.Player);
-				userSession.getUser().setRegistered(!isGuest);
-				userSession.getUser().setUserVars(new morphy.user.UserVars(userSession.getUser()));
-				userSession.setHasLoggedIn(true);
-				instance.addLoggedInUser(userSession);
+			if (instance.isLoggedIn(name)) {
+				userSession.send(name + " is already logged in - kicking them out.");
+				
+				UserSession sess = instance.getUserSession(name);
+				sess.send("**** " + name + " has arrived - you can't both be logged in. ****");
+				sess.disconnect();
+			}
+			
+			userSession.getUser().setUserName(name);
+			userSession.getUser().setPlayerType(PlayerType.Human);
+			userSession.getUser().setUserLevel(UserLevel.Player);
+			userSession.getUser().setRegistered(!isGuest);
+			userSession.getUser().setUserVars(new morphy.user.UserVars(userSession.getUser()));
+			userSession.setHasLoggedIn(true);
+			instance.addLoggedInUser(userSession);
 
-				boolean isHeadAdmin = false;
+			boolean isHeadAdmin = false;
 
-				DBConnection conn = new DBConnection();
-				conn
-						.executeQuery("UPDATE `users` SET `lastlogin` = CURRENT_TIMESTAMP, `ipaddress` = '"
-								+ SocketUtils.getIpAddress(userSession.getChannel().socket()) + "'");
-
-				boolean b = conn
-						.executeQuery("SELECT `adminLevel` FROM `users` WHERE `username` = '"
-								+ name + "'");
-				if (b) {
-					try {
-						java.sql.ResultSet r = conn.getStatement()
-								.getResultSet();
-						if (r.next()) {
-							String level = r.getString(1);
-							UserLevel val = UserLevel.valueOf(level);
-							userSession.getUser().setUserLevel(val);
-							if (val == UserLevel.Admin
-									|| val == UserLevel.SuperAdmin
-									|| val == UserLevel.HeadAdmin) {
-								ServerListManagerService s = ServerListManagerService
-										.getInstance();
-								s.getElements().get(s.getList("admin")).add(
-										name);
-							}
-
-							if (val == UserLevel.HeadAdmin) {
-								isHeadAdmin = true;
-							}
+			DBConnection conn = new DBConnection();
+			conn.executeQuery("UPDATE `users` SET `lastlogin` = CURRENT_TIMESTAMP, `ipaddress` = '"
+							+ SocketUtils.getIpAddress(userSession.getChannel().socket()) + "' WHERE `username` = '" + name + "'");
+			java.sql.ResultSet r = conn.executeQueryWithRS("SELECT `adminLevel` FROM `users` WHERE `username` = '" + name + "'");
+				try {
+					if (r.next()) {
+						String level = r.getString(1);
+						UserLevel val = UserLevel.valueOf(level);
+						userSession.getUser().setUserLevel(val);
+						if (val == UserLevel.Admin
+								|| val == UserLevel.SuperAdmin
+								|| val == UserLevel.HeadAdmin) {
+							ServerListManagerService s = ServerListManagerService
+									.getInstance();
+							s.getElements().get(s.getList("admin")).add(
+									name);
 						}
-					} catch (java.sql.SQLException e) {
-						if (LOG.isErrorEnabled()) {
-							LOG
-									.error("Unable to set user level from database for name \""
-											+ name + "\"");
-							LOG.error(e);
+
+						if (val == UserLevel.HeadAdmin) {
+							isHeadAdmin = true;
 						}
 					}
-				}
-				conn.closeConnection();
-
-				StringBuilder loginMessage = new StringBuilder(200);
-				loginMessage.append(formatMessage(userSession,
-						"**** Starting FICS session as " 
-								+ instance.getTags(name) + " ****\n"));
-				if (isHeadAdmin)
-					loginMessage.append("\n  ** LOGGED IN AS HEAD ADMIN **\n");
-				loginMessage.append(ScreenService.getInstance().getScreen(
-						Screen.SuccessfulLogin));
-				userSession.send(loginMessage.toString());
-				
-				UserSession[] sessions = UserService.getInstance().fetchAllUsersWithVariable("pin","1");
-				
-				for(UserSession s : sessions) {
-					UserLevel adminLevel = s.getUser().getUserLevel();
-					
-					if (adminLevel == UserLevel.Admin || adminLevel == UserLevel.SuperAdmin || adminLevel == UserLevel.HeadAdmin) {
-						s.send(String.format("[%s [[%s] has connected.]",
-									userSession.getUser().getUserName(),
-									SocketUtils.getIpAddress(userSession.getChannel().socket())));
-					} else {
-						s.send(String.format("[%s has connected.]",userSession.getUser().getUserName()));
+				} catch (java.sql.SQLException e) {
+					if (LOG.isErrorEnabled()) {
+						LOG
+								.error("Unable to set user level from database for name \""
+										+ name + "\"");
+						LOG.error(e);
 					}
+				}
+
+			StringBuilder loginMessage = new StringBuilder(200);
+			loginMessage.append(formatMessage(userSession,
+					"**** Starting FICS session as " 
+							+ instance.getTags(name) + " ****\n"));
+			if (isHeadAdmin)
+				loginMessage.append("\n  ** LOGGED IN AS HEAD ADMIN **\n");
+			loginMessage.append(ScreenService.getInstance().getScreen(
+					Screen.SuccessfulLogin));
+			userSession.send(loginMessage.toString());
+			
+			UserSession[] sessions = UserService.getInstance().fetchAllUsersWithVariable("pin","1");
+			for(UserSession s : sessions) {
+				UserLevel adminLevel = s.getUser().getUserLevel();
+				
+				if (adminLevel == UserLevel.Admin || adminLevel == UserLevel.SuperAdmin || adminLevel == UserLevel.HeadAdmin) {
+					s.send(String.format("[%s [[%s] has connected.]",
+								userSession.getUser().getUserName(),
+								SocketUtils.getIpAddress(userSession.getChannel().socket())));
+				} else {
+					s.send(String.format("[%s has connected.]",userSession.getUser().getUserName()));
 				}
 			}
 		} else {

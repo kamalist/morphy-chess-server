@@ -61,7 +61,7 @@ public class IVariablesCommand extends AbstractCommand {
 		
 		StringBuilder builder = new StringBuilder(900);
 		
-		builder.append("Interface variable settings of" + personQueried.getUser().getUserName() + ":\n");
+		builder.append("Interface variable settings of " + personQueried.getUser().getUserName() + ":\n\n");
 
 		builder.append("compressmove=0     defprompt=0        lock=0             ms=1\n");
 		builder.append("seekremove=0       startpos=1         block=0            gameinfo=1\n");

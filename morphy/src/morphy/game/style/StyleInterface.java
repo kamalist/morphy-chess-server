@@ -17,11 +17,11 @@
  */
 package morphy.game.style;
 
-import morphy.game.Board;
+import morphy.game.Game;
 import morphy.user.UserSession;
 
 /** All style implementations (1-15) should implement this interface. */
 public interface StyleInterface {
 	/** Prints <tt>board</tt> to <tt>userSession</tt> */
-	public void print(UserSession userSession,Board board);
+	public void print(UserSession userSession,Game g);
 }

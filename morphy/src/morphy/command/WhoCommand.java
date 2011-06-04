@@ -18,6 +18,7 @@
 package morphy.command;
 
 import morphy.service.UserService;
+import morphy.user.SocketChannelUserSession;
 import morphy.user.UserSession;
 
 import org.apache.commons.lang.StringUtils;
@@ -34,8 +35,15 @@ public class WhoCommand extends AbstractCommand {
 		StringBuilder output = new StringBuilder(150);
 		int counter = 0;
 		for (int i = 0; i < users.length; i++) {
-			output.append(StringUtils.rightPad(
-					us.getTags(users[i].getUser().getUserName()), 20));
+			String pChar = " ";
+			SocketChannelUserSession s = (SocketChannelUserSession)users[i];
+			if (s.isPlaying()) { pChar = "^"; } else
+			if (s.isExamining()) { pChar = "#"; } else
+			if (s.getIdleTimeMillis() > 5000 || 
+				!s.getUser().getUserVars().getVariables().get("busy").equals("")) { pChar = "."; } else
+			if (s.getUser().getUserVars().getVariables().get("tourney").equals("1")) { pChar = "&"; }
+			
+			output.append(String.format("%4s","9999") + " " + pChar + StringUtils.rightPad(us.getTags(s.getUser().getUserName()), 20));
 			if (counter >= 4) {
 				output.append("\n");
 				counter = 0;

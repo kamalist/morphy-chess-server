@@ -22,6 +22,7 @@ import java.sql.ResultSetMetaData;
 import java.util.HashMap;
 
 import morphy.Morphy;
+import morphy.service.DBConnectionService;
 import morphy.utils.john.DBConnection;
 
 public class UserVars {
@@ -40,6 +41,7 @@ public class UserVars {
 		
 		loadFromDB();
 		variables.put("showadmintag","1");
+		variables.put("showsrtag","1");
 		variables.put("busy","");
 		
 		// if id is set, obviously a record in the db exists.
@@ -107,10 +109,9 @@ public class UserVars {
 	}
 	
 	public void loadFromDB() {
-		DBConnection conn = new DBConnection();
-		conn.executeQuery("SELECT * FROM `user_vars` WHERE `user_id` = (SELECT `id` FROM `users` WHERE `username` = '" + getUser().getUserName() + "')");
+		DBConnection conn = DBConnectionService.getInstance().getDBConnection();
+		ResultSet r = conn.executeQueryWithRS("SELECT * FROM `user_vars` WHERE `user_id` = (SELECT `id` FROM `users` WHERE `username` = '" + getUser().getUserName() + "')");
 		try {
-			ResultSet r = conn.getStatement().getResultSet();
 			ResultSetMetaData meta = r.getMetaData();
 			int count = meta.getColumnCount();
 			if (r.next()) {
@@ -121,7 +122,6 @@ public class UserVars {
 				}
 			}
 			
-		conn.closeConnection();
 		} catch(java.sql.SQLException e) {
 			Morphy.getInstance().onError("SQLException thrown in class UserVars method loadFromDB();",e);
 		}
@@ -143,6 +143,7 @@ public class UserVars {
 	
 	public void dumpToDB() {
 		if (getUser() == null || !getUser().isRegistered()) return;
+		if (getUser().getUserLevel() == UserLevel.Guest) return;
 		
 		HashMap<String,String> variables = getVariables();
 		String[] keys = variables.keySet().toArray(new String[0]);
@@ -150,22 +151,34 @@ public class UserVars {
 		
 		String username = getUser().getUserName();
 		Object query = null;
-		DBConnection conn = new DBConnection();
-		conn.executeQuery("SELECT `id` FROM `user_vars` WHERE `user_id` = (SELECT `id` FROM `users` WHERE `username` = '" + username + "')");
-		
-		StringBuilder cols = new StringBuilder(200);
-		StringBuilder vals = new StringBuilder(100);
+		DBConnection conn = DBConnectionService.getInstance().getDBConnection();
+		ResultSet rs = conn.executeQueryWithRS("SELECT `id` FROM `users` WHERE `username` = '" + username + "'");
+		int userid = 0;
+		try { 
+			if (rs.next()) {
+				userid = rs.getInt(1);
+			}
+		} catch(java.sql.SQLException e) { Morphy.getInstance().onError(e); }
+		StringBuilder insertcols = new StringBuilder(200);
+		StringBuilder insertvals = new StringBuilder(200);
 		for(int i=0;i<keys.length;i++) {
-			cols.append("`" + keys[i] + "`");
-			if (i != keys.length-1) cols.append(",");
-			vals.append("'" + values[i] + "'");
-			if (i != keys.length-1) vals.append(",");
+			if (keys[i].equals("busy") || keys[i].equals("showadmintag") || keys[i].equals("showsrtag") || keys[i].equals("user_id") || keys[i].equals("id")) continue;
+			insertcols.append("`" + keys[i] + "`");
+			if (i != keys.length-1) insertcols.append(",");
+			insertvals.append("'" + values[i] + "'");
+			if (i != keys.length-1) insertvals.append(",");
 		}
 		
-		query = "INSERT IGNORE INTO `user_vars` (`id`,`user_id`," + cols.toString() + ") VALUES (NULL,(SELECT `id` FROM `users` WHERE `username` = '" + username + "')," + vals.toString() + ")";
+		StringBuilder update = new StringBuilder(500);
+		for(int i=0;i<keys.length;i++) {
+			if (keys[i].equals("busy") || keys[i].equals("showadmintag") || keys[i].equals("showsrtag") || keys[i].equals("user_id") || keys[i].equals("id")) continue;
+			update.append("`" + keys[i] + "` = '" + values[i] + "'");
+			if (i != keys.length-1) update.append(",");
+		}
+		
+		query = "INSERT INTO `user_vars` (`id`,`user_id`," + insertcols.toString() + ") VALUES (NULL," + userid + "," + insertvals.toString() + ") ON DUPLICATE KEY UPDATE "+update.toString();
 
 		conn.executeQuery(query.toString());
-		conn.closeConnection();
 		
 //		query = new StringBuilder("UPDATE `user_vars` SET ");
 //		

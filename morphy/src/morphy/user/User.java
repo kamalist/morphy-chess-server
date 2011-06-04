@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import morphy.Morphy;
+import morphy.service.DBConnectionService;
 import morphy.utils.john.DBConnection;
 
 public class User {
@@ -53,16 +54,14 @@ public class User {
 	}
 	
 	private void loadFromDB() {
-		DBConnection c = new DBConnection();
-		c.executeQuery("SELECT `email`,UNIX_TIMESTAMP(`registeredSince`) FROM `users` WHERE `username` = '" + getUserName() + "'");
+		DBConnection c = DBConnectionService.getInstance().getDBConnection();
+		java.sql.ResultSet r = c.executeQueryWithRS("SELECT `email`,UNIX_TIMESTAMP(`registeredSince`) FROM `users` WHERE `username` = '" + getUserName() + "'");
 		try {
-			java.sql.ResultSet r = c.getStatement().getResultSet();
 			if (r.next()) {
 				setEmail(r.getString(1));
 				long millis = Long.parseLong(r.getString(2)+"000");
 				setRegisteredSince(millis);
 			}
-			c.closeConnection();
 		} catch(java.sql.SQLException e) {
 			Morphy.getInstance().onError("Error reading user info from database in User.loadFromDB()",e);
 		}
@@ -155,5 +154,13 @@ public class User {
 
 	public void setRegisteredSince(long registeredSince) {
 		this.registeredSince = registeredSince;
+	}
+
+	public Formula getFormula() {
+		return formula;
+	}
+
+	public void setFormula(Formula formula) {
+		this.formula = formula;
 	}
 }

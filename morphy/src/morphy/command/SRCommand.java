@@ -17,21 +17,29 @@
  */
 package morphy.command;
 
-import morphy.Morphy;
-import morphy.service.UserService;
+import morphy.service.ServerListManagerService;
 import morphy.user.UserSession;
 
-public class ShutdownCommand extends AbstractCommand {
-	public ShutdownCommand() {
-		super("shutdown");
+public class SRCommand extends AbstractCommand {
+	public SRCommand() {
+		super("sr");
 	}
 
 	public void process(String arguments, UserSession userSession) {
-		UserService us = UserService.getInstance();
-		UserSession[] arr = us.getLoggedInUsers();
-		for(UserSession s : arr) {
-			s.send(" **** Server is shutting down now. **** ");
+		ServerListManagerService mgr = ServerListManagerService.getInstance();
+		if (!mgr.isOnList(mgr.getList("SR"),userSession.getUser().getUserName())) {
+			userSession.send("Only SRs are allowed to use that command.");
+			return;
 		}
-		Morphy.getInstance().shutdown();
+		
+		morphy.user.UserVars uv = userSession.getUser().getUserVars();
+		String val = uv.getVariables().get("showsrtag");
+		if (val.equals("1")) {
+			uv.getVariables().put("showsrtag","0");
+			userSession.send("SR mode (SR) is now not shown.");
+		} else if (val.equals("0")) {
+			uv.getVariables().put("showsrtag","1");
+			userSession.send("SR mode (SR) is now shown.");
+		}
 	}
 }
