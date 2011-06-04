@@ -17,6 +17,6 @@
  */
 package morphy.game;
 
-public class Board {
-	// TODO content
+public enum Variant {
+	blitz,lightning,bughouse,frbughouse,crazyhouse,losers,suicide,frcrazyhouse,atomic,standard
 }

@@ -81,6 +81,14 @@ public class Channel implements Comparable<Channel> {
 	public int getNumber() {
 		return number;
 	}
+	
+	public UserLevel getLevel() {
+		return level;
+	}
+	
+	public ServerList[] getCanJoinLists() {
+		return canJoin;
+	}
 
 	public boolean hasAccess(User user) {
 		boolean result = false;

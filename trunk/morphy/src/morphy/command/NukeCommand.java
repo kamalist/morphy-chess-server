@@ -33,6 +33,28 @@ public class NukeCommand extends AbstractCommand {
 			return;
 		}
 		
+		
+		String[] matches = UserService.getInstance().completeHandle(arguments);
+		if (matches.length > 1) {
+			StringBuilder toprint = new StringBuilder("Ambiguous name " + 
+					arguments + ":\n-- Matches: " + matches.length + " player(s) --\n");
+			for(int i=0;i<matches.length;i++) { 
+				toprint.append(matches[i]);
+				if (i != matches.length-1) { 
+					toprint.append(" "); 
+				} 
+			}
+			userSession.send(toprint.toString());
+			return;
+		} else if (matches.length == 1) { 
+			arguments = matches[0];
+		}
+		
+//		if (!UserService.getInstance().isLoggedIn(arguments)) {
+//			userSession.send(arguments + " is not logged in.");
+//			return;
+//		}
+		
 		UserSession s = UserService.getInstance().getUserSession(arguments);
 		if (s != null) {
 			String str = "Nuking: " + arguments.toLowerCase() + "\n";

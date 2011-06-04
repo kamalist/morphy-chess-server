@@ -17,7 +17,6 @@
  */
 package morphy.service;
 
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -63,8 +62,9 @@ public class UserService implements Service {
 
 	public String generateAnonymousHandle() {
 		StringBuilder s = new StringBuilder();
+		Random r = new Random();
 		for (int i = 0; i < 4; i++) {
-			s.append((char) (65 + new Random().nextInt(26)));
+			s.append((char) (65 + r.nextInt(26)));
 		}
 		return "Guest" + s.toString();
 	}
@@ -77,6 +77,15 @@ public class UserService implements Service {
 		return s.toString().toLowerCase();
 	}
 
+	/**
+	 * Returns the list of usernames that start with the <tt>partial</tt> parameter.
+	 * If the username <tt>partial</tt> is logged on, returns that user.
+	 * Otherwise, returns all users starting with <tt>partial</tt>.
+	 * If more than one value is in the array, the user needs to be told that that handle is ambiguous.
+	 * In this algorithm, online users should be given priority.
+	 * @param partial
+	 * @return
+	 */
 	public String[] completeHandle(String partial) {
 		if (isLoggedIn(partial)) return new String[] { partial };
 		
@@ -84,7 +93,7 @@ public class UserService implements Service {
 
 		List<String> matches = new ArrayList<String>();
 		for (String s : allkeys) {
-			if (s.startsWith(partial))
+			if (s.toLowerCase().startsWith(partial.toLowerCase()))
 				matches.add(s);
 		}
 
@@ -100,6 +109,7 @@ public class UserService implements Service {
 		}
 	}
 
+	/** O(N) performance */
 	public UserSession[] fetchAllUsersWithVariable(String variable, String value) {
 		List<UserSession> list = new ArrayList<UserSession>();
 
@@ -179,18 +189,13 @@ public class UserService implements Service {
 			return getUserSession(username).getUser().isRegistered();
 		} else {
 			try {
-				DBConnection conn = new DBConnection();
-				boolean hasResults = conn
-						.executeQuery("SELECT `id` FROM `users` WHERE `username` = '"
+				DBConnection conn = DBConnectionService.getInstance().getDBConnection();
+				java.sql.ResultSet results = conn
+						.executeQueryWithRS("SELECT `id` FROM `users` WHERE `username` = '"
 								+ username + "'");
-				if (hasResults) {
-					ResultSet results = conn.getStatement().getResultSet();
 					if (results.next()) {
-						conn.closeConnection();
 						return true;
 					}
-				}
-				conn.closeConnection();
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
 			}
@@ -211,6 +216,10 @@ public class UserService implements Service {
 			if (service.isOnList(sl, username)) {
 				if (sl.equals(service.getList("admin"))) {
 					if (u.getUserVars().getVariables().get("showadmintag").equals("1")) {
+						tags.append(sl.getTag());
+					}
+				} else if (sl.equals(service.getList("sr"))) {
+					if (u.getUserVars().getVariables().get("showsrtag").equals("1")) {
 						tags.append(sl.getTag());
 					}
 				} else {

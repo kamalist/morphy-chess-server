@@ -20,18 +20,24 @@ package morphy.game;
 import java.util.ArrayList;
 import java.util.List;
 
+import board.Board;
+
 import morphy.user.UserSession;
 
 public class Game {
+	private int gameNumber;
 	private UserSession white;
 	private UserSession black;
 	private int time;
 	private int increment;
+	private boolean rated;
+	private Variant variant;
+	private Board board;
 	
 	List<UserSession> observers;
 	
 	public Game() {
-		observers = new ArrayList<UserSession>();
+		observers = new ArrayList<UserSession>(0);
 	}
 	
 	public Game(UserSession white,UserSession black,int time,int increment) {
@@ -50,7 +56,7 @@ public class Game {
 		return observers.toArray(new UserSession[observers.size()]);
 	}
 
-	protected void setWhite(UserSession white) {
+	public void setWhite(UserSession white) {
 		this.white = white;
 	}
 
@@ -58,7 +64,7 @@ public class Game {
 		return white;
 	}
 
-	protected void setBlack(UserSession black) {
+	public void setBlack(UserSession black) {
 		this.black = black;
 	}
 
@@ -66,7 +72,7 @@ public class Game {
 		return black;
 	}
 
-	protected void setTime(int time) {
+	public void setTime(int time) {
 		this.time = time;
 	}
 
@@ -74,11 +80,43 @@ public class Game {
 		return time;
 	}
 
-	protected void setIncrement(int increment) {
+	public void setIncrement(int increment) {
 		this.increment = increment;
 	}
 
 	public int getIncrement() {
 		return increment;
+	}
+
+	public void setBoard(Board board) {
+		this.board = board;
+	}
+
+	public Board getBoard() {
+		return board;
+	}
+
+	public void setGameNumber(int gameNumber) {
+		this.gameNumber = gameNumber;
+	}
+
+	public int getGameNumber() {
+		return gameNumber;
+	}
+
+	public void setRated(boolean rated) {
+		this.rated = rated;
+	}
+
+	public boolean isRated() {
+		return rated;
+	}
+
+	public void setVariant(Variant variant) {
+		this.variant = variant;
+	}
+
+	public Variant getVariant() {
+		return variant;
 	}
 }

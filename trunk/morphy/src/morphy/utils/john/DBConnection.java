@@ -31,9 +31,13 @@ public class DBConnection {
 	private enum DBType { MySQL,Derby; }
 	
 	private DBType type;
-	private Statement statement;
+	private Connection c;
 	
 	public DBConnection() {
+		this("localhost","morphyics","root","abcdef");
+	}
+	
+	public DBConnection(String address,String db,String username,String password) {
 		try {
 			DBType type = DBType.MySQL;
 			this.type = type;
@@ -44,12 +48,11 @@ public class DBConnection {
 			Class.forName(driver).newInstance();
 			
 			String connectionString = "";
-			if (type == DBType.MySQL) connectionString = "jdbc:mysql://localhost/morphyics?user=root&password=abcdef";
+			if (type == DBType.MySQL) connectionString = "jdbc:mysql://" + address + "/" + db + "?user=" + username + "&password=" + password + "";
 			if (type == DBType.Derby) connectionString = "jdbc:derby:MorphyICSDB;";
 			Connection conn = DriverManager.getConnection(connectionString);
-			
-			Statement s = conn.createStatement();
-			this.statement = s;
+
+			this.c = conn;
 		} catch(Exception e) {
 			if (LOG.isErrorEnabled()) {
 				LOG.error(e);
@@ -60,33 +63,46 @@ public class DBConnection {
 	/**
 	 * 
 	 * @return
+	 * @throws SQLException 
 	 */
-	public Statement getStatement() {
-		return statement;
+	public Statement getStatement() throws SQLException {
+		return c.createStatement();
 	}
 	
 	public Connection getConnection() {
+		return c;
+	}
+	
+	public java.sql.ResultSet executeQueryWithRS(String query) {
 		try {
-			return statement.getConnection();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace(System.err);
+			if (LOG.isInfoEnabled()) {
+				LOG.info("Executed query: " + query);
+			}
+			Statement s = getConnection().createStatement();
+			s.execute(query);
+			return s.getResultSet();
+		} catch(SQLException se) {
+			if (LOG.isErrorEnabled()) {
+				LOG.error(se);
+			}
+			return null;
 		}
-		return null;
 	}
 	
 	/**
-	 * Shorthand for getStatement().execute(query).
+	 * Shorthand for getConnection().getStatement().execute(query).
+	 * You can NOT retrieve ResultSets using this method, so they can only be INSERTs, etc.
 	 */
 	public boolean executeQuery(String query) {
 		try {
 			if (LOG.isInfoEnabled()) {
 				LOG.info("Executed query: " + query);
 			}
-			return statement.execute(query);
+			return getConnection().createStatement().execute(query);
 		} catch(SQLException se) {
 			if (LOG.isErrorEnabled()) {
 				LOG.error(se);
+				se.printStackTrace(System.err);
 			}
 			return false;
 		}
@@ -124,8 +140,7 @@ public class DBConnection {
 		
 		try {
 			if (type == DBType.MySQL) {
-				statement.getConnection().close();
-				statement.close();
+				c.close();
 			}
 		} catch(SQLException e) {
 			if (LOG.isErrorEnabled()) {

@@ -19,8 +19,11 @@ package morphy.user;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TreeMap;
 
@@ -30,6 +33,7 @@ import morphy.service.SocketConnectionService;
 import morphy.service.UserService;
 import morphy.service.ScreenService.Screen;
 import morphy.utils.BufferUtils;
+import morphy.utils.john.TimeZoneUtils;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -50,7 +54,8 @@ public class SocketChannelUserSession implements UserSession,
 	protected Channel lastChannelToldTo = null;
 	protected UserSession lastPersonToldTo = null;
 	protected boolean isPlaying = false;
-	
+	protected boolean isExamining = false;
+
 	public SocketChannelUserSession(User user, SocketChannel channel) {
 		this.user = user;
 		this.channel = channel;
@@ -166,9 +171,24 @@ public class SocketChannelUserSession implements UserSession,
 	public void send(String message) {
 		try {
 			if (isConnected()) {
+				String prompt = "fics% ";
+					HashMap<String,String> map = getUser().getUserVars().getVariables();
+				if (map.containsKey("prompt") && map.containsKey("ptime") && map.containsKey("tzone")) {
+					prompt = map.get("prompt");
+					boolean useptime = map.get("ptime").equals("1");
+					if (useptime) {
+						Date d = new Date();
+						java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm");
+						String tzone = getUser().getUserVars().getVariables().get("tzone").toUpperCase();
+						if (tzone.equals("SERVER")) tzone = TimeZone.getDefault().getDisplayName(TimeZone.getDefault().inDaylightTime(d),TimeZone.SHORT);
+						sdf.setTimeZone(TimeZoneUtils.getTimeZone(tzone));
+						prompt = sdf.format(d) + "_" + prompt;
+					}
+				}
+				
 				ByteBuffer buffer = BufferUtils
 						.createBuffer(SocketConnectionService.getInstance()
-								.formatMessage(this, message + "\nfics% "));
+								.formatMessage(this, message + "\n" + prompt + " "));
 				channel.write(buffer);
 			} else {
 				if (LOG.isInfoEnabled()) {
@@ -250,5 +270,13 @@ public class SocketChannelUserSession implements UserSession,
 
 	public void setPlaying(boolean isPlaying) {
 		this.isPlaying = isPlaying;
+	}
+	
+	public boolean isExamining() {
+		return isExamining;
+	}
+
+	public void setExamining(boolean isExamining) {
+		this.isExamining = isExamining;
 	}
 }

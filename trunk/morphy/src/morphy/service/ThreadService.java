@@ -171,8 +171,7 @@ public class ThreadService implements Service {
 	 * @return The Future, may return null if there was an error scheduling the
 	 *         Runnable or if execution was vetoed.
 	 */
-	@SuppressWarnings("unchecked")
-	public Future scheduleOneShot(long delay, Runnable runnable) {
+	public Future<?> scheduleOneShot(long delay, Runnable runnable) {
 		if (!Morphy.getInstance().isShutdown()) {
 			try {
 				return executor.schedule(new RunnableExceptionDecorator(

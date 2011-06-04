@@ -17,6 +17,14 @@
  */
 package morphy.service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import morphy.game.Game;
+import morphy.game.MatchParams;
+import morphy.user.UserSession;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -25,12 +33,37 @@ public class GameService implements Service {
 	private static final GameService singletonInstance = new GameService();
 	
 	protected int mostConcurrentGames = 0;
+	protected HashMap<UserSession,Game> map = new HashMap<UserSession,Game>();
+	protected List<Game> games;
 	
 	public static GameService getInstance() {
 		return singletonInstance;
 	}
 	
+	private void sendGin(Game g) {
+		UserService s = UserService.getInstance();
+		UserSession[] arr = s.fetchAllUsersWithVariable("gin","1");
+		for(UserSession sess : arr) {
+			sess.send("{Game " + g.getGameNumber() + " (" + g.getWhite().getUser().getUserName() + " vs. " + g.getBlack().getUser().getUserName() + ") Creating " + (g.isRated()?"rated":"unrated") + " " + g.getVariant().name() + "  match.}");
+		}
+	}
+	
+	public Game createGame(UserSession white,UserSession black,MatchParams params) {
+		Game g = new Game();
+		g.setWhite(white);
+		g.setBlack(black);
+		g.setTime(params.getTime());
+		g.setIncrement(params.getIncrement());
+		g.setRated(params.isRated());
+		g.setVariant(params.getVariant());
+		g.setGameNumber(1);
+		sendGin(g);
+		return g;
+	}
+	
 	public GameService() {
+		games = new ArrayList<Game>();
+		
 		if (LOG.isInfoEnabled())
 			LOG.info("Initialized GameService.");
 	}
@@ -69,6 +102,8 @@ public class GameService implements Service {
 	}
 
 	public void dispose() {
+		
+		
 		if (LOG.isInfoEnabled())
 			LOG.info("GameService disposed.");
 	}

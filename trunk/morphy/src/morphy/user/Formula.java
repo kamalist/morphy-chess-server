@@ -17,6 +17,8 @@
  */
 package morphy.user;
 
+import morphy.game.MatchParams;
+
 public class Formula {
 	protected String[] validKeywords = { "abuser", "assessdraw", "assessloss",
 			"assesswin", "black", "blitz", "bughouse", "computer",
@@ -26,7 +28,7 @@ public class Formula {
 			"rated", "registered", "suicide", "standard", "time", "timeseal",
 			"unrated", "untimed", "white", "wild" };
 	
-	public static boolean isValidFormula(String formula) {
+	/*public static boolean isValidFormula(String formula) {
 		// if any word outside of formula is not in validKeywords, (except comment) it is a bad formula.
 		// if two variants are &&'d together (blitz && bughouse) it is invalid.
 		// comment symbol is #.
@@ -36,6 +38,10 @@ public class Formula {
 		// if formula is something that will always evaluate to false (e.g. rating>9999) disallow everything.
 		
 		
+		return false;
+	}*/
+	
+	public boolean matches(MatchParams params) {
 		return false;
 	}
 
@@ -47,12 +53,5 @@ public class Formula {
 
 	public Formula(String formula) {
 		this.formula = formula;
-	}
-
-	/**
-	 * Parameters to be determined.
-	 */
-	public boolean matches() {
-		return true;
 	}
 }

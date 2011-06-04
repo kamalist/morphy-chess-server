@@ -44,7 +44,7 @@ public class AddListCommand extends AbstractCommand {
 			userSession.send(getContext().getUsage());
 			return;
 		}
-		String listName = args[0];
+		String listName = args[0].toLowerCase();
 		String value = args[1];
 		
 		if (UserService.getInstance().isAdmin(userSession.getUser().getUserName())) {
@@ -63,6 +63,12 @@ public class AddListCommand extends AbstractCommand {
 						return;
 					} else if (s.getType().equals(ListType.String) && value.contains(" ")) {
 						userSession.send("Bad value provided for that list (String required)");
+						return;
+					}
+					
+					
+					if (listName.equals("admin") && !UserService.getInstance().isRegistered(value)) {
+						userSession.send("Guests cannot be added to that list.");
 						return;
 					}
 					
@@ -111,9 +117,7 @@ public class AddListCommand extends AbstractCommand {
 				} catch (NumberFormatException e) {
 					userSession
 							.send("The channel to add must be a number between "
-									+ Channel.MINIMUM
-									+ " and "
-									+ Channel.MAXIMUM + ".");
+									+ Channel.MINIMUM + " and " + Channel.MAXIMUM + ".");
 					return;
 				}
 			}

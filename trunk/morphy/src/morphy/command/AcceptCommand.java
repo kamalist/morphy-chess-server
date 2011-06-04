@@ -17,21 +17,27 @@
  */
 package morphy.command;
 
-import morphy.Morphy;
-import morphy.service.UserService;
 import morphy.user.UserSession;
 
-public class ShutdownCommand extends AbstractCommand {
-	public ShutdownCommand() {
-		super("shutdown");
+public class AcceptCommand extends AbstractCommand {
+	public AcceptCommand() {
+		super("accept");
 	}
 
 	public void process(String arguments, UserSession userSession) {
-		UserService us = UserService.getInstance();
-		UserSession[] arr = us.getLoggedInUsers();
-		for(UserSession s : arr) {
-			s.send(" **** Server is shutting down now. **** ");
+		int num = 0;
+		if (num >= 2) {
+			userSession.send("There is more than one pending offer.\nType \"pending\" to see the list of offers.\nType \"accept n\" to accept an offer.");
+			return;
 		}
-		Morphy.getInstance().shutdown();
+		
+		if (num == 0) {
+			userSession.send("There are no offers to accept.");
+			return;
+		}
+		
+		if (num == 1) {
+			// 
+		}
 	}
 }

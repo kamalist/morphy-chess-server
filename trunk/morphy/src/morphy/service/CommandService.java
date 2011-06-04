@@ -25,14 +25,9 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import morphy.command.AddCensorCommand;
-import morphy.command.AddGnotifyCommand;
+import morphy.command.AcceptCommand;
 import morphy.command.AddListCommand;
-import morphy.command.AddNopartnerCommand;
-import morphy.command.AddNoplayCommand;
-import morphy.command.AddNotifyCommand;
 import morphy.command.AddPlayerCommand;
-import morphy.command.AddRemoteCommand;
 import morphy.command.AdminCommand;
 import morphy.command.AnnounceCommand;
 import morphy.command.AnnunregCommand;
@@ -44,10 +39,14 @@ import morphy.command.ISetCommand;
 import morphy.command.IVariablesCommand;
 import morphy.command.InchannelCommand;
 import morphy.command.ItShoutCommand;
+import morphy.command.MatchCommand;
+import morphy.command.NewsCommand;
 import morphy.command.NukeCommand;
+import morphy.command.PendingCommand;
 import morphy.command.QtellCommand;
 import morphy.command.QuitCommand;
 import morphy.command.RemoveListCommand;
+import morphy.command.SRCommand;
 import morphy.command.SetCommand;
 import morphy.command.ShoutCommand;
 import morphy.command.ShowListCommand;
@@ -63,6 +62,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import board.Board;
+import board.IllegalMoveException;
+import board.WrongColorToMoveException;
+
 @SuppressWarnings("unused")
 public class CommandService implements Service {
 	protected static Log LOG = LogFactory.getLog(CommandService.class);
@@ -72,6 +75,8 @@ public class CommandService implements Service {
 					"notify|channel|idlenotify)");
 	
 	private static final Class<?>[] socketCommandsClasses = { 
+		AcceptCommand.class,
+		
 //	 	AddCensorCommand.class,
 //	 	AddGnotifyCommand.class,
 	 	AddListCommand.class,
@@ -95,7 +100,12 @@ public class CommandService implements Service {
 		ItShoutCommand.class,
 		IVariablesCommand.class,
 		
+		MatchCommand.class,
+		
+		NewsCommand.class,
 		NukeCommand.class,
+		
+		PendingCommand.class,
 		
 		QtellCommand.class,
 		QuitCommand.class,
@@ -106,6 +116,7 @@ public class CommandService implements Service {
 		ShoutCommand.class,
 		ShowListCommand.class,
 		ShutdownCommand.class,
+		SRCommand.class,
 		SummonCommand.class,
 		
 		TellCommand.class,
@@ -126,11 +137,10 @@ public class CommandService implements Service {
 		return singletonInstance;
 	}
 
-	@SuppressWarnings("unchecked")
 	private CommandService() {
 		long startTime = System.currentTimeMillis();
 
-		for (Class clazz : socketCommandsClasses) {
+		for (Class<?> clazz : socketCommandsClasses) {
 			try {
 				Command command = (Command) clazz.newInstance();
 				commands.add(command);
@@ -186,6 +196,20 @@ public class CommandService implements Service {
 	
 	public void processCommandAndCheckAliases(String command,SocketChannelUserSession userSession) {
 		command = command.trim();
+		
+		if (Board.isValidSAN(command)) {
+			morphy.game.Game g = GameService.getInstance().map.get(userSession);
+			if (g != null) {
+				try {
+					g.getBoard().move(!g.getBoard().getLatestMove().isWhitesMove(),command);
+				} catch(WrongColorToMoveException e) { userSession.send("It is not your move."); }
+				catch(IllegalMoveException e) { userSession.send("Illegal move (" + command + ")."); }
+			} else {
+				userSession.send("You are not playing or examining a game.");
+			}
+			return;
+		}
+		
 		String keyword = null;
 		String content = null;
 		

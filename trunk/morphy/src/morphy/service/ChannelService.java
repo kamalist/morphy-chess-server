@@ -20,15 +20,20 @@ package morphy.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import morphy.channel.Channel;
 import morphy.user.PersonalList;
 import morphy.user.UserLevel;
 import morphy.user.UserSession;
+import morphy.utils.john.DBConnection;
 import morphy.utils.john.ServerList;
 
 public class ChannelService implements Service {
+	protected static Log LOG = LogFactory.getLog(ChannelService.class);
 	public static final int MAX_NUM_CHANNELS = 30;
-
+	
 	private static final ChannelService singletonInstance = new ChannelService();
 	private ServerListManagerService listManager = ServerListManagerService
 			.getInstance();
@@ -40,12 +45,14 @@ public class ChannelService implements Service {
 	private List<Channel> channels = new ArrayList<Channel>(1);
 
 	private ChannelService() {
+		addChannel(new Channel(0, "Admins", "", UserLevel.Admin, new ServerList[] { listManager.getList("admin") }));
 		addChannel(new Channel(1, "Help", "The help channel.",
 				UserLevel.Player, null));
 		addChannel(new Channel(5, "Service Representitives", "SRs",
 				UserLevel.Player, new ServerList[] { listManager.getList("SR"),
 						listManager.getList("admin") }));
 		addChannel(new Channel(255,"","",UserLevel.Player,null));
+		loadChannelsFromDatabase();
 		// getChannel(1).addListener();
 	}
 
@@ -55,7 +62,59 @@ public class ChannelService implements Service {
 	}
 
 	public void dispose() {
-
+		dumpChannelsToDatabase();
+		
+		if (LOG.isInfoEnabled())
+			LOG.info("ChannelService disposed.");
+	}
+	
+	private void loadChannelsFromDatabase() {
+		channels.clear();
+		DBConnectionService s = DBConnectionService.getInstance();
+		DBConnection conn = s.getDBConnection();
+		java.sql.ResultSet r = conn.executeQueryWithRS("SELECT chnum,chname,chdescription,level,canJoinLists FROM channels ORDER BY chnum ASC");
+		try {
+			while(r.next()) {
+				int number = r.getInt(1);
+				String name = r.getString(2);
+				String description = r.getString(3);
+				UserLevel level = UserLevel.valueOf(r.getString(4));
+				String canJoinLists = r.getString(5);
+				ServerList[] canJoin;
+				if (canJoinLists != null) {
+					String[] split = canJoinLists.split(",");
+					canJoin = new ServerList[split.length];
+					for(int i=0;i<split.length;i++) {
+						canJoin[i] = listManager.getList(split[i]);
+					}
+				} else {
+					canJoin = null;
+				}
+				Channel c = new Channel(number, name, description, level, canJoin);
+				addChannel(c);
+			}
+		} catch(java.sql.SQLException e) { morphy.Morphy.getInstance().onError("Error loading channels from database",e); }
+		
+	}
+	
+	private void dumpChannelsToDatabase() {
+		DBConnectionService s = DBConnectionService.getInstance();
+		DBConnection conn = s.getDBConnection();
+		for(Channel c : channels) {
+			String txt = "";
+			ServerList[] lists = c.getCanJoinLists();
+			if (lists != null) {
+				for(int i=0;i<lists.length;i++) {
+					ServerList sl = lists[i];
+					txt += sl.getName();
+					if (i != lists.length-1) txt += ",";
+				}
+				txt = "'" + txt + "'";
+			} else {
+				txt = "NULL";
+			}
+			conn.executeQuery("INSERT INTO `channels` VALUES('" + c.getNumber() + "','" + c.getName() + "','" + c.getDescription() + "','" + c.getLevel().name() + "'," + txt + ") ON DUPLICATE KEY UPDATE `chname` = '" + c.getName() + "',`chdescription` = '" + c.getDescription() + "',`level` = '" +  c.getLevel().name() + "',`canJoinLists` = " + txt + "");
+		}
 	}
 
 	public Channel getChannel(int number) {

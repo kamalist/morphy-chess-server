@@ -15,15 +15,37 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package morphy.game.style;
+package morphy.service;
 
-import morphy.game.Game;
-import morphy.user.UserSession;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-/** Class implementing the style12 string. */
-public class Style12 implements StyleInterface {
+import morphy.utils.john.DBConnection;
 
-	public void print(UserSession userSession, Game g) {
-		userSession.send(g.getBoard().getLatestMove().draw() + " ");
+public class DBConnectionService implements Service {
+	protected static Log LOG = LogFactory.getLog(GameService.class);
+
+	private static DBConnectionService service = new DBConnectionService();
+	public static DBConnectionService getInstance() {
+		return service;
 	}
+	
+	private DBConnection Connection;
+	
+	public DBConnectionService() {
+		if (LOG.isInfoEnabled())
+			LOG.info("Initialized DBConnectionService.");
+		
+		DBConnection c = new DBConnection("localhost","morphyics","root","abcdef");
+		Connection = c;
+	}
+	
+	public DBConnection getDBConnection() {
+		return Connection;
+	}
+	
+	public void dispose() {
+
+	}
+
 }

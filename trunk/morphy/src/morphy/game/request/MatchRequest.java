@@ -15,15 +15,24 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package morphy.game.style;
+package morphy.game.request;
 
-import morphy.game.Game;
 import morphy.user.UserSession;
 
-/** Class implementing the style12 string. */
-public class Style12 implements StyleInterface {
+public class MatchRequest implements Request {
 
-	public void print(UserSession userSession, Game g) {
-		userSession.send(g.getBoard().getLatestMove().draw() + " ");
+	public void acceptAction(UserSession from,UserSession to) {
+		to.send("You accept the match offer from " + from.getUser().getUserName());
+		from.send(to.getUser().getUserName() + " accepts the match offer.");
+		
+//		GameService instance = GameService.getInstance();
+//		
+//		instance.createGameBoard();
 	}
+
+	public void declineAction(UserSession from,UserSession to) {
+		to.send("You decline the match offer from " + from.getUser().getUserName());
+		from.send(to.getUser().getUserName() + " declines the match offer.");
+	}
+
 }
