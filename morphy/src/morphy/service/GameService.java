@@ -23,6 +23,7 @@ import java.util.List;
 
 import morphy.game.Game;
 import morphy.game.MatchParams;
+import morphy.user.SocketChannelUserSession;
 import morphy.user.UserSession;
 
 import org.apache.commons.logging.Log;
@@ -33,18 +34,40 @@ public class GameService implements Service {
 	private static final GameService singletonInstance = new GameService();
 	
 	protected int mostConcurrentGames = 0;
-	protected HashMap<UserSession,Game> map = new HashMap<UserSession,Game>();
+	public HashMap<UserSession,Game> map = new HashMap<UserSession,Game>();
 	protected List<Game> games;
 	
 	public static GameService getInstance() {
 		return singletonInstance;
 	}
 	
-	private void sendGin(Game g) {
+	private String generateGin(Game g,boolean gameStart) {
+		return "{Game " + g.getGameNumber() + " (" + g.getWhite().getUser().getUserName() + " vs. " + g.getBlack().getUser().getUserName() + ") Creating " + (g.isRated()?"rated":"unrated") + " " + g.getVariant().name() + " match.}";
+	}
+	
+	private void sendGin(Game g,boolean gameStart) {
 		UserService s = UserService.getInstance();
 		UserSession[] arr = s.fetchAllUsersWithVariable("gin","1");
+		String line = generateGin(g,gameStart);
 		for(UserSession sess : arr) {
-			sess.send("{Game " + g.getGameNumber() + " (" + g.getWhite().getUser().getUserName() + " vs. " + g.getBlack().getUser().getUserName() + ") Creating " + (g.isRated()?"rated":"unrated") + " " + g.getVariant().name() + "  match.}");
+			sess.send(line);
+		}
+	}
+	
+	public void endGame(UserSession sess) {
+		String username = sess.getUser().getUserName();
+		Game g = map.get(sess);
+		
+		if (!sess.isConnected()) {
+			g.setReason(sess.getUser().getUserName() + " forfeits by disconnection");
+			if (username.equals(g.getWhite().getUser().getUserName())) {
+				g.setResult("0-1");
+			}
+			if (username.equals(g.getBlack().getUser().getUserName())) {
+				g.setResult("1-0");
+			}
+			
+			sendGin(g, false);
 		}
 	}
 	
@@ -57,8 +80,57 @@ public class GameService implements Service {
 		g.setRated(params.isRated());
 		g.setVariant(params.getVariant());
 		g.setGameNumber(1);
-		sendGin(g);
+		g.setTimeGameStarted(System.currentTimeMillis());
+		g.setWhiteClock(g.getTime() * (60*1000));
+		g.setBlackClock(g.getTime() * (60*1000));
+		
+		map.put(g.getWhite(),g);
+		map.put(g.getBlack(),g);
+	
+		String line = "Creating: " + g.getWhite().getUser().getUserName() + " (----) " + g.getBlack().getUser().getUserName() + " (----) " + (g.isRated()?"rated":"unrated") + " " + g.getVariant().name() + " " + g.getTime() + " " + g.getIncrement();
+
+		String tmpLine = g.getBlack().getUser().getUserName() + " accepts the match offer.\n\n"+line+"\n"+generateGin(g,true)+"\n";
+		if (g.getWhite().getUser().getUserVars().getIVariables().get("gameinfo").equals("1")) {
+			tmpLine += g.generateGameInfoLine();
+		}
+		tmpLine += "\n"+g.getWhite().getUser().getUserVars().getStyle().print(white,g);
+		g.getWhite().send(tmpLine);
+		
+		tmpLine = "You accept the match offer from " + g.getWhite().getUser().getUserName()+".\n\n"+line+"\n"+generateGin(g,true)+"\n";
+		if (g.getBlack().getUser().getUserVars().getIVariables().get("gameinfo").equals("1")) {
+			tmpLine += g.generateGameInfoLine();
+		}
+		tmpLine += "\n"+g.getBlack().getUser().getUserVars().getStyle().print(black,g);
+		g.getBlack().send(tmpLine);
+		
+		
+		g.processMoveUpdate(false);
+		
+		((SocketChannelUserSession)g.getWhite()).setPlaying(true);
+		((SocketChannelUserSession)g.getBlack()).setPlaying(true);
+		
+		sendGin(g,true);
+		games.add(g);
+		if (games.size() > mostConcurrentGames) {
+			mostConcurrentGames = games.size();
+		}
+		
 		return g;
+	}
+	
+	
+	
+	public List<Game> getGames() {
+		return games;
+	}
+	
+	/** O(N) performance */
+	public Game findGameById(int id) {
+		for(Game g : games) {
+			if (g.getGameNumber() == id)
+				return g;
+		}
+		return null;
 	}
 	
 	public GameService() {
@@ -78,7 +150,7 @@ public class GameService implements Service {
 	
 	/** Returns the number of games currently being played. */
 	public int getCurrentNumberOfGames() {
-		return 0;
+		return games.size();
 	}
 	
 	/**

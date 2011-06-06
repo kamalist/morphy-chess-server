@@ -108,6 +108,16 @@ public class UserService implements Service {
 			}
 		}
 	}
+	
+	/** Added by johnthegreat on 6/5/11 */
+	public void batchSend(UserSession[] sessions, String message) {
+		for (UserSession s : sessions) {
+			if (s.isConnected()) {
+				s.send(message);
+			}
+		}
+	}
+
 
 	/** O(N) performance */
 	public UserSession[] fetchAllUsersWithVariable(String variable, String value) {

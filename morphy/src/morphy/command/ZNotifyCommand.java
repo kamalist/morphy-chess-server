@@ -46,7 +46,7 @@ public class ZNotifyCommand extends AbstractCommand {
 				UserSession s = UserService.getInstance().getUserSession(username);
 				b.append(username);
 				if (s.getIdleTimeMillis() > 60000) {
-					b.append("((idle:" + (s.getIdleTimeMillis()/60000) + "m)");
+					b.append("(idle:" + (s.getIdleTimeMillis()/60000) + "m)");
 				}
 				if (i != l.size()-1)
 					b.append(" ");

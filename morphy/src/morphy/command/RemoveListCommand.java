@@ -23,8 +23,10 @@ import java.util.List;
 import morphy.channel.Channel;
 import morphy.service.ChannelService;
 import morphy.service.ServerListManagerService;
+import morphy.service.UserService;
 import morphy.user.PersonalList;
 import morphy.user.User;
+import morphy.user.UserLevel;
 import morphy.user.UserSession;
 import morphy.utils.john.ServerList;
 
@@ -53,6 +55,10 @@ public class RemoveListCommand extends AbstractCommand {
 			if (serverList == null) {
 				userSession.send("\"" + listName
 						+ "\" does not match any list name.");
+				return;
+			}
+			if (userSession.getUser().getUserLevel().ordinal() < serverList.getPermissions().ordinal()) {
+				userSession.send("\"" + listName + "\" is not an appropriate list name or you have insufficient rights.");
 				return;
 			}
 		}
@@ -106,7 +112,23 @@ public class RemoveListCommand extends AbstractCommand {
 				}
 			}
 
-			myList.remove(value);
+			if (serverList != null && userSession.getUser().getUserLevel().ordinal() >= serverList.getPermissions().ordinal()) {
+				myList.remove(value);
+				UserSession user = UserService.getInstance().getUserSession(value);
+				if (listName.equals("admin")) {
+					user.getUser().setUserLevel(UserLevel.Player); 
+				}
+				if (listName.equals("admin") || listName.equals("sr") || listName.equals("tm") || 
+					listName.equals("td") || listName.equals("computer")) {
+					if (user != null) {
+						user.send("You have been removed from the " + listName + " list by " + userSession.getUser().getUserName() + ".");
+					}
+				}
+				
+			} else if (list != null) {
+				myList.remove(value);
+			}
+			
 			userSession.send("[" + value + "] removed from " + ((list == null) ? "the" : "your") + " " + listName
 					+ " list.");
 		} else {

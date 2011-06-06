@@ -17,6 +17,11 @@
  */
 package morphy.command;
 
+import java.util.List;
+
+import morphy.game.request.MatchRequest;
+import morphy.game.request.Request;
+import morphy.service.RequestService;
 import morphy.user.UserSession;
 
 public class PendingCommand extends AbstractCommand {
@@ -25,22 +30,55 @@ public class PendingCommand extends AbstractCommand {
 		super("pending");
 	}
 	
+	// 36: You are offering johnthegreatguest a challenge: GuestVNNP (----) johnthegreatguest (----) unrated crazyhouse 2 0.\n\n
+	//  8: johnthegreat is offering a challenge: johnthegreat (2151) GuestVNNP (----) unrated crazyhouse 2 0.\n\n
+
 	public void process(String arguments, UserSession userSession) {
 		if (!arguments.equals("")) {
 			process(userSession.getUser().getUserName(),userSession);
 			return;
 		}
 		
+		RequestService service = RequestService.getInstance();
+		List<Request> from = service.getRequestsFrom(userSession);
+		List<Request> to = service.getRequestsTo(userSession);
 		
 		StringBuilder b = new StringBuilder();
 		//b.append("There are no offers pending to other players.\n\nThere are no offers pending from other players.\n");
 		
-		b.append("Offers to other players:\n\n");
-		b.append(" " + String.format("%2d",36) + ": You are offering johnthegreatguest a challenge: GuestVNNP (----) johnthegreatguest (----) unrated crazyhouse 2 0.\n\n");
-		b.append("If you wish to withdraw any of these offers type \"withdraw number\".\n\n");
-		b.append("Offers from other players:\n\n");
-		b.append(" " + String.format("%2d",8) + ": johnthegreat is offering a challenge: johnthegreat (2151) GuestVNNP (----) unrated crazyhouse 2 0.\n\n");
-		b.append("If you wish to accept any of these offers type \"accept number\".\nIf you wish to decline any of these offers type \"decline number\".");
+		
+		if (from == null || from.size() == 0) {
+			b.append("There are no offers pending to other players.\n\n");
+		} else {
+			b.append("Offers to other players:\n\n");
+			for(Request r : from) {
+				b.append(" " + String.format("%2d",r.getRequestNumber()) + ": ");
+				if (r instanceof MatchRequest) {
+					MatchRequest mr = (MatchRequest)r;
+					b.append("You are offering " + mr.getTo().getUser().getUserName() + " a challenge: " + mr.getFrom().getUser().getUserName() + " (----) " + mr.getTo().getUser().getUserName() + " (----) " + (mr.getParams().isRated()?"rated":"unrated") + " " + mr.getParams().getVariant().name() + " " + mr.getParams().getTime() + " " + mr.getParams().getIncrement() + ".\n\n");
+				} else /* */ {
+					
+				}
+			}
+			b.append("If you wish to withdraw any of these offers type \"withdraw number\".\n\n");
+		}
+		
+		if (to == null || to.size() == 0) {
+			b.append("There are no offers pending from other players.");
+		} else {
+			b.append("Offers from other players:\n\n");
+			for(Request r : to) {
+				b.append(" " + String.format("%2d",r.getRequestNumber()) + ": ");
+				if (r instanceof MatchRequest) {
+					MatchRequest mr = (MatchRequest)r;
+					b.append(mr.getFrom().getUser().getUserName() + " is offering a challenge: " + mr.getFrom().getUser().getUserName() + " (----) " + mr.getTo().getUser().getUserName() + " (----) " + (mr.getParams().isRated()?"rated":"unrated") + " " + mr.getParams().getVariant().name() + " " + mr.getParams().getTime() + " " + mr.getParams().getIncrement() + ".\n\n");
+				} else /* */ {
+					
+				}
+			}
+			b.append("If you wish to accept any of these offers type \"accept number\".\nIf you wish to decline any of these offers type \"decline number\".");
+		}
+		
 		userSession.send(b.toString());
 	}
 }

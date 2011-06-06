@@ -58,6 +58,7 @@ public class ISetCommand extends AbstractCommand {
 					value = "0";
 				
 				// set the variable here.
+				userSession.getUser().getUserVars().getIVariables().put(setWhat,value);
 				
 				userSession.send(setWhat + " " + (value.equals("1")?"set":"unset") + ".");
 			}

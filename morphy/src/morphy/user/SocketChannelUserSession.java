@@ -19,6 +19,7 @@ package morphy.user;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -55,6 +56,7 @@ public class SocketChannelUserSession implements UserSession,
 	protected UserSession lastPersonToldTo = null;
 	protected boolean isPlaying = false;
 	protected boolean isExamining = false;
+	protected List<Integer> gamesObserving = new ArrayList<Integer>();
 
 	public SocketChannelUserSession(User user, SocketChannel channel) {
 		this.user = user;
@@ -81,7 +83,7 @@ public class SocketChannelUserSession implements UserSession,
 		idleLogoutTimer.schedule(new java.util.TimerTask() {
 			public void run() {
 					if (getIdleTimeMillis() >= millis-1) {
-						send("**** Auto-logout because you were idle for 60 minutes ****");
+						send("\n**** Auto-logout because you were idle for 60 minutes ****\n");
 						disconnect();
 					} else {
 						idleLogoutTimer.purge();
@@ -278,5 +280,13 @@ public class SocketChannelUserSession implements UserSession,
 
 	public void setExamining(boolean isExamining) {
 		this.isExamining = isExamining;
+	}
+
+	public List<Integer> getGamesObserving() {
+		return gamesObserving;
+	}
+
+	public void setGamesObserving(List<Integer> gamesObserving) {
+		this.gamesObserving = gamesObserving;
 	}
 }

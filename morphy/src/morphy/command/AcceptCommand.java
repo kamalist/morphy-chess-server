@@ -17,6 +17,10 @@
  */
 package morphy.command;
 
+import java.util.List;
+
+import morphy.game.request.Request;
+import morphy.service.RequestService;
 import morphy.user.UserSession;
 
 public class AcceptCommand extends AbstractCommand {
@@ -25,7 +29,10 @@ public class AcceptCommand extends AbstractCommand {
 	}
 
 	public void process(String arguments, UserSession userSession) {
-		int num = 0;
+		RequestService rs = RequestService.getInstance();
+		List<Request> list = rs.getRequestsTo(userSession);
+		int num = list.size();
+		
 		if (num >= 2) {
 			userSession.send("There is more than one pending offer.\nType \"pending\" to see the list of offers.\nType \"accept n\" to accept an offer.");
 			return;
@@ -38,6 +45,7 @@ public class AcceptCommand extends AbstractCommand {
 		
 		if (num == 1) {
 			// 
+			list.get(0).acceptAction();
 		}
 	}
 }

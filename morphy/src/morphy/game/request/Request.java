@@ -20,6 +20,10 @@ package morphy.game.request;
 import morphy.user.UserSession;
 
 public interface Request {
-	public void acceptAction(UserSession from,UserSession to);
-	public void declineAction(UserSession from,UserSession to);
+	public void acceptAction();
+	public void declineAction();
+	public void setRequestNumber(int i);
+	public int getRequestNumber();
+	public UserSession getFrom();
+	public UserSession getTo();
 }
