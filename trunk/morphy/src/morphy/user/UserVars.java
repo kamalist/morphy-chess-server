@@ -22,18 +22,23 @@ import java.sql.ResultSetMetaData;
 import java.util.HashMap;
 
 import morphy.Morphy;
+import morphy.game.style.Style12;
+import morphy.game.style.StyleInterface;
 import morphy.service.DBConnectionService;
 import morphy.utils.john.DBConnection;
 
 public class UserVars {
 	private User user;
+	private StyleInterface style;
 	private HashMap<String,String> variables = new HashMap<String,String>();
+	private HashMap<String,String> ivariables = new HashMap<String,String>();
 	
 	public UserVars(User user) {
 		if (user.getUserName() == null) return;
 		
 		this.user = user;
 		
+		variables.put("busy","");
 		if (!user.isRegistered()) {
 			initialize();
 			return;
@@ -42,18 +47,19 @@ public class UserVars {
 		loadFromDB();
 		variables.put("showadmintag","1");
 		variables.put("showsrtag","1");
-		variables.put("busy","");
-		
+
 		// if id is set, obviously a record in the db exists.
-		if (variables.get("id") == null) {
-			initialize();
-			if (user.isRegistered())
-				dumpToDB();
-		}
+//		if (variables.get("id") == null) {
+//			initialize();
+//			if (user.isRegistered())
+//				dumpToDB();
+//		}
 	}
 	
 	private void initialize() {
 		// set defaults
+		setStyle(new Style12());
+		
 		variables.put("time","2");
 		variables.put("inc","12");
 		variables.put("rated","1");
@@ -102,6 +108,10 @@ public class UserVars {
 		variables.put("notakeback","0");
 		variables.put("prompt","fics%");
 		variables.put("interface","NULL");
+	
+		ivariables.put("ms","1");
+		ivariables.put("gameinfo","1");
+		ivariables.put("lock","0");
 	}
 	
 	public User getUser() {
@@ -139,6 +149,10 @@ public class UserVars {
 	
 	public HashMap<String,String> getVariables() {
 		return variables;
+	}
+	
+	public HashMap<String,String> getIVariables() {
+		return ivariables;
 	}
 	
 	public void dumpToDB() {
@@ -190,5 +204,13 @@ public class UserVars {
 //
 //		conn.executeQuery(query.toString());
 			
+	}
+
+	public void setStyle(StyleInterface style) {
+		this.style = style;
+	}
+
+	public StyleInterface getStyle() {
+		return style;
 	}
 }

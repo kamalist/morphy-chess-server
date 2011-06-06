@@ -29,19 +29,23 @@ import morphy.command.AcceptCommand;
 import morphy.command.AddListCommand;
 import morphy.command.AddPlayerCommand;
 import morphy.command.AdminCommand;
+import morphy.command.AllObserversCommand;
 import morphy.command.AnnounceCommand;
 import morphy.command.AnnunregCommand;
 import morphy.command.Command;
 import morphy.command.DateCommand;
 import morphy.command.FingerCommand;
+import morphy.command.GamesCommand;
 import morphy.command.HelpCommand;
 import morphy.command.ISetCommand;
 import morphy.command.IVariablesCommand;
 import morphy.command.InchannelCommand;
 import morphy.command.ItShoutCommand;
 import morphy.command.MatchCommand;
+import morphy.command.MovesCommand;
 import morphy.command.NewsCommand;
 import morphy.command.NukeCommand;
+import morphy.command.ObserveCommand;
 import morphy.command.PendingCommand;
 import morphy.command.QtellCommand;
 import morphy.command.QuitCommand;
@@ -53,6 +57,7 @@ import morphy.command.ShowListCommand;
 import morphy.command.ShutdownCommand;
 import morphy.command.SummonCommand;
 import morphy.command.TellCommand;
+import morphy.command.UptimeCommand;
 import morphy.command.VariablesCommand;
 import morphy.command.WhoCommand;
 import morphy.command.ZNotifyCommand;
@@ -65,8 +70,8 @@ import org.apache.commons.logging.LogFactory;
 import board.Board;
 import board.IllegalMoveException;
 import board.WrongColorToMoveException;
+import board.printer.Style12Printer;
 
-@SuppressWarnings("unused")
 public class CommandService implements Service {
 	protected static Log LOG = LogFactory.getLog(CommandService.class);
 	protected static Pattern listAliasPattern = Pattern
@@ -83,15 +88,18 @@ public class CommandService implements Service {
 //	 	AddNopartnerCommand.class,
 //		AddNoplayCommand.class,
 //		AddNotifyCommand.class,
-//		AddPlayerCommand.class,
+	 	AddPlayerCommand.class,
 //		AddRemoteCommand.class,
 		AdminCommand.class,
+		AllObserversCommand.class,
 		AnnounceCommand.class,
 		AnnunregCommand.class,
 	
 		DateCommand.class,
 		
 		FingerCommand.class,
+		
+		GamesCommand.class,
 		
 		HelpCommand.class,
 		
@@ -101,9 +109,12 @@ public class CommandService implements Service {
 		IVariablesCommand.class,
 		
 		MatchCommand.class,
+		MovesCommand.class,
 		
 		NewsCommand.class,
 		NukeCommand.class,
+		
+		ObserveCommand.class,
 		
 		PendingCommand.class,
 		
@@ -120,6 +131,8 @@ public class CommandService implements Service {
 		SummonCommand.class,
 		
 		TellCommand.class,
+		
+		UptimeCommand.class,
 		
 		VariablesCommand.class,
 		
@@ -201,7 +214,10 @@ public class CommandService implements Service {
 			morphy.game.Game g = GameService.getInstance().map.get(userSession);
 			if (g != null) {
 				try {
-					g.getBoard().move(!g.getBoard().getLatestMove().isWhitesMove(),command);
+					g.getBoard().move(g.getWhite().equals(userSession),command);
+					g.getBoard().getLatestMove().setPrinter(new Style12Printer());
+					g.touchLastMoveMadeTime();
+					g.processMoveUpdate(true);
 				} catch(WrongColorToMoveException e) { userSession.send("It is not your move."); }
 				catch(IllegalMoveException e) { userSession.send("Illegal move (" + command + ")."); }
 			} else {

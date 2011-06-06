@@ -25,6 +25,7 @@ import morphy.service.CommandService;
 import morphy.service.DBConnectionService;
 import morphy.service.GameService;
 import morphy.service.PreferenceService;
+import morphy.service.RequestService;
 import morphy.service.ServerListManagerService;
 import morphy.service.Service;
 import morphy.service.SocketConnectionService;
@@ -55,6 +56,7 @@ public class Morphy {
 	}
 
 	protected static Log LOG = LogFactory.getLog(Morphy.class);
+	protected long upsince;
 
 	public static void main(String[] args) {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -117,6 +119,8 @@ public class Morphy {
 			LOG.info("Initializing Morphy");
 		}
 		
+		upsince = System.currentTimeMillis();
+		
 		Thread t = new Thread() {
 			public void run() {
 				if (LOG.isInfoEnabled()) {
@@ -130,6 +134,10 @@ public class Morphy {
 				ThreadService.getInstance(), CommandService.getInstance(),
 				SocketConnectionService.getInstance(),
 				ChannelService.getInstance(), UserService.getInstance(),
-				ServerListManagerService.getInstance(),GameService.getInstance() };
+				ServerListManagerService.getInstance(),GameService.getInstance(),RequestService.getInstance() };
+	}
+
+	public long getUpSinceTime() {
+		return upsince;
 	}
 }

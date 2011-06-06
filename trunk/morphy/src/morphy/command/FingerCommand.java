@@ -21,7 +21,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import morphy.game.Game;
+import morphy.service.GameService;
 import morphy.service.UserService;
+import morphy.user.SocketChannelUserSession;
 import morphy.user.UserInfoList;
 import morphy.user.UserLevel;
 import morphy.user.UserSession;
@@ -69,8 +72,12 @@ public class FingerCommand extends AbstractCommand {
 		}
 		
 		StringBuilder str = new StringBuilder(200);
-		UserSession query = userService.getUserSession(user);
-		String busyString = query.getUser().getUserVars().getVariables().get("busy");
+		SocketChannelUserSession query = (SocketChannelUserSession)userService.getUserSession(user);
+		String busyString = "";
+		if (query.isConnected()) {
+			// avoid NullPointerException
+			busyString = query.getUser().getUserVars().getVariables().get("busy");
+		}
 		
 		str.append("Finger of " + userService.getTags(query.getUser().getUserName()) + ":\n");
 		if (!busyString.equals(""))
@@ -83,6 +90,26 @@ public class FingerCommand extends AbstractCommand {
 				+ MorphyStringUtils.formatTime(loggedInMillis)
 				+ "\tIdle: "
 				+ ((idleTimeMillis <= 999) ? (idleTimeMillis + " secs") : MorphyStringUtils.formatTime(idleTimeMillis)));
+		if (query.isPlaying()) {
+			GameService gs = GameService.getInstance();
+			Game g = gs.map.get(query);
+			if (g != null) {
+				str.append("\n(playing game " + g.getGameNumber() + ": " + g.getWhite().getUser().getUserName() + " vs. " + g.getBlack().getUser().getUserName() + ")\n");
+				//str.append("\n(partner is playing game 331: BlindJKiller vs. XeRcHeSs)\n");
+				List<Integer> list = query.getGamesObserving();
+				if (list.size() > 0) {
+					str.append("\n(" + query.getUser().getUserName() + " is observing game(s)");
+					for(int i=0;i<list.size();i++) {
+						str.append(" " + i + "");
+						if (i == list.size()-2) str.append(" and");
+						if (i != list.size()-2) str.append(",");
+					}
+				}
+			}
+			
+		} else if (query.isExamining()) {
+			//str.append("\n(examining game 395: GuestPZKF vs. GuestPZKF)\n");
+		}
 		str.append("\n\n");
 		
 		if (showRatings) {

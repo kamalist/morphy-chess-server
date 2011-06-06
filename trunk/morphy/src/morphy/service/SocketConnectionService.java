@@ -263,7 +263,7 @@ public class SocketConnectionService implements Service {
 			
 			userSession.getUser().setUserName(name);
 			userSession.getUser().setPlayerType(PlayerType.Human);
-			userSession.getUser().setUserLevel(UserLevel.Player);
+			userSession.getUser().setUserLevel(isGuest?UserLevel.Guest:UserLevel.Player);
 			userSession.getUser().setRegistered(!isGuest);
 			userSession.getUser().setUserVars(new morphy.user.UserVars(userSession.getUser()));
 			userSession.setHasLoggedIn(true);
@@ -271,10 +271,11 @@ public class SocketConnectionService implements Service {
 
 			boolean isHeadAdmin = false;
 
-			DBConnection conn = new DBConnection();
-			conn.executeQuery("UPDATE `users` SET `lastlogin` = CURRENT_TIMESTAMP, `ipaddress` = '"
-							+ SocketUtils.getIpAddress(userSession.getChannel().socket()) + "' WHERE `username` = '" + name + "'");
-			java.sql.ResultSet r = conn.executeQueryWithRS("SELECT `adminLevel` FROM `users` WHERE `username` = '" + name + "'");
+			if (!isGuest) {
+				DBConnection conn = DBConnectionService.getInstance().getDBConnection();
+				conn.executeQuery("UPDATE `users` SET `lastlogin` = CURRENT_TIMESTAMP, `ipaddress` = '"
+								+ SocketUtils.getIpAddress(userSession.getChannel().socket()) + "' WHERE `username` = '" + name + "'");
+				java.sql.ResultSet r = conn.executeQueryWithRS("SELECT `adminLevel` FROM `users` WHERE `username` = '" + name + "'");
 				try {
 					if (r.next()) {
 						String level = r.getString(1);
@@ -301,6 +302,7 @@ public class SocketConnectionService implements Service {
 						LOG.error(e);
 					}
 				}
+			}
 
 			StringBuilder loginMessage = new StringBuilder(200);
 			loginMessage.append(formatMessage(userSession,
@@ -317,8 +319,9 @@ public class SocketConnectionService implements Service {
 				UserLevel adminLevel = s.getUser().getUserLevel();
 				
 				if (adminLevel == UserLevel.Admin || adminLevel == UserLevel.SuperAdmin || adminLevel == UserLevel.HeadAdmin) {
-					s.send(String.format("[%s [[%s] has connected.]",
+					s.send(String.format("[%s (%s: %s) has connected.]",
 								userSession.getUser().getUserName(),
+								!isGuest?"R":"U",
 								SocketUtils.getIpAddress(userSession.getChannel().socket())));
 				} else {
 					s.send(String.format("[%s has connected.]",userSession.getUser().getUserName()));
@@ -379,7 +382,7 @@ public class SocketConnectionService implements Service {
 							+ session.getUser().getUserName() + " " + message);
 				}
 				if (LOG.isInfoEnabled())
-					LOG.info("userSession.disconnect(); called");
+					LOG.info("ession.disconnect(); called");
 				session.disconnect();
 			}
 		} catch (Throwable t) {

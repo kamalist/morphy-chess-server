@@ -65,7 +65,7 @@ public class InchannelCommand extends AbstractCommand {
 					userSession.send(str.toString());
 				}
 			} else {
-				StringBuilder str = new StringBuilder("50");
+				StringBuilder str = new StringBuilder(50);
 				str.append(userName + " is in the following channels:\n");
 				UserService uS = UserService.getInstance();
 				UserSession sess = uS.getUserSession(userName);

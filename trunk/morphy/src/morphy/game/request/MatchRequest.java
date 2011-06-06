@@ -17,22 +17,71 @@
  */
 package morphy.game.request;
 
+import morphy.game.MatchParams;
+import morphy.service.GameService;
+import morphy.service.RequestService;
 import morphy.user.UserSession;
 
 public class MatchRequest implements Request {
-
-	public void acceptAction(UserSession from,UserSession to) {
-		to.send("You accept the match offer from " + from.getUser().getUserName());
-		from.send(to.getUser().getUserName() + " accepts the match offer.");
-		
-//		GameService instance = GameService.getInstance();
-//		
-//		instance.createGameBoard();
+	
+	private UserSession from;
+	private UserSession to;
+	private MatchParams params;
+	private int requestNumber;
+	public MatchRequest(UserSession from,UserSession to,MatchParams params) {
+		this.from = from;
+		this.to = to;
+		this.params = params;
 	}
 
-	public void declineAction(UserSession from,UserSession to) {
+	public void acceptAction() {
+		GameService gs = GameService.getInstance();
+		gs.createGame(from, to, params);
+		
+		RequestService rs = RequestService.getInstance();
+		rs.removeRequestFrom(from,this);
+		rs.removeRequestTo(to,this);
+	}
+
+	public void declineAction() {
 		to.send("You decline the match offer from " + from.getUser().getUserName());
 		from.send(to.getUser().getUserName() + " declines the match offer.");
+		
+		RequestService rs = RequestService.getInstance();
+		rs.removeRequestFrom(from,this);
+		rs.removeRequestTo(to,this);
+	}
+
+	public void setParams(MatchParams params) {
+		this.params = params;
+	}
+
+	public MatchParams getParams() {
+		return params;
+	}
+
+	public void setRequestNumber(int i) {
+		requestNumber = i;
+	}
+
+	public int getRequestNumber() {
+		return requestNumber;
+	}
+	
+	public UserSession getFrom() {
+		return from;
+	}
+
+	public void setFrom(UserSession from) {
+		this.from = from;
+	}
+
+	public UserSession getTo() {
+		return to;
+	}
+
+	public void setTo(UserSession to) {
+		this.to = to;
 	}
 
 }

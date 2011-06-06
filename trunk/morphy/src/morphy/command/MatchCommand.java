@@ -19,6 +19,8 @@ package morphy.command;
 
 import morphy.game.MatchParams;
 import morphy.game.Variant;
+import morphy.game.request.MatchRequest;
+import morphy.service.RequestService;
 import morphy.service.UserService;
 import morphy.user.PersonalList;
 import morphy.user.SocketChannelUserSession;
@@ -87,6 +89,11 @@ public class MatchCommand extends AbstractCommand {
 			return;
 		}
 		
+		if (sess.getUser().getUserVars().getVariables().get("open").equals("0")) {
+			userSession.send(user + " is not open to match requests.");
+			return;
+		}
+		
 		if (sess.isPlaying()) {
 			userSession.send(user + " is playing a game.");
 			return;
@@ -121,5 +128,10 @@ public class MatchCommand extends AbstractCommand {
 		str = new StringBuilder(200);
 		str.append("Issuing: " + userSession.getUser().getUserName() + " (----) " + user + " (----) " + (p.getColorRequested()!=MatchParams.ColorRequested.Neither?"[" + p.getColorRequested().name() + "]":"") + " " + (p.isRated()?"rated":"unrated") + " " + p.getVariant() + " " + p.getTime() + " " + p.getIncrement() + ".");
 		userSession.send(str.toString());
+		
+		MatchRequest req = new MatchRequest(userSession,sess,p);
+		
+		RequestService instance = RequestService.getInstance();
+		instance.addRequest(userSession, sess, req);
 	}
 }

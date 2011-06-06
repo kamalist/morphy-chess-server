@@ -28,6 +28,7 @@ import morphy.service.ServerListManagerService;
 import morphy.service.UserService;
 import morphy.user.PersonalList;
 import morphy.user.User;
+import morphy.user.UserLevel;
 import morphy.user.UserSession;
 import morphy.utils.john.ServerList;
 import morphy.utils.john.ServerList.ListType;
@@ -75,6 +76,16 @@ public class AddListCommand extends AbstractCommand {
 					if (!serv.isOnList(s,value)) {
 						serv.getElements().get(s).add(value);
 						userSession.send("[" + value + "] added to the " + listName + " list.");
+						UserSession user = UserService.getInstance().getUserSession(value);
+						if (listName.equals("admin")) { 
+							user.getUser().setUserLevel(UserLevel.Admin); 
+						}
+						if (listName.equals("admin") || listName.equals("sr") || listName.equals("tm") || 
+							listName.equals("td") || listName.equals("computer")) {
+							if (user != null) {
+								user.send("You have been added to the " + listName + " list by " + userSession.getUser().getUserName() + ".");
+							}
+						}
 						return;
 					} else {
 						userSession.send("[" + value + "] is already on the " + listName + " list.");
@@ -82,6 +93,7 @@ public class AddListCommand extends AbstractCommand {
 					}
 				} else {
 					userSession.send("\"" + listName + "\" is not an appropriate list name or you have insufficient rights.");
+					return;
 				}
 			}
 		}

@@ -23,5 +23,5 @@ import morphy.user.UserSession;
 /** All style implementations (1-15) should implement this interface. */
 public interface StyleInterface {
 	/** Prints <tt>board</tt> to <tt>userSession</tt> */
-	public void print(UserSession userSession,Game g);
+	public String print(UserSession userSession,Game g);
 }
