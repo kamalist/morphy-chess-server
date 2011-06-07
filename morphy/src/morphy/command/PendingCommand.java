@@ -19,6 +19,7 @@ package morphy.command;
 
 import java.util.List;
 
+import morphy.game.request.AbortRequest;
 import morphy.game.request.MatchRequest;
 import morphy.game.request.Request;
 import morphy.service.RequestService;
@@ -56,8 +57,9 @@ public class PendingCommand extends AbstractCommand {
 				if (r instanceof MatchRequest) {
 					MatchRequest mr = (MatchRequest)r;
 					b.append("You are offering " + mr.getTo().getUser().getUserName() + " a challenge: " + mr.getFrom().getUser().getUserName() + " (----) " + mr.getTo().getUser().getUserName() + " (----) " + (mr.getParams().isRated()?"rated":"unrated") + " " + mr.getParams().getVariant().name() + " " + mr.getParams().getTime() + " " + mr.getParams().getIncrement() + ".\n\n");
-				} else /* */ {
-					
+				} else if (r instanceof AbortRequest) {
+					AbortRequest ar = (AbortRequest)r;
+					b.append("You are offering " + ar.getTo().getUser().getUserName() + " to abort the game.\n\n");
 				}
 			}
 			b.append("If you wish to withdraw any of these offers type \"withdraw number\".\n\n");
@@ -72,8 +74,9 @@ public class PendingCommand extends AbstractCommand {
 				if (r instanceof MatchRequest) {
 					MatchRequest mr = (MatchRequest)r;
 					b.append(mr.getFrom().getUser().getUserName() + " is offering a challenge: " + mr.getFrom().getUser().getUserName() + " (----) " + mr.getTo().getUser().getUserName() + " (----) " + (mr.getParams().isRated()?"rated":"unrated") + " " + mr.getParams().getVariant().name() + " " + mr.getParams().getTime() + " " + mr.getParams().getIncrement() + ".\n\n");
-				} else /* */ {
-					
+				} else if (r instanceof AbortRequest) {
+					AbortRequest ar = (AbortRequest)r;
+					b.append(ar.getFrom().getUser().getUserName() + " is offering to abort the game.\n\n");
 				}
 			}
 			b.append("If you wish to accept any of these offers type \"accept number\".\nIf you wish to decline any of these offers type \"decline number\".");

@@ -65,6 +65,10 @@ public class Game {
 		setBlackClock(time * (60*1000));
 	}
 	
+	public void abort() {
+		
+	}
+	
 	/** boolean all - true for all, false for observers only. */
 	public void processMoveUpdate(boolean all) {
 		if (all) {

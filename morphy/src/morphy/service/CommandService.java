@@ -25,6 +25,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import morphy.command.AbortCommand;
 import morphy.command.AcceptCommand;
 import morphy.command.AddListCommand;
 import morphy.command.AddPlayerCommand;
@@ -80,6 +81,7 @@ public class CommandService implements Service {
 					"notify|channel|idlenotify)");
 	
 	private static final Class<?>[] socketCommandsClasses = { 
+		AbortCommand.class,
 		AcceptCommand.class,
 		
 //	 	AddCensorCommand.class,

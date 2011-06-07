@@ -29,6 +29,9 @@ import java.util.Timer;
 import java.util.TreeMap;
 
 import morphy.channel.Channel;
+import morphy.game.request.MatchRequest;
+import morphy.game.request.Request;
+import morphy.service.RequestService;
 import morphy.service.ScreenService;
 import morphy.service.SocketConnectionService;
 import morphy.service.UserService;
@@ -112,6 +115,15 @@ public class SocketChannelUserSession implements UserSession,
 				if (LOG.isInfoEnabled()) {
 					LOG.info("Disconnected user " + user.getUserName());
 				}
+				
+				RequestService rs = RequestService.getInstance();
+				List<Request> list = rs.getRequestsTo(this);
+				for(Request r : list) {
+					if (r.getClass() == MatchRequest.class) {
+						r.getFrom().send(r.getTo().getUser().getUserName() + " whom you were challenging, has departed.\nChallenge to " + r.getTo().getUser().getUserName() + " withdrawn.");
+					}
+				}
+				rs.removeAllRequestsTo(this);
 				
 				UserSession[] sessions = UserService.getInstance().fetchAllUsersWithVariable("pin","1");
 				for(UserSession s : sessions) {
