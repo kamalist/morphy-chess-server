@@ -42,7 +42,12 @@ public class GameService implements Service {
 	}
 	
 	private String generateGin(Game g,boolean gameStart) {
-		return "{Game " + g.getGameNumber() + " (" + g.getWhite().getUser().getUserName() + " vs. " + g.getBlack().getUser().getUserName() + ") Creating " + (g.isRated()?"rated":"unrated") + " " + g.getVariant().name() + " match.}";
+		if (gameStart) {
+			return "{Game " + g.getGameNumber() + " (" + g.getWhite().getUser().getUserName() + " vs. " + g.getBlack().getUser().getUserName() + ") Creating " + (g.isRated()?"rated":"unrated") + " " + g.getVariant().name() + " match.}";
+		} else {
+			//{Game 1 (johnthegreat vs. GuestZJBY) Game aborted by mutual agreement} *
+			return "{Game " + g.getGameNumber() + " (" + g.getWhite().getUser().getUserName() + " vs. " + g.getBlack().getUser().getUserName() + ") " + g.getReason() + "} " + g.getResult();
+		}
 	}
 	
 	private void sendGin(Game g,boolean gameStart) {
@@ -54,21 +59,8 @@ public class GameService implements Service {
 		}
 	}
 	
-	public void endGame(UserSession sess) {
-		String username = sess.getUser().getUserName();
-		Game g = map.get(sess);
-		
-		if (!sess.isConnected()) {
-			g.setReason(sess.getUser().getUserName() + " forfeits by disconnection");
-			if (username.equals(g.getWhite().getUser().getUserName())) {
-				g.setResult("0-1");
-			}
-			if (username.equals(g.getBlack().getUser().getUserName())) {
-				g.setResult("1-0");
-			}
-			
-			sendGin(g, false);
-		}
+	public void endGame(Game g) {
+		sendGin(g,false);
 	}
 	
 	public Game createGame(UserSession white,UserSession black,MatchParams params) {

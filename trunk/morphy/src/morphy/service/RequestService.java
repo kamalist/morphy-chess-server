@@ -152,6 +152,13 @@ public class RequestService implements Service {
 		rList.remove(instance);
 	}
 	
+	public void removeAllRequestsTo(UserSession userSession) {
+		if (!toMap.containsKey(userSession)) return;
+		
+		List<Request> rList = toMap.get(userSession);
+		rList.clear();
+	}
+	
 	public void recycleRequestNumber(int num) {
 		if (!availableRequestNumbers.contains(num)) {
 			availableRequestNumbers.add(new Integer(num));
