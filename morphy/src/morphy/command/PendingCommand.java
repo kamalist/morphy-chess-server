@@ -21,6 +21,7 @@ import java.util.List;
 
 import morphy.game.request.AbortRequest;
 import morphy.game.request.MatchRequest;
+import morphy.game.request.PartnershipRequest;
 import morphy.game.request.Request;
 import morphy.service.RequestService;
 import morphy.user.UserSession;
@@ -56,13 +57,16 @@ public class PendingCommand extends AbstractCommand {
 				b.append(" " + String.format("%2d",r.getRequestNumber()) + ": ");
 				if (r instanceof MatchRequest) {
 					MatchRequest mr = (MatchRequest)r;
-					b.append("You are offering " + mr.getTo().getUser().getUserName() + " a challenge: " + mr.getFrom().getUser().getUserName() + " (----) " + mr.getTo().getUser().getUserName() + " (----) " + (mr.getParams().isRated()?"rated":"unrated") + " " + mr.getParams().getVariant().name() + " " + mr.getParams().getTime() + " " + mr.getParams().getIncrement() + ".\n\n");
+					b.append("You are offering " + mr.getTo().getUser().getUserName() + " a challenge: " + mr.getFrom().getUser().getUserName() + " (----) " + mr.getTo().getUser().getUserName() + " (----) " + (mr.getParams().isRated()?"rated":"unrated") + " " + mr.getParams().getVariant().name() + " " + mr.getParams().getTime() + " " + mr.getParams().getIncrement() + ".\n");
 				} else if (r instanceof AbortRequest) {
 					AbortRequest ar = (AbortRequest)r;
-					b.append("You are offering " + ar.getTo().getUser().getUserName() + " to abort the game.\n\n");
+					b.append("You are offering " + ar.getTo().getUser().getUserName() + " to abort the game.\n");
+				} else if (r instanceof PartnershipRequest) {
+					PartnershipRequest pr = (PartnershipRequest)r;
+					b.append("You are offering " + pr.getTo().getUser().getUserName() + " to be bughouse partners.\n");
 				}
 			}
-			b.append("If you wish to withdraw any of these offers type \"withdraw number\".\n\n");
+			b.append("\nIf you wish to withdraw any of these offers type \"withdraw number\".\n\n");
 		}
 		
 		if (to == null || to.size() == 0) {
@@ -73,13 +77,16 @@ public class PendingCommand extends AbstractCommand {
 				b.append(" " + String.format("%2d",r.getRequestNumber()) + ": ");
 				if (r instanceof MatchRequest) {
 					MatchRequest mr = (MatchRequest)r;
-					b.append(mr.getFrom().getUser().getUserName() + " is offering a challenge: " + mr.getFrom().getUser().getUserName() + " (----) " + mr.getTo().getUser().getUserName() + " (----) " + (mr.getParams().isRated()?"rated":"unrated") + " " + mr.getParams().getVariant().name() + " " + mr.getParams().getTime() + " " + mr.getParams().getIncrement() + ".\n\n");
+					b.append(mr.getFrom().getUser().getUserName() + " is offering a challenge: " + mr.getFrom().getUser().getUserName() + " (----) " + mr.getTo().getUser().getUserName() + " (----) " + (mr.getParams().isRated()?"rated":"unrated") + " " + mr.getParams().getVariant().name() + " " + mr.getParams().getTime() + " " + mr.getParams().getIncrement() + ".\n");
 				} else if (r instanceof AbortRequest) {
 					AbortRequest ar = (AbortRequest)r;
-					b.append(ar.getFrom().getUser().getUserName() + " is offering to abort the game.\n\n");
+					b.append(ar.getFrom().getUser().getUserName() + " is offering to abort the game.\n");
+				} else if (r instanceof PartnershipRequest) {
+					PartnershipRequest pr = (PartnershipRequest)r;
+					b.append(pr.getFrom().getUser().getUserName() + " is offering to be bughouse partners.\n");
 				}
 			}
-			b.append("If you wish to accept any of these offers type \"accept number\".\nIf you wish to decline any of these offers type \"decline number\".");
+			b.append("\nIf you wish to accept any of these offers type \"accept number\".\nIf you wish to decline any of these offers type \"decline number\".");
 		}
 		
 		userSession.send(b.toString());

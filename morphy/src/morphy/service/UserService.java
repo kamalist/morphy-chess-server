@@ -201,7 +201,7 @@ public class UserService implements Service {
 			try {
 				DBConnection conn = DBConnectionService.getInstance().getDBConnection();
 				java.sql.ResultSet results = conn
-						.executeQueryWithRS("SELECT `id` FROM `users` WHERE `username` = '"
+						.executeQueryWithRS("SELECT `id` FROM `users` WHERE `username` LIKE '"
 								+ username + "'");
 					if (results.next()) {
 						return true;
@@ -211,6 +211,21 @@ public class UserService implements Service {
 			}
 		}
 		return false;
+	}
+	
+	public int getDBID(String username) {
+		try {
+			DBConnection conn = DBConnectionService.getInstance().getDBConnection();
+			java.sql.ResultSet results = conn
+					.executeQueryWithRS("SELECT `id` FROM `users` WHERE `username` LIKE '"
+							+ username + "'");
+				if (results.next()) {
+					return results.getInt(1);
+				}
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+		}
+		return 0;
 	}
 
 	public String getTags(String username) {

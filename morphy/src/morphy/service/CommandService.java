@@ -33,6 +33,7 @@ import morphy.command.AdminCommand;
 import morphy.command.AllObserversCommand;
 import morphy.command.AnnounceCommand;
 import morphy.command.AnnunregCommand;
+import morphy.command.BugWhoCommand;
 import morphy.command.Command;
 import morphy.command.DateCommand;
 import morphy.command.FingerCommand;
@@ -47,6 +48,7 @@ import morphy.command.MovesCommand;
 import morphy.command.NewsCommand;
 import morphy.command.NukeCommand;
 import morphy.command.ObserveCommand;
+import morphy.command.PartnerCommand;
 import morphy.command.PendingCommand;
 import morphy.command.QtellCommand;
 import morphy.command.QuitCommand;
@@ -61,6 +63,7 @@ import morphy.command.TellCommand;
 import morphy.command.UptimeCommand;
 import morphy.command.VariablesCommand;
 import morphy.command.WhoCommand;
+import morphy.command.WithdrawCommand;
 import morphy.command.ZNotifyCommand;
 import morphy.user.SocketChannelUserSession;
 
@@ -97,6 +100,8 @@ public class CommandService implements Service {
 		AnnounceCommand.class,
 		AnnunregCommand.class,
 	
+		BugWhoCommand.class,
+		
 		DateCommand.class,
 		
 		FingerCommand.class,
@@ -118,6 +123,7 @@ public class CommandService implements Service {
 		
 		ObserveCommand.class,
 		
+		PartnerCommand.class,
 		PendingCommand.class,
 		
 		QtellCommand.class,
@@ -139,6 +145,7 @@ public class CommandService implements Service {
 		VariablesCommand.class,
 		
 		WhoCommand.class,
+		WithdrawCommand.class,
 		
 		ZNotifyCommand.class
 	};

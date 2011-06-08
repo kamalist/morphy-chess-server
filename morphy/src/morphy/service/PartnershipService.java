@@ -15,18 +15,30 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package morphy.game;
+package morphy.service;
 
-public enum Variant {
-	blitz,lightning,bughouse,frbughouse,crazyhouse,losers,suicide,frcrazyhouse,atomic,standard;
+//import java.util.HashMap;
+
+import morphy.user.UserSession;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+public class PartnershipService implements Service {
+	protected static Log LOG = LogFactory.getLog(PartnershipService.class);
+	private static final PartnershipService singletonInstance = new PartnershipService();
 	
-	/** For standard chess only */
-	public static Variant getVariantBasedOnTimeAndIncrement(int time,int inc) {
-		int etime = (time + inc*2/3);
-		if (etime < 3) return lightning;
-		if (etime > 3 && etime < 15) return blitz;
-		if (etime > 15) return standard;
+	//private HashMap<UserSession,Partnership> partnershipMap = new HashMap<UserSession,Partnership>();
+	
+	public static PartnershipService getInstance() {
+		return singletonInstance;
+	}
+	
+	public void addPartnership(UserSession a,UserSession b) {
 		
-		return null;
+	}
+
+	public void dispose() {
+		
 	}
 }

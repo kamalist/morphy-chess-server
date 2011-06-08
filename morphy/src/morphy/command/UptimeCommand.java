@@ -42,8 +42,8 @@ public class UptimeCommand extends AbstractCommand {
 		System.err.println(diff);
 		int days = 0,hours = 0,minutes = 0;
 		days = (int)(diff / (1000*60*60*24));
-		hours = (int)(diff / (1000*60*60));
-		minutes = (int)(diff / (1000*60));
+		hours = (int)(diff / (1000*60*60)) % 24;
+		minutes = (int)(diff / (1000*60)) % 60;
 		b.append("(Up for " + days + " days, " + hours + " hrs, " + minutes + " mins)\n\n");
 
 		UserService us = UserService.getInstance();

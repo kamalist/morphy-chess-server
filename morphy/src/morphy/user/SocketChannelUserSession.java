@@ -31,6 +31,7 @@ import java.util.TreeMap;
 import morphy.channel.Channel;
 import morphy.game.request.MatchRequest;
 import morphy.game.request.Request;
+import morphy.service.GameService;
 import morphy.service.RequestService;
 import morphy.service.ScreenService;
 import morphy.service.SocketConnectionService;
@@ -124,6 +125,17 @@ public class SocketChannelUserSession implements UserSession,
 					}
 				}
 				rs.removeAllRequestsTo(this);
+				
+				GameService gs = GameService.getInstance();
+				morphy.game.Game g = gs.map.get(this);
+				if (g != null) {
+					g.setReason(user.getUserName() + " forfeits by disconnection");
+					g.setResult(this==g.getWhite()?"0-1":"1-0");
+					gs.endGame(g);
+					final String line = "\n{Game " + g.getGameNumber() + " (" + g.getWhite().getUser().getUserName() + " vs. " + g.getBlack().getUser().getUserName() + ") " + g.getReason() + "} " + g.getResult() + "";
+					if (this != g.getWhite()) g.getWhite().send(line);
+					if (this != g.getBlack()) g.getBlack().send(line);
+				}
 				
 				UserSession[] sessions = UserService.getInstance().fetchAllUsersWithVariable("pin","1");
 				for(UserSession s : sessions) {

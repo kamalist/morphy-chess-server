@@ -31,7 +31,21 @@ public class AcceptCommand extends AbstractCommand {
 	public void process(String arguments, UserSession userSession) {
 		RequestService rs = RequestService.getInstance();
 		List<Request> list = rs.getRequestsTo(userSession);
-		int num = list.size();
+		
+		if (arguments.matches("[0-9]+")) {
+			Request r = rs.getRequestTo(userSession,Integer.parseInt(arguments));
+			if (!r.getTo().equals(userSession)) {
+				userSession.send("There is no offer " + arguments + " to accept.\nType \"pending\" to see the list of offers.");
+				return;
+			}
+			if (r != null) {
+				// we found it, we no longer need the list
+				list = new java.util.ArrayList<Request>(1);
+				list.add(r);
+			}
+		}
+		
+		int num = list == null ? 0 : list.size();
 		
 		if (num >= 2) {
 			userSession.send("There is more than one pending offer.\nType \"pending\" to see the list of offers.\nType \"accept n\" to accept an offer.");

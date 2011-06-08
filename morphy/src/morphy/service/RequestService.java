@@ -18,6 +18,7 @@
 package morphy.service;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -67,6 +68,28 @@ public class RequestService implements Service {
 			toMap.put(to,new ArrayList<Request>(10));
 		}
 		toMap.get(to).add(req);
+	}
+	
+	public Request getRequestFrom(UserSession userSession,int id) {
+		Collection<List<Request>> collection = fromMap.values();
+		for(List<Request> list : collection) {
+			for(Request r : list) {
+				if (r.getRequestNumber() == id)
+					return r;
+			}
+		}
+		return null;
+	}
+	
+	public Request getRequestTo(UserSession userSession,int id) {
+		Collection<List<Request>> collection = toMap.values();
+		for(List<Request> list : collection) {
+			for(Request r : list) {
+				if (r.getRequestNumber() == id)
+					return r;
+			}
+		}
+		return null;
 	}
 	
 	public List<Request> getRequestsFrom(UserSession userSession) {

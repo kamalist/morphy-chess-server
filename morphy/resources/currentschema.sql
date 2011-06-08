@@ -1,10 +1,8 @@
-CREATE DATABASE  IF NOT EXISTS `morphyics` /*!40100 DEFAULT CHARACTER SET latin1 */;
-USE `morphyics`;
--- MySQL dump 10.13  Distrib 5.1.40, for Win32 (ia32)
+-- MySQL dump 10.13  Distrib 5.5.9, for Win32 (x86)
 --
 -- Host: localhost    Database: morphyics
 -- ------------------------------------------------------
--- Server version	5.1.44-community
+-- Server version	5.5.9-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -16,6 +14,31 @@ USE `morphyics`;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Current Database: `morphyics`
+--
+
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `morphyics` /*!40100 DEFAULT CHARACTER SET latin1 */;
+
+USE `morphyics`;
+
+--
+-- Table structure for table `channels`
+--
+
+DROP TABLE IF EXISTS `channels`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `channels` (
+  `chnum` int(3) NOT NULL,
+  `chname` varchar(45) DEFAULT NULL,
+  `chdescription` varchar(500) DEFAULT NULL,
+  `level` enum('Guest','Player','Bot','Admin','SuperAdmin','HeadAdmin') DEFAULT NULL,
+  `canJoinLists` varchar(45) DEFAULT NULL,
+  UNIQUE KEY `chnum_UNIQUE` (`chnum`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `comment`
@@ -32,28 +55,38 @@ CREATE TABLE `comment` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `tzone` varchar(4) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `users`
+-- Table structure for table `commentfile`
 --
 
-DROP TABLE IF EXISTS `users`;
+DROP TABLE IF EXISTS `commentfile`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `users` (
+CREATE TABLE `commentfile` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `game`
+--
+
+DROP TABLE IF EXISTS `game`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `game` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `username` varchar(17) NOT NULL DEFAULT 'guest',
-  `password` varchar(25) NOT NULL DEFAULT 'abcd',
-  `ipAddress` varchar(15) DEFAULT NULL,
-  `registeredSince` timestamp NULL DEFAULT NULL,
-  `adminLevel` enum('Player','Admin','SuperAdmin','HeadAdmin') DEFAULT 'Player',
-  `lastLogin` timestamp NULL DEFAULT NULL,
-  `email` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `username_UNIQUE` (`username`)
-) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+  `White` varchar(17) NOT NULL,
+  `Black` varchar(17) NOT NULL,
+  `Reason` varchar(75) NOT NULL,
+  `Result` enum('1-0','0-1','1/2-1/2','*') NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -68,7 +101,116 @@ CREATE TABLE `list` (
   `name` varchar(10) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name_UNIQUE` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `list_entry`
+--
+
+DROP TABLE IF EXISTS `list_entry`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `list_entry` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `list_id` int(11) DEFAULT NULL,
+  `value` varchar(17) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `move`
+--
+
+DROP TABLE IF EXISTS `move`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `move` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `game_id` int(11) NOT NULL,
+  `username` varchar(17) NOT NULL,
+  `move_number` int(3) NOT NULL,
+  `move_time` decimal(10,3) NOT NULL,
+  `notation` varchar(10) NOT NULL,
+  `verbose` varchar(10) NOT NULL,
+  `isWhiteMove` tinyint(1) NOT NULL,
+  `fenbefore` varchar(90) NOT NULL,
+  `fenafter` varchar(90) NOT NULL,
+  `position` varchar(90) NOT NULL,
+  `server_game_number` int(4) NOT NULL,
+  `time_left` decimal(10,3) NOT NULL,
+  `lag` int(11) DEFAULT NULL,
+  `timestamp` decimal(21,6) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `newsitems`
+--
+
+DROP TABLE IF EXISTS `newsitems`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `newsitems` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `posted_by_user_id` int(6) DEFAULT NULL,
+  `name` varchar(50) DEFAULT NULL,
+  `content` varchar(300) DEFAULT NULL,
+  `posted_timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `expires_timestamp` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `posted_by_user_id` (`posted_by_user_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `personallist`
+--
+
+DROP TABLE IF EXISTS `personallist`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `personallist` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `name` varchar(45) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id_UNIQUE` (`user_id`),
+  UNIQUE KEY `name_UNIQUE` (`name`)
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `personallist_entry`
+--
+
+DROP TABLE IF EXISTS `personallist_entry`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `personallist_entry` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `personallist_id` int(11) NOT NULL,
+  `value` varchar(17) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `serverevent`
+--
+
+DROP TABLE IF EXISTS `serverevent`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `serverevent` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `comment` varchar(100) DEFAULT NULL,
+  `type` enum('Critical Error','Tolerable Error','Warning','Log') NOT NULL DEFAULT 'Log',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -88,86 +230,7 @@ CREATE TABLE `user_ratings` (
   `drawCount` int(6) DEFAULT NULL,
   `lossCount` int(6) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `serverevent`
---
-
-DROP TABLE IF EXISTS `serverevent`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `serverevent` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `comment` varchar(100) DEFAULT NULL,
-  `type` enum('Critical Error','Tolerable Error','Warning','Log') NOT NULL DEFAULT 'Log',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `commentfile`
---
-
-DROP TABLE IF EXISTS `commentfile`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `commentfile` (
-  `id` int(11) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `list_entry`
---
-
-DROP TABLE IF EXISTS `list_entry`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `list_entry` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `list_id` int(11) DEFAULT NULL,
-  `value` varchar(17) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `newsitems`
---
-
-DROP TABLE IF EXISTS `newsitems`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `newsitems` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `posted_by_user_id` int(6) DEFAULT NULL,
-  `name` varchar(50) DEFAULT NULL,
-  `content` varchar(300) DEFAULT NULL,
-  `posted_timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `expires_timestamp` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `channel`
---
-
-DROP TABLE IF EXISTS `channel`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `channel` (
-  `id` int(11) NOT NULL,
-  `chnum` int(3) DEFAULT NULL,
-  `chname` varchar(45) DEFAULT NULL,
-  `chdescription` varchar(500) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -230,7 +293,28 @@ CREATE TABLE `user_vars` (
   `interface` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id_UNIQUE` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(17) NOT NULL DEFAULT 'guest',
+  `password` varchar(25) NOT NULL DEFAULT 'abcd',
+  `ipAddress` varchar(15) DEFAULT NULL,
+  `registeredSince` timestamp NULL DEFAULT NULL,
+  `adminLevel` enum('Player','Admin','SuperAdmin','HeadAdmin') DEFAULT 'Player',
+  `lastLogin` timestamp NULL DEFAULT NULL,
+  `email` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username_UNIQUE` (`username`)
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -242,4 +326,4 @@ CREATE TABLE `user_vars` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2010-08-14 23:23:11
+-- Dump completed on 2011-06-08  0:03:34

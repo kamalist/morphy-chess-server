@@ -61,6 +61,11 @@ public class GameService implements Service {
 	
 	public void endGame(Game g) {
 		sendGin(g,false);
+		
+		((SocketChannelUserSession)g.getWhite()).setPlaying(false);
+		((SocketChannelUserSession)g.getBlack()).setPlaying(false);
+		map.put(g.getWhite(),null);
+		map.put(g.getBlack(),null);
 	}
 	
 	public Game createGame(UserSession white,UserSession black,MatchParams params) {

@@ -57,6 +57,11 @@ public class ObserveCommand extends AbstractCommand {
 			g = gs.map.get(array[0]);
 		}
 		
+		if (g == null) {
+			userSession.send("There is no such game.");
+			return;
+		}
+		
 		g.addObserver(userSession);
 		g.processMoveUpdate(userSession);
 	}

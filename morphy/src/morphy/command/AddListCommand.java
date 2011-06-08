@@ -24,6 +24,7 @@ import org.apache.commons.lang.StringUtils;
 
 import morphy.channel.Channel;
 import morphy.service.ChannelService;
+import morphy.service.DBConnectionService;
 import morphy.service.ServerListManagerService;
 import morphy.service.UserService;
 import morphy.user.PersonalList;
@@ -48,7 +49,8 @@ public class AddListCommand extends AbstractCommand {
 		String listName = args[0].toLowerCase();
 		String value = args[1];
 		
-		if (UserService.getInstance().isAdmin(userSession.getUser().getUserName())) {
+		UserService us = UserService.getInstance();
+		if (us.isAdmin(userSession.getUser().getUserName())) {
 			ServerListManagerService serv = ServerListManagerService.getInstance();
 			ServerList s = serv.getList(listName);
 			if (s != null) {
@@ -56,7 +58,7 @@ public class AddListCommand extends AbstractCommand {
 					if (s.getType().equals(ListType.Integer) && !StringUtils.isNumeric(value)) {
 						userSession.send("Bad value provided for that list (Integer required)");
 						return;
-					} else if (s.getType().equals(ListType.Username) && !UserService.getInstance().isValidUsername(value)) {
+					} else if (s.getType().equals(ListType.Username) && !us.isValidUsername(value)) {
 						userSession.send("Bad value provided for that list (Username required)");
 						return;
 					} else if (s.getType().equals(ListType.IPAddress) && !value.matches("\\d{1,3}.\\d{1,3}.\\d{1,3}.\\d{1,3}")) { 
@@ -68,7 +70,7 @@ public class AddListCommand extends AbstractCommand {
 					}
 					
 					
-					if (listName.equals("admin") && !UserService.getInstance().isRegistered(value)) {
+					if (listName.equals("admin") && !us.isRegistered(value)) {
 						userSession.send("Guests cannot be added to that list.");
 						return;
 					}
@@ -76,7 +78,7 @@ public class AddListCommand extends AbstractCommand {
 					if (!serv.isOnList(s,value)) {
 						serv.getElements().get(s).add(value);
 						userSession.send("[" + value + "] added to the " + listName + " list.");
-						UserSession user = UserService.getInstance().getUserSession(value);
+						UserSession user = us.getUserSession(value);
 						if (listName.equals("admin")) { 
 							user.getUser().setUserLevel(UserLevel.Admin); 
 						}
@@ -137,6 +139,15 @@ public class AddListCommand extends AbstractCommand {
 			myList.add(value);
 			userSession.send("[" + value + "] added to your " + listName
 					+ " list.");
+			
+			int dbid = userSession.getUser().getDBID();
+			boolean isGuest = dbid == 0;
+			if (!isGuest) {
+				DBConnectionService dbcs = DBConnectionService.getInstance();
+				dbcs.getDBConnection().executeQueryWithRS("INSERT IGNORE INTO personallist VALUES(NULL," + dbid + ",'" + listName + "');");
+				String query = "INSERT INTO personallist_entry VALUES(NULL," + userSession.getUser().getPersonalListDBIDs().get(list) + ",'" + value + "');";
+				dbcs.getDBConnection().executeQuery(query);
+			}
 		} else {
 			userSession.send("[" + value + "] is already on your " + listName
 					+ " list.");
