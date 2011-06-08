@@ -39,8 +39,10 @@ public class User {
 	// the following variables are stored in the db and need to be filled in.
 	protected String email;
 	protected long registeredSince;
+	protected int dbid;
 	
 	private Map<PersonalList,List<String>> personalLists;
+	private Map<PersonalList,Integer> personalListDBIDs;
 	
 	public User() {
 		setUserInfoLists(new HashMap<UserInfoList,List<String>>());
@@ -162,5 +164,21 @@ public class User {
 
 	public void setFormula(Formula formula) {
 		this.formula = formula;
+	}
+
+	public int getDBID() {
+		return dbid;
+	}
+
+	public void setDBID(int dbid) {
+		this.dbid = dbid;
+	}
+
+	public void setPersonalListDBIDs(Map<PersonalList,Integer> personalListDBIDs) {
+		this.personalListDBIDs = personalListDBIDs;
+	}
+
+	public Map<PersonalList,Integer> getPersonalListDBIDs() {
+		return personalListDBIDs;
 	}
 }

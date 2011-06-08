@@ -28,6 +28,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -36,6 +37,7 @@ import java.util.Set;
 import morphy.Morphy;
 import morphy.properties.PreferenceKeys;
 import morphy.service.ScreenService.Screen;
+import morphy.user.PersonalList;
 import morphy.user.PlayerType;
 import morphy.user.SocketChannelUserSession;
 import morphy.user.User;
@@ -268,11 +270,31 @@ public class SocketConnectionService implements Service {
 			userSession.getUser().setUserVars(new morphy.user.UserVars(userSession.getUser()));
 			userSession.setHasLoggedIn(true);
 			instance.addLoggedInUser(userSession);
+			userSession.getUser().setDBID(instance.getDBID(name));
 
 			boolean isHeadAdmin = false;
 
 			if (!isGuest) {
 				DBConnection conn = DBConnectionService.getInstance().getDBConnection();
+				
+				String query = "SELECT pl.`name`,pe.`value` FROM personallist pl INNER JOIN personallist_entry pe ON (pe.personallist_id = pl.id) WHERE pl.user_id = '" + userSession.getUser().getDBID() + "'";
+				java.sql.ResultSet rs = conn.executeQueryWithRS(query);
+				try {
+					while(rs.next()) {
+						userSession.getUser().getLists().get(PersonalList.valueOf(rs.getString(1))).add(rs.getString(2));
+					}
+				} catch(SQLException e) { Morphy.getInstance().onError(e); }
+				
+				Map<PersonalList,Integer> map = new HashMap<PersonalList,Integer>();
+				query = "SELECT name,id FROM personallist WHERE user_id = '" + userSession.getUser().getDBID() + "'";
+				rs = conn.executeQueryWithRS(query);
+				try {
+					while(rs.next()) {
+						map.put(PersonalList.valueOf(rs.getString(1)),rs.getInt(2));
+					}
+				} catch(SQLException e) { Morphy.getInstance().onError(e); }
+				userSession.getUser().setPersonalListDBIDs(map);
+				
 				conn.executeQuery("UPDATE `users` SET `lastlogin` = CURRENT_TIMESTAMP, `ipaddress` = '"
 								+ SocketUtils.getIpAddress(userSession.getChannel().socket()) + "' WHERE `username` = '" + name + "'");
 				java.sql.ResultSet r = conn.executeQueryWithRS("SELECT `adminLevel` FROM `users` WHERE `username` = '" + name + "'");

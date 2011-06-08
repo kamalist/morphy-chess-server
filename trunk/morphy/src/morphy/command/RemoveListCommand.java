@@ -22,6 +22,7 @@ import java.util.List;
 
 import morphy.channel.Channel;
 import morphy.service.ChannelService;
+import morphy.service.DBConnectionService;
 import morphy.service.ServerListManagerService;
 import morphy.service.UserService;
 import morphy.user.PersonalList;
@@ -131,6 +132,14 @@ public class RemoveListCommand extends AbstractCommand {
 			
 			userSession.send("[" + value + "] removed from " + ((list == null) ? "the" : "your") + " " + listName
 					+ " list.");
+			
+			int dbid = userSession.getUser().getDBID();
+			boolean isGuest = dbid == 0;
+			if (!isGuest) {
+				DBConnectionService dbcs = DBConnectionService.getInstance();
+				String query = "DELETE FROM personallist_entry WHERE personallist_id = " + userSession.getUser().getPersonalListDBIDs().get(list) + " && value = '" + value + "';";
+				dbcs.getDBConnection().executeQuery(query);
+			}
 		} else {
 			userSession.send("[" + value + "] is not " + ((list == null) ? "on the" : "in your") + " " + listName
 					+ " list.");

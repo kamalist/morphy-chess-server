@@ -26,6 +26,7 @@ import org.apache.commons.lang.StringUtils;
 
 import morphy.command.VariablesCommand.variables;
 import morphy.game.request.MatchRequest;
+import morphy.game.request.PartnershipRequest;
 import morphy.game.request.Request;
 import morphy.service.RequestService;
 import morphy.user.UserInfoList;
@@ -111,7 +112,12 @@ public class SetCommand extends AbstractCommand {
 				try {
 					var = VariablesCommand.variables.valueOf(setWhat);
 				} catch(IllegalArgumentException e) {
-					var = VariablesCommand.variables.valueOf("my"+setWhat);
+					try {
+						var = VariablesCommand.variables.valueOf("my"+setWhat);
+					} catch(IllegalArgumentException e2) {
+						userSession.send("No such variable \"" + setWhat + "\".");
+						return;
+					}
 				}
 				 
 				if (var.getType().equals(Integer.class) && !StringUtils.isNumeric(message)) {
@@ -377,23 +383,25 @@ public class SetCommand extends AbstractCommand {
 					RequestService rq = RequestService.getInstance();
 					if (var == VariablesCommand.variables.open && message.equals("0")) {
 						List<Request> list = rq.findAllToRequestsByType(userSession,MatchRequest.class);
-						for(Request r : list) {
-							r.getFrom().send(userSession.getUser().getUserName() + ", whom you were challenging, has become unavailable for matches.\n" +
-									"Challenge to " + userSession.getUser().getUserName() + " withdrawn.");
-							rq.removeRequestFrom(r.getFrom(),r);
-							userSession.send("Challenge from " + r.getFrom().getUser().getUserName() + " removed.");
+						if (list != null) {
+							for(Request r : list) {
+								r.getFrom().send(userSession.getUser().getUserName() + ", whom you were challenging, has become unavailable for matches.\n" +
+										"Challenge to " + userSession.getUser().getUserName() + " withdrawn.");
+								rq.removeRequestFrom(r.getFrom(),r);
+								userSession.send("Challenge from " + r.getFrom().getUser().getUserName() + " removed.");
+							}
+							rq.removeRequestsTo(userSession,MatchRequest.class);
 						}
-						rq.removeRequestsTo(userSession,MatchRequest.class);
 					}
 					
 					if (var == variables.bugopen && message.equals("0")) {
-						//List<Request> list = rq.findAllToRequestsByType(userSession,PartnershipRequest.class);
-						//for(Request r : list) {
-						//	r.getFrom().send(userSession.getUser().getUserName() + ", whom you were offering a partnership with, has become unavailable for bughouse.\n" +
-						//			"Partnership offer to " + userSession.getUser().getUserName() + " withdrawn.");
-						//	userSession.send("Partnership offer from " + r.getFrom().getUser().getUserName() + " removed.");
-						//}
-						//rq.removeRequestsTo(userSession,PartnershipRequest.class);
+						List<Request> list = rq.findAllToRequestsByType(userSession,PartnershipRequest.class);
+						for(Request r : list) {
+							r.getFrom().send(userSession.getUser().getUserName() + ", whom you were offering a partnership with, has become unavailable for bughouse.\n" +
+									"Partnership offer to " + userSession.getUser().getUserName() + " withdrawn.");
+							userSession.send("Partnership offer from " + r.getFrom().getUser().getUserName() + " removed.");
+						}
+						rq.removeRequestsTo(userSession,PartnershipRequest.class);
 					}
 					
 					userSession.send(returnmessage);

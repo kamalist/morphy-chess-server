@@ -17,14 +17,18 @@
  */
 package morphy.command;
 
+import java.util.List;
+
 import morphy.game.MatchParams;
 import morphy.game.Variant;
 import morphy.game.request.MatchRequest;
+import morphy.game.request.Request;
 import morphy.service.RequestService;
 import morphy.service.UserService;
 import morphy.user.PersonalList;
 import morphy.user.SocketChannelUserSession;
 import morphy.user.UserSession;
+import morphy.utils.MorphyStringTokenizer;
 import morphy.utils.MorphyStringUtils;
 
 public class MatchCommand extends AbstractCommand {
@@ -39,8 +43,9 @@ public class MatchCommand extends AbstractCommand {
      */
 	public void process(String arguments, UserSession userSession) {
 		int pos = arguments.indexOf(" ");
-		if (arguments.equals("")) {
-			process(userSession.getUser().getUserName(),userSession);
+		if (arguments.equals("") || pos == -1) {
+			userSession.send(getContext().getUsage());
+			//process(userSession.getUser().getUserName(),userSession);
 			return;
 		}
 		
@@ -101,15 +106,71 @@ public class MatchCommand extends AbstractCommand {
 		
 		if (sess.isExamining()) {
 			userSession.send(user + " is examining a game.");
+			return;
 		}
 		
 		// defaults
 		MatchParams p = new MatchParams();
-		p.setTime(Integer.parseInt(userSession.getUser().getUserVars().getVariables().get("time")));
-		p.setIncrement(Integer.parseInt(userSession.getUser().getUserVars().getVariables().get("inc")));
-		p.setRated(userSession.getUser().getUserVars().getVariables().get("rated").equals("1")?true:false);
-		p.setVariant(Variant.blitz);
-		p.setColorRequested(MatchParams.ColorRequested.Black);
+		boolean timeSet = false,incrementSet = false,ratedSet = false,variantSet = false,colorSet = false;
+		
+//		userSession.send("Game is untimed - setting to unrated.");
+//		userSession.send("Couldn't interpret the game parameters.");
+//		userSession.send("No such board: unrate 0");
+		
+		// i hate doing this, but for now i will presume it is in format: 3 0 r zh black
+		MorphyStringTokenizer toks = new MorphyStringTokenizer(arguments," ");
+		String tok = toks.nextToken();
+		if (tok.matches("[0-9]+")) {
+			// time
+			p.setTime(Integer.parseInt(tok));
+			timeSet = true;
+			tok = toks.nextToken();
+		}
+		
+		
+		if (tok.matches("[0-9]+")) {
+			// time
+			p.setIncrement(Integer.parseInt(tok));
+			incrementSet = true;
+			tok = toks.nextToken();
+		}
+		
+		if (tok.equalsIgnoreCase("u") || tok.equalsIgnoreCase("unrated")) { 
+			p.setRated(false); 
+			ratedSet = true;
+		}
+		if (tok.equalsIgnoreCase("r") || tok.equalsIgnoreCase("rated")) {
+			if (!userSession.getUser().isRegistered()) {
+				userSession.send("You are unregistered - setting to unrated.");
+				p.setRated(false);
+			} else if (!sess.getUser().isRegistered()) {
+				userSession.send(sess.getUser().getUserName() + " is unregistered - setting to unrated.");
+				p.setRated(false);
+			} else {
+				p.setRated(true);
+			}
+			ratedSet = true;
+		}
+		tok = toks.nextToken();
+		
+		if (tok.equalsIgnoreCase("w") || tok.equalsIgnoreCase("white")) {
+			p.setColorRequested(MatchParams.ColorRequested.White);
+			colorSet = true;
+		} else if (tok.equalsIgnoreCase("b") || tok.equalsIgnoreCase("black")) {
+			p.setColorRequested(MatchParams.ColorRequested.Black);
+			colorSet = true;
+		} else {
+			p.setColorRequested(MatchParams.ColorRequested.Neither);
+			colorSet = true;
+		}
+		
+		//tok = toks.nextToken();
+	
+		if (!timeSet) p.setTime(Integer.parseInt(userSession.getUser().getUserVars().getVariables().get("time")));
+		if (!incrementSet) p.setIncrement(Integer.parseInt(userSession.getUser().getUserVars().getVariables().get("inc")));
+		if (!ratedSet) p.setRated(userSession.getUser().getUserVars().getVariables().get("rated").equals("1")?true:false);
+		if (!variantSet) p.setVariant(Variant.blitz);
+		if (!colorSet) p.setColorRequested(MatchParams.ColorRequested.Neither);
 		
 		// todo
 		if (sess.getUser().getFormula() != null) {
@@ -119,19 +180,42 @@ public class MatchCommand extends AbstractCommand {
 				return;
 			}
 		}
-	
+		
+		boolean update = false;
+		
+		RequestService rs = RequestService.getInstance();
+		
 		StringBuilder str = new StringBuilder(200);
-		str.append("Challenge: " + userSession.getUser().getUserName() + " (----) " + (p.getColorRequested()!=MatchParams.ColorRequested.Neither?"[" + p.getColorRequested().name() + "]":"") + " " + user + " (----) " + (p.isRated()?"rated":"unrated") + " " + p.getVariant() + " " + p.getTime() + " " + p.getIncrement() + ".");
+		List<Request> list = rs.findAllFromRequestsByType(userSession,MatchRequest.class);
+		if (list != null) {
+			for(Request r : list) {
+				if (r.getTo().equals(sess)) {
+					update = true;
+				}
+			}
+		}		
+	
+		str = new StringBuilder(200);
+		//str.append("GuestBVKZ updates the match request.\n\n");
+		
+		str.append("Challenge: " + userSession.getUser().getUserName() + " (----) " + (p.getColorRequested()!=MatchParams.ColorRequested.Neither?"[" + p.getColorRequested().name() + "]":"") + " " + sess.getUser().getUserName() + " (----) " + (p.isRated()?"rated":"unrated") + " " + p.getVariant() + " " + p.getTime() + " " + p.getIncrement() + ".");
 		str.append("\nYou can \"accept\" or \"decline\", or propose different parameters.");
 		sess.send(str.toString());
 		
 		str = new StringBuilder(200);
-		str.append("Issuing: " + userSession.getUser().getUserName() + " (----) " + user + " (----) " + (p.getColorRequested()!=MatchParams.ColorRequested.Neither?"[" + p.getColorRequested().name() + "]":"") + " " + (p.isRated()?"rated":"unrated") + " " + p.getVariant() + " " + p.getTime() + " " + p.getIncrement() + ".");
+		if (userSession.getUser().getUserVars().getVariables().get("open").equals("0")) {
+			str.append("You are now open to receive match requests.\n");
+			userSession.getUser().getUserVars().getVariables().put("open","1");
+		}
+		if (!update) str.append("Issuing: " + userSession.getUser().getUserName() + " (----) " + sess.getUser().getUserName() + " (----) " + (p.getColorRequested()!=MatchParams.ColorRequested.Neither?"[" + p.getColorRequested().name() + "]":"") + " " + (p.isRated()?"rated":"unrated") + " " + p.getVariant() + " " + p.getTime() + " " + p.getIncrement() + ".");
+		if (update) {
+			str.append("Updating offer already made to \"" + sess.getUser().getUserName() + "\".\n\n");
+			// TODO watchout for bug where color is Neither
+			str.append("Updating match request to: " + ((p.getColorRequested()==MatchParams.ColorRequested.White)?userSession.getUser().getUserName():sess.getUser().getUserName()) + " (----) " + ((p.getColorRequested()==MatchParams.ColorRequested.Black)?userSession.getUser().getUserName():sess.getUser().getUserName()) + "(----) " + (p.isRated()?"rated":"unrated") + " " + p.getVariant() + " " + p.getTime() + " " + p.getIncrement() + ".");
+		}
 		userSession.send(str.toString());
 		
 		MatchRequest req = new MatchRequest(userSession,sess,p);
-		
-		RequestService instance = RequestService.getInstance();
-		instance.addRequest(userSession, sess, req);
+		rs.addRequest(userSession, sess, req);
 	}
 }
