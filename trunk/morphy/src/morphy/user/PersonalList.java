@@ -19,4 +19,8 @@ package morphy.user;
 
 public enum PersonalList {
 	censor, gnotify, noplay, notify, channel, nopartner, remote, idlenotify;
+	
+	public String toString() {
+		return name();
+	}
 }

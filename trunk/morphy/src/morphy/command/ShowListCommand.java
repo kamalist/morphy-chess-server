@@ -25,6 +25,7 @@ import morphy.service.ServerListManagerService;
 import morphy.user.PersonalList;
 import morphy.user.User;
 import morphy.user.UserSession;
+import morphy.utils.MorphyStringUtils;
 import morphy.utils.john.ServerList;
 
 public class ShowListCommand extends AbstractCommand {
@@ -65,18 +66,48 @@ public class ShowListCommand extends AbstractCommand {
 			return;
 		}
 
+		
+		
 		PersonalList list = null;
 		ServerList serverList = null;
-		try {
-			list = PersonalList.valueOf(listName);
-		} catch (Exception e) {
-			serverList = serv.getList(listName);
-			if (serverList == null) {
-				userSession.send("\"" + listName
-						+ "\" does not match any list name.");
+		
+		PersonalList[] arr = getLists(listName);
+		if (arr.length >= 2) {
+			userSession.send("Ambiguous list - matches: " + MorphyStringUtils.toDelimitedString(arr, ", ") + ".");
+			return;
+		}
+		if (arr.length == 1) {
+			list = arr[0];
+		}
+		
+		if (arr.length == 0) {
+			// try parsing for serverList
+			ServerList[] sl_arr = getLists(serv, listName);
+			if (sl_arr.length >= 2) {
+			
 				return;
 			}
-		}
+			if (sl_arr.length == 1) {
+				serverList = sl_arr[0];
+			}
+			if (sl_arr.length == 0) {
+				userSession.send("\"" + listName
+					+ "\" does not match any list name.");
+				return;
+			}
+ 		}
+		
+//		try {
+//			list = PersonalList.valueOf(listName);
+//		} catch (Exception e) {
+//			serverList = serv.getList(listName);
+//			if (serverList == null) {
+//				userSession.send("\"" + listName
+//						+ "\" does not match any list name.");
+//				return;
+//			}
+//		}
+		
 		List<String> myList = null;
 		if (list != null) {
 			myList = userSession.getUser().getLists().get(list);
@@ -90,6 +121,28 @@ public class ShowListCommand extends AbstractCommand {
 		Collections.sort(myList);
 		showList(userSession, listName, myList
 				.toArray(new String[myList.size()]));
+	}
+	
+	private PersonalList[] getLists(String partial) {
+		PersonalList[] values = PersonalList.values();
+		List<PersonalList> retList = new ArrayList<PersonalList>(values.length);
+		for(PersonalList l : values) {
+			if (l.name().toLowerCase().startsWith(partial.toLowerCase())) {
+				retList.add(l);
+			}
+		}
+		return retList.toArray(new PersonalList[retList.size()]);
+	}
+	
+	private ServerList[] getLists(ServerListManagerService instance,String partial) {
+		ServerList[] values = instance.getLists().toArray(new ServerList[instance.getLists().size()]);
+		List<ServerList> retList = new ArrayList<ServerList>(values.length);
+		for(ServerList l : values) {
+			if (l.getName().toLowerCase().startsWith(partial.toLowerCase())) {
+				retList.add(l);
+			}
+		}
+		return retList.toArray(new ServerList[retList.size()]);
 	}
 
 	private void showList(UserSession userSession, String listName,

@@ -142,8 +142,7 @@ public class UserService implements Service {
 	}
 
 	public void addLoggedInUser(UserSession userSessopm) {
-		userNameToSessionMap.put(userSessopm.getUser().getUserName()
-				.toLowerCase(), userSessopm);
+		userNameToSessionMap.put(userSessopm.getUser().getUserName(), userSessopm);
 	}
 
 	public void dispose() {
@@ -172,18 +171,17 @@ public class UserService implements Service {
 	}
 
 	public UserSession getUserSession(String userName) {
-		return userNameToSessionMap.get(userName.toLowerCase());
+		return userNameToSessionMap.get(userName);
 	}
 
 	public boolean isLoggedIn(String userName) {
-		return userNameToSessionMap.get(userName.toLowerCase()) != null;
+		return userNameToSessionMap.get(userName) != null;
 	}
 
 	public void removeLoggedInUser(UserSession userSession) {
 		if (userSession.getUser() != null
 				&& userSession.getUser().getUserName() != null) {
-			userNameToSessionMap.remove(userSession.getUser().getUserName()
-					.toLowerCase());
+			userNameToSessionMap.remove(userSession.getUser().getUserName());
 		}
 	}
 

@@ -29,41 +29,49 @@ public class BugWhoCommand extends AbstractCommand {
 		super("bugwho");
 	}
 	
-	public void process(String arguments, UserSession userSession) {
-//		int pos = arguments.indexOf(" ");
-//		if (arguments.equals("")) {
-//			process(userSession.getUser().getUserName(),userSession);
-//			return;
-//		}
-
-//		30 2677 GMFressinet 2705 GMBacrot   [ su120   0] 1:31:00 -1:32:00 (39-39) B:  7
+	public void process(String arguments, UserSession userSession) {	
 		
+		boolean showGames = false;
+		boolean showPartnerships = false;
+		boolean showUnpartnered = false;
 		
-//		GameService gs = GameService.getInstance();
-//		List<Game> list = gs.getGames();
-//		if (list.size() == 0) {
-//			userSession.send("There are no games in progress.");
-//			return;
-//		}
+		if (arguments.equals("")) {
+			arguments = "gpu";
+		}
+		
+		if (arguments.contains("g")) {
+			showGames = true;
+		}
+		if (arguments.contains("p")) {
+			showPartnerships = true;
+		}
+		if (arguments.contains("u")) {
+			showUnpartnered = true;
+		}
 		
 		StringBuilder b = new StringBuilder();
 		
-		b.append("Bughouse games in progress\n");
-		b.append("160 1770 knighttour  1680 BishopBlud [pBu  2   0]   0:58 -  0:14 (35-23) W: 27\n");
-		b.append("179 1486 EagleMorphy ++++ DogWithSky [pBu  2   0]   1:09 -  0:22 (43-55) B: 20\n");
-
-		b.append(String.format("%2d",1) + " game displayed.\n\n");
-
-		b.append("Partnerships not playing bughouse\n");
-		UserService us = UserService.getInstance();
-		UserSession u = us.getUserSession("johnthegreat");
-		b.append(String.format("%4s","9999") + " " + getChar(u) + StringUtils.rightPad(us.getTags(u.getUser().getUserName()), 20));
-		b.append(" / 2789:ChIcKeNcRoSsRoAd(FM)(CA)");
-
-		b.append("\n3 partnerships displayed.\n\n");
+		if (showGames) {
+			b.append("Bughouse games in progress\n");
+			b.append(String.format("%3d",160) + " 1770 knighttour  1680 BishopBlud [pBu  2   0]   0:58 -  0:14 (35-23) W: 27\n");
+			b.append(String.format("%3d",179) + " 1486 EagleMorphy ++++ DogWithSky [pBu  2   0]   1:09 -  0:22 (43-55) B: 20\n");
+			b.append("\n"+String.format("%2d",1) + " game displayed.\n\n");
+		}
 		
-		b.append("Unpartnered players with bugopen on\n\n");
-		b.append("2789:ChIcKeNcRoSsRoAd(FM)(CA)  1369^bachio");
+		if (showPartnerships) {
+			UserService us = UserService.getInstance();
+			UserSession u = us.getUserSession("johnthegreat");
+			b.append("Partnerships not playing bughouse\n");
+			b.append(String.format("%4s","9999") + " " + getChar(u) + StringUtils.rightPad(us.getTags(u.getUser().getUserName()), 17));
+			b.append(" / 2789:ChIcKeNcRoSsRoAd(FM)(CA)");
+			
+			b.append("\n\n" + String.format("%2d",1) + " partnerships displayed.\n\n");
+		}
+
+		if (showUnpartnered) {
+			b.append("Unpartnered players with bugopen on\n\n");
+			b.append("2789:ChIcKeNcRoSsRoAd(FM)(CA)  1369^bachio");
+		}
 		
 		userSession.send(b.toString());
 	}
@@ -74,6 +82,7 @@ public class BugWhoCommand extends AbstractCommand {
 		SocketChannelUserSession s = (SocketChannelUserSession)u;
 		if (s.isPlaying()) { pChar = "^"; } else
 		if (s.isExamining()) { pChar = "#"; } else
+		if (s.getUser().getUserVars().getVariables().get("open").equals("0")) { pChar = ":"; } else
 		if (s.getIdleTimeMillis() > 300000 || 
 			!s.getUser().getUserVars().getVariables().get("busy").equals("")) { pChar = "."; } else
 		if (s.getUser().getUserVars().getVariables().get("tourney").equals("1")) { pChar = "&"; }

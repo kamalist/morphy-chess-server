@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
+import morphy.Morphy;
 import morphy.channel.Channel;
 import morphy.service.ChannelService;
 import morphy.service.DBConnectionService;
@@ -136,16 +137,35 @@ public class AddListCommand extends AbstractCommand {
 				}
 			}
 
+			if (list != PersonalList.channel) {
+				String[] matches = us.completeHandle(value);
+				//System.err.println(value + " " + java.util.Arrays.toString(matches));
+				if (matches.length > 0) {
+					if (matches.length == 1) {
+						value = matches[0];
+					}
+				}
+			}
+			
 			myList.add(value);
-			userSession.send("[" + value + "] added to your " + listName
-					+ " list.");
+			userSession.send("[" + value + "] added to your " + listName + " list.");
 			
 			int dbid = userSession.getUser().getDBID();
 			boolean isGuest = dbid == 0;
 			if (!isGuest) {
 				DBConnectionService dbcs = DBConnectionService.getInstance();
 				dbcs.getDBConnection().executeQueryWithRS("INSERT IGNORE INTO personallist VALUES(NULL," + dbid + ",'" + listName + "');");
-				String query = "INSERT INTO personallist_entry VALUES(NULL," + userSession.getUser().getPersonalListDBIDs().get(list) + ",'" + value + "');";
+				Integer listid = userSession.getUser().getPersonalListDBIDs().get(list);
+				if (listid == null) {
+					java.sql.ResultSet rs = dbcs.getDBConnection().executeQueryWithRS("SELECT `id`,`name` FROM personallist WHERE user_id = '" + dbid + "' && name = '" + listName + "';");
+					try {
+						if (rs.next()) {
+							userSession.getUser().getPersonalListDBIDs().put(PersonalList.valueOf(rs.getString(2)),rs.getInt(1));
+							listid = rs.getInt(1);
+						}
+					} catch(java.sql.SQLException e) { Morphy.getInstance().onError(e); }
+				}
+				String query = "INSERT INTO personallist_entry VALUES(NULL," + listid + ",'" + value + "');";
 				dbcs.getDBConnection().executeQuery(query);
 			}
 		} else {
