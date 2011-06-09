@@ -39,6 +39,7 @@ public class WhoCommand extends AbstractCommand {
 			SocketChannelUserSession s = (SocketChannelUserSession)users[i];
 			if (s.isPlaying()) { pChar = "^"; } else
 			if (s.isExamining()) { pChar = "#"; } else
+			if (s.getUser().getUserVars().getVariables().get("open").equals("0")) { pChar = ":"; } else
 			if (s.getIdleTimeMillis() > 300000 || 
 				!s.getUser().getUserVars().getVariables().get("busy").equals("")) { pChar = "."; } else
 			if (s.getUser().getUserVars().getVariables().get("tourney").equals("1")) { pChar = "&"; }

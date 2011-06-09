@@ -28,6 +28,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -297,7 +298,7 @@ public class SocketConnectionService implements Service {
 				
 				conn.executeQuery("UPDATE `users` SET `lastlogin` = CURRENT_TIMESTAMP, `ipaddress` = '"
 								+ SocketUtils.getIpAddress(userSession.getChannel().socket()) + "' WHERE `username` = '" + name + "'");
-				java.sql.ResultSet r = conn.executeQueryWithRS("SELECT `adminLevel` FROM `users` WHERE `username` = '" + name + "'");
+				ResultSet r = conn.executeQueryWithRS("SELECT `adminLevel` FROM `users` WHERE `username` = '" + name + "'");
 				try {
 					if (r.next()) {
 						String level = r.getString(1);
@@ -316,7 +317,7 @@ public class SocketConnectionService implements Service {
 							isHeadAdmin = true;
 						}
 					}
-				} catch (java.sql.SQLException e) {
+				} catch (SQLException e) {
 					if (LOG.isErrorEnabled()) {
 						LOG
 								.error("Unable to set user level from database for name \""
@@ -336,6 +337,17 @@ public class SocketConnectionService implements Service {
 					Screen.SuccessfulLogin));
 			userSession.send(loginMessage.toString());
 			
+//			query = "SELECT DISTINCT u.username FROM `morphyics`.`personallist` pl INNER JOIN users u ON (pl.user_id = u.id) WHERE pl.`name` = 'notify'";
+//			rs = dbcs.getDBConnection().executeQueryWithRS(query);
+//			try {
+//				UserService us = UserService.getInstance();
+//				while(rs.next()) {
+//					String username = rs.getString(1);
+//					UserSession sess = us.getUserSession(username);
+//					sess.send("Notification: " + name + " has arrived.");
+//				} 
+//			} catch(SQLException e) { Morphy.getInstance().onError(e); }
+			
 			UserSession[] sessions = UserService.getInstance().fetchAllUsersWithVariable("pin","1");
 			for(UserSession s : sessions) {
 				UserLevel adminLevel = s.getUser().getUserLevel();
@@ -349,6 +361,39 @@ public class SocketConnectionService implements Service {
 					s.send(String.format("[%s has connected.]",userSession.getUser().getUserName()));
 				}
 			}
+			
+			DBConnectionService dbcs = DBConnectionService.getInstance();
+			
+			java.util.List<String> arrivalNotedBy = new java.util.ArrayList<String>(10);
+			// this query gets all usernames with this player on their notify list.
+			String query = "SELECT u.username FROM personallist pl INNER JOIN personallist_entry ple ON (pl.id = ple.personallist_id) INNER JOIN users u ON (u.id = pl.user_id) WHERE pl.`name` = 'notify' && ple.`value` LIKE '" + userSession.getUser().getUserName() + "';";
+			ResultSet rs = dbcs.getDBConnection().executeQueryWithRS(query);
+			try {
+				UserService us = UserService.getInstance();
+				while(rs.next()) {
+					String username = rs.getString(1);
+					UserSession sess = us.getUserSession(username);
+					if (sess != null && sess.isConnected()) sess.send("Notification: " + name + " has arrived.");
+					arrivalNotedBy.add(sess.getUser().getUserName());
+				}
+			} catch(SQLException e) { Morphy.getInstance().onError(e); }
+			if (arrivalNotedBy.size() > 0) {
+				userSession.send("Your arrival was noted by: " + MorphyStringUtils
+						.toDelimitedString(arrivalNotedBy.toArray(new String[arrivalNotedBy.size()])," "));
+			}
+			
+			query = "SELECT ple.`value` FROM personallist pl INNER JOIN personallist_entry ple ON (pl.id = ple.personallist_id) WHERE pl.user_id = " + userSession.getUser().getDBID() + " && pl.`name` = 'notify'"; // get this player's notify list
+			rs = dbcs.getDBConnection().executeQueryWithRS(query);
+			try {
+				UserService us = UserService.getInstance();
+				while(rs.next()) {
+					String username = rs.getString(1);
+					if (arrivalNotedBy.contains(username)) continue;
+					UserSession sess = us.getUserSession(username);
+					if (sess != null && sess.isConnected()) sess.send("Notification: " + name + " has arrived and isn't on your notify list.");
+				}
+			} catch(SQLException e) { Morphy.getInstance().onError(e); }
+			// Notification: ChannelBot has arrived and isn't on your notify list.
 		} else {
 			sendWithoutPrompt("Invalid user name: " + message + " Good Bye.\n",
 					userSession);

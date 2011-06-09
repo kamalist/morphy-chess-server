@@ -61,7 +61,10 @@ public class SetCommand extends AbstractCommand {
 		String setWhat = arguments.substring(0,pos).trim();
 		String message = arguments.substring(pos).trim();
 		
-		variables[] v = findAllMatches(VariablesCommand.variables.values(),setWhat);
+		variables[] varr = variables.values();
+		java.util.Arrays.sort(varr);
+		
+		variables[] v = findAllMatches(varr,setWhat);
 		//System.out.println(java.util.Arrays.toString(v));
 		
 		if (StringUtils.isNumeric(setWhat)) {
@@ -108,17 +111,7 @@ public class SetCommand extends AbstractCommand {
 			}
 			
 			if (v.length == 1) {
-				variables var;
-				try {
-					var = VariablesCommand.variables.valueOf(setWhat);
-				} catch(IllegalArgumentException e) {
-					try {
-						var = VariablesCommand.variables.valueOf("my"+setWhat);
-					} catch(IllegalArgumentException e2) {
-						userSession.send("No such variable \"" + setWhat + "\".");
-						return;
-					}
-				}
+				variables var = v[0];
 				 
 				if (var.getType().equals(Integer.class) && !StringUtils.isNumeric(message)) {
 					if (message.equalsIgnoreCase("true")) message = "1"; else

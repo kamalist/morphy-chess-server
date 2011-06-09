@@ -22,6 +22,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import morphy.Morphy;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -82,9 +84,7 @@ public class DBConnection {
 			s.execute(query);
 			return s.getResultSet();
 		} catch(SQLException se) {
-			if (LOG.isErrorEnabled()) {
-				LOG.error(se);
-			}
+			Morphy.getInstance().onError(se);
 			return null;
 		}
 	}

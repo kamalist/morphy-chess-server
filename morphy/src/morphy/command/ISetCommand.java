@@ -22,7 +22,7 @@ import morphy.user.UserSession;
 
 public class ISetCommand extends AbstractCommand {
 	public ISetCommand() {
-		super("ISet");
+		super("iset");
 	}
 
 	public void process(String arguments, UserSession userSession) {
@@ -47,6 +47,8 @@ public class ISetCommand extends AbstractCommand {
 				}
 				userSession.send(errmess.toString());
 				return;
+			} else {
+				setWhat = matches[0].name();
 			}
 			
 			if (value.equalsIgnoreCase("true") || value.equals("1") || value.equalsIgnoreCase("false") || value.equals("0")) {
@@ -57,10 +59,15 @@ public class ISetCommand extends AbstractCommand {
 				if (value.equalsIgnoreCase("false"))
 					value = "0";
 				
+//				if (userSession.getUser().getUserVars().getIVariables().get("lock").equals("1")) {
+//					userSession.send("Cannot alter: Interface setting locked.");
+//					return;
+//				}
 				// set the variable here.
 				userSession.getUser().getUserVars().getIVariables().put(setWhat,value);
 				
 				userSession.send(setWhat + " " + (value.equals("1")?"set":"unset") + ".");
+				
 			}
 			
 		} else {

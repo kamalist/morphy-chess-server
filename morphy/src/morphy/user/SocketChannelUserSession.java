@@ -19,6 +19,8 @@ package morphy.user;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -28,9 +30,11 @@ import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TreeMap;
 
+import morphy.Morphy;
 import morphy.channel.Channel;
 import morphy.game.request.MatchRequest;
 import morphy.game.request.Request;
+import morphy.service.DBConnectionService;
 import morphy.service.GameService;
 import morphy.service.RequestService;
 import morphy.service.ScreenService;
@@ -87,7 +91,7 @@ public class SocketChannelUserSession implements UserSession,
 		idleLogoutTimer.schedule(new java.util.TimerTask() {
 			public void run() {
 					if (getIdleTimeMillis() >= millis-1) {
-						send("\n**** Auto-logout because you were idle for 60 minutes ****\n");
+						send("\n\n**** Auto-logout because you were idle for 60 minutes ****\n");
 						disconnect();
 					} else {
 						idleLogoutTimer.purge();
@@ -119,9 +123,11 @@ public class SocketChannelUserSession implements UserSession,
 				
 				RequestService rs = RequestService.getInstance();
 				List<Request> list = rs.getRequestsTo(this);
-				for(Request r : list) {
-					if (r.getClass() == MatchRequest.class) {
-						r.getFrom().send(r.getTo().getUser().getUserName() + " whom you were challenging, has departed.\nChallenge to " + r.getTo().getUser().getUserName() + " withdrawn.");
+				if (list != null) {
+					for(Request r : list) {
+						if (r.getClass() == MatchRequest.class) {
+							r.getFrom().send(r.getTo().getUser().getUserName() + " whom you were challenging, has departed.\nChallenge to " + r.getTo().getUser().getUserName() + " withdrawn.");
+						}
 					}
 				}
 				rs.removeAllRequestsTo(this);
@@ -141,6 +147,18 @@ public class SocketChannelUserSession implements UserSession,
 				for(UserSession s : sessions) {
 					s.send(String.format("[%s has disconnected.]",getUser().getUserName()));
 				}
+				
+				String query = "SELECT u.username FROM personallist pl INNER JOIN personallist_entry ple ON (pl.id = ple.personallist_id) INNER JOIN users u ON (u.id = pl.user_id) WHERE pl.`name` = 'notify' && ple.`value` LIKE '" + getUser().getUserName() + "';";
+				DBConnectionService dbcs = DBConnectionService.getInstance();
+				ResultSet resultSet = dbcs.getDBConnection().executeQueryWithRS(query);
+				try {
+					UserService us = UserService.getInstance();
+					while(resultSet.next()) {
+						String username = resultSet.getString(1);
+						UserSession sess = us.getUserSession(username);
+						if (sess != null && sess.isConnected()) sess.send("Notification: " + getUser().getUserName() + " has departed.");
+					} 
+				} catch(SQLException e) { Morphy.getInstance().onError(e); }
 			}
 		}
 	}
