@@ -90,11 +90,13 @@ public class UserService implements Service {
 		if (isLoggedIn(partial)) return new String[] { partial };
 		
 		String[] allkeys = userNameToSessionMap.keySet().toArray(new String[0]);
+		UserSession[] values = userNameToSessionMap.values().toArray(new UserSession[userNameToSessionMap.values().size()]);
 
 		List<String> matches = new ArrayList<String>();
-		for (String s : allkeys) {
+		for (int i=0;i<allkeys.length;i++) {
+			String s = allkeys[i];
 			if (s.toLowerCase().startsWith(partial.toLowerCase()))
-				matches.add(s);
+				matches.add(values[i].getUser().getUserName());
 		}
 
 		return matches.toArray(new String[matches.size()]);
@@ -142,7 +144,8 @@ public class UserService implements Service {
 	}
 
 	public void addLoggedInUser(UserSession userSessopm) {
-		userNameToSessionMap.put(userSessopm.getUser().getUserName(), userSessopm);
+		userNameToSessionMap.put(userSessopm.getUser().getUserName()
+				.toLowerCase(), userSessopm);
 	}
 
 	public void dispose() {
@@ -171,17 +174,18 @@ public class UserService implements Service {
 	}
 
 	public UserSession getUserSession(String userName) {
-		return userNameToSessionMap.get(userName);
+		return userNameToSessionMap.get(userName.toLowerCase());
 	}
 
 	public boolean isLoggedIn(String userName) {
-		return userNameToSessionMap.get(userName) != null;
+		return userNameToSessionMap.get(userName.toLowerCase()) != null;
 	}
 
 	public void removeLoggedInUser(UserSession userSession) {
 		if (userSession.getUser() != null
 				&& userSession.getUser().getUserName() != null) {
-			userNameToSessionMap.remove(userSession.getUser().getUserName());
+			userNameToSessionMap.remove(userSession.getUser().getUserName()
+					.toLowerCase());
 		}
 	}
 
