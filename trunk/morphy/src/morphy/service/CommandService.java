@@ -38,6 +38,7 @@ import morphy.command.Command;
 import morphy.command.DateCommand;
 import morphy.command.FingerCommand;
 import morphy.command.GamesCommand;
+import morphy.command.HandlesCommand;
 import morphy.command.HelpCommand;
 import morphy.command.ISetCommand;
 import morphy.command.IVariablesCommand;
@@ -108,6 +109,7 @@ public class CommandService implements Service {
 		
 		GamesCommand.class,
 		
+		HandlesCommand.class,
 		HelpCommand.class,
 		
 		InchannelCommand.class,

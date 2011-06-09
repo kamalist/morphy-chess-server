@@ -43,10 +43,13 @@ public class ZNotifyCommand extends AbstractCommand {
 			b.append("Present company on your notify list:\n   ");
 			for(int i=0;i<l.size();i++) {
 				String username = l.get(i);
+				System.err.println(username);
 				UserSession s = UserService.getInstance().getUserSession(username);
-				b.append(username);
-				if (s.getIdleTimeMillis() > 60000) {
-					b.append("(idle:" + (s.getIdleTimeMillis()/60000) + "m)");
+				if (s != null) { // in case player is offline
+					b.append(username);
+					if (s.getIdleTimeMillis() > 60000) {
+						b.append("(idle:" + (s.getIdleTimeMillis()/60000) + "m)");
+					}
 				}
 				if (i != l.size()-1)
 					b.append(" ");
