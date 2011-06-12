@@ -36,7 +36,7 @@ public class AbortRequest implements Request {
 	
 	public void acceptAction() {
 		GameService gs = GameService.getInstance();
-		Game g = gs.map.get(from);
+		Game g = (Game)gs.map.get(from);
 		g.setResult("*");
 		
 		String message = "";

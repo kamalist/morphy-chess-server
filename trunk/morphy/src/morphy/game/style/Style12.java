@@ -18,13 +18,15 @@
 package morphy.game.style;
 
 import board.PositionState;
+import morphy.game.ExaminedGame;
 import morphy.game.Game;
+import morphy.game.GameInterface;
 import morphy.user.UserSession;
 
 /** Class implementing the style12 string. */
 public class Style12 implements StyleInterface {
 
-	public String print(UserSession userSession, Game g) {
+	public String print(UserSession userSession, GameInterface g) {
 		PositionState p = g.getBoard().getLatestMove();
 		
 		String notation = "none", verboseNotation = "none";
@@ -36,14 +38,32 @@ public class Style12 implements StyleInterface {
 		
 		//System.err.println(p.getNotation() + " " + p.getVerboseNotation() + " " + p.getFEN());
 		int myrelation = 0;
-		boolean amIPlaying = userSession.getUser().getUserName().equals(g.getWhite().getUser().getUserName()) || userSession.getUser().getUserName().equals(g.getBlack().getUser().getUserName());
-		if (!amIPlaying) myrelation = 0;
-		boolean amIWhite = userSession.getUser().getUserName().equals(g.getWhite().getUser().getUserName());
-		boolean whitesMove = !p.isWhitesMove();
-		if ((amIWhite && whitesMove) || (!amIWhite && !whitesMove)) myrelation = 1;
-		if (amIWhite && !whitesMove || !amIWhite && whitesMove) myrelation = -1;
 		
-		String style12string = "" + p.draw() + "" + (p.isWhitesMove()?"B":"W") + " -1 " + (p.canWhiteCastleKingside()?"1":"0") + " " + (p.canWhiteCastleQueenside()?"1":"0") + " " + (p.canBlackCastleKingside()?"1":"0") + " " + (p.canBlackCastleQueenside()?"1":"0") + " 0 " + g.getGameNumber() + " " + g.getWhite().getUser().getUserName() + " " + g.getBlack().getUser().getUserName() + " " + myrelation + " " + (g.getTime()) + " " + g.getIncrement() + " " + g.getWhiteBoardStrength() + " " + g.getBlackBoardStrength() + " " + g.getWhiteClock() + " " + g.getBlackClock() + " " + (g.getBoard().getPositions().size()/2) + " " + verboseNotation + " (0:00" + (userSession.getUser().getUserVars().getIVariables().get("ms").equals("1")?".000":"") + ") " + notation + " 0 0 0";
+		if (g instanceof ExaminedGame) {
+			ExaminedGame eg = (ExaminedGame)g;
+			java.util.Arrays.sort(eg.getExaminers());
+			if (java.util.Arrays.binarySearch(eg.getExaminers(),userSession) >= 0) {
+				myrelation = 2;
+			}
+			java.util.Arrays.sort(eg.getObservers());
+			if (java.util.Arrays.binarySearch(eg.getObservers(),userSession) >= 0) {
+				myrelation = -2;
+			}
+		} else if (g instanceof Game) {
+			Game gg = (Game)g;
+			
+			boolean amIPlaying = userSession.getUser().getUserName().equals(gg.getWhite().getUser().getUserName()) || userSession.getUser().getUserName().equals(gg.getBlack().getUser().getUserName());
+			if (!amIPlaying) myrelation = 0;
+			boolean amIWhite = userSession.getUser().getUserName().equals(gg.getWhite().getUser().getUserName());
+			boolean whitesMove = !p.isWhitesMove();
+			if ((amIWhite && whitesMove) || (!amIWhite && !whitesMove)) myrelation = 1;
+			if (amIWhite && !whitesMove || !amIWhite && whitesMove) myrelation = -1;
+		}
+		
+		
+		String whiteName = (g instanceof ExaminedGame?((ExaminedGame)g).getWhiteName():((Game)g).getWhite().getUser().getUserName());
+		String blackName = (g instanceof ExaminedGame?((ExaminedGame)g).getBlackName():((Game)g).getBlack().getUser().getUserName());
+		String style12string = "" + p.draw() + "" + (p.isWhitesMove()?"B":"W") + " -1 " + (p.canWhiteCastleKingside()?"1":"0") + " " + (p.canWhiteCastleQueenside()?"1":"0") + " " + (p.canBlackCastleKingside()?"1":"0") + " " + (p.canBlackCastleQueenside()?"1":"0") + " 0 " + g.getGameNumber() + " " + whiteName + " " + blackName + " " + myrelation + " " + (g.getTime()) + " " + g.getIncrement() + " " + g.getWhiteBoardStrength() + " " + g.getBlackBoardStrength() + " " + g.getWhiteClock() + " " + g.getBlackClock() + " " + (g.getBoard().getPositions().size()/2) + " " + verboseNotation + " (0:00" + (userSession.getUser().getUserVars().getIVariables().get("ms").equals("1")?".000":"") + ") " + notation + " 0 0 0";
 		System.err.println(userSession.getUser().getUserName() + " > " + style12string);
 		return style12string;
 	}

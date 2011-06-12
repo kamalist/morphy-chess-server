@@ -35,7 +35,7 @@ public class AbortCommand extends AbstractCommand {
 	public void process(String arguments, UserSession userSession) {
 		GameService gs = GameService.getInstance();
 		
-		Game g = gs.map.get(userSession);
+		Game g = (Game)gs.map.get(userSession);
 		if (g == null) {
 			userSession.send("You are not playing a game.");
 			return;

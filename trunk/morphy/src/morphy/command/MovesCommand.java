@@ -20,6 +20,7 @@ package morphy.command;
 import java.text.SimpleDateFormat;
 
 import morphy.game.Game;
+import morphy.game.GameInterface;
 import morphy.service.GameService;
 import morphy.service.UserService;
 import morphy.user.UserSession;
@@ -38,7 +39,7 @@ public class MovesCommand extends AbstractCommand {
 		arguments = arguments.trim();
 		
 		GameService gs = GameService.getInstance();
-		Game g = null;
+		GameInterface g = null;
 		
 		UserSession s = null;
 		if (arguments.equals("")) {
@@ -50,7 +51,7 @@ public class MovesCommand extends AbstractCommand {
 			s = UserService.getInstance().getUserSession(arguments);
 		}
 
-		if (s != null && g == null) g = gs.map.get(s);
+		if (s != null && g == null) g = (Game)gs.map.get(s);
 		if (g == null) { System.err.println("args = \"" + arguments + "\""); }
 		
 		StringBuilder b = new StringBuilder();
@@ -61,10 +62,17 @@ public class MovesCommand extends AbstractCommand {
 				.getUserVars().getVariables().get("tzone").toUpperCase()));
 		if (sdf.getTimeZone() == null) sdf.setTimeZone(java.util.TimeZone.getDefault());
 		
-		b.append(g.getWhite().getUser().getUserName() + " (2151) vs. " + g.getBlack().getUser().getUserName() + " (UNR) --- " + sdf.format(g.getTimeGameStarted()) + "\n");
+		
+		if (g instanceof Game) { 
+			b.append(((Game)g).getWhite().getUser().getUserName() + " (2151) vs. " + 
+					((Game)g).getBlack().getUser().getUserName() + " (UNR) --- " + sdf.format(g.getTimeGameStarted()) + "\n");
+		}
 		b.append((g.isRated()?"Rated":"Unrated") + " " + g.getVariant().name() + " match, initial time: " + g.getTime() + " minutes, increment: " + g.getIncrement() + " seconds.\n\n");
 
-		b.append("Move  " + g.getWhite().getUser().getUserName() + "            " + g.getBlack().getUser().getUserName() + "            \n");
+		if (g instanceof Game) { 
+			b.append("Move  " + ((Game)g).getWhite().getUser().getUserName() + "            " 
+					+ ((Game)g).getBlack().getUser().getUserName() + "            \n"); 
+		}
 		b.append("----  ---------------------   ---------------------\n"); //21
 		//b.append("  1.  e4      (0:00.000)      e5      (0:00.000)   \n");
 		b.append("      {Still in progress} *");

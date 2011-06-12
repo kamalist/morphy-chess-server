@@ -21,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import morphy.game.ExaminedGame;
 import morphy.game.Game;
 import morphy.service.GameService;
 import morphy.service.UserService;
@@ -90,9 +91,9 @@ public class FingerCommand extends AbstractCommand {
 				+ MorphyStringUtils.formatTime(loggedInMillis)
 				+ "\tIdle: "
 				+ ((idleTimeMillis <= 999) ? (idleTimeMillis + " secs") : MorphyStringUtils.formatTime(idleTimeMillis)));
-		if (query.isPlaying()) {
-			GameService gs = GameService.getInstance();
-			Game g = gs.map.get(query);
+		GameService gs = GameService.getInstance();
+		if (query.isPlaying()) {	
+			Game g = (Game)gs.map.get(query);
 			if (g != null) {
 				str.append("\n(playing game " + g.getGameNumber() + ": " + g.getWhite().getUser().getUserName() + " vs. " + g.getBlack().getUser().getUserName() + ")\n");
 				//str.append("\n(partner is playing game 331: BlindJKiller vs. XeRcHeSs)\n");
@@ -108,7 +109,8 @@ public class FingerCommand extends AbstractCommand {
 			}
 			
 		} else if (query.isExamining()) {
-			//str.append("\n(examining game 395: GuestPZKF vs. GuestPZKF)\n");
+			ExaminedGame g = (ExaminedGame)gs.map.get(query);
+			str.append("\n(examining game " + g.getGameNumber() + ": " + g.getWhiteName() + " vs. " + g.getBlackName() + ")\n");
 		}
 		str.append("\n\n");
 		

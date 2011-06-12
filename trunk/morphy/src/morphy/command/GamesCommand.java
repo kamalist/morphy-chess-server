@@ -19,7 +19,9 @@ package morphy.command;
 
 import java.util.List;
 
+import morphy.game.ExaminedGame;
 import morphy.game.Game;
+import morphy.game.GameInterface;
 import morphy.service.GameService;
 import morphy.user.UserSession;
 
@@ -40,7 +42,7 @@ public class GamesCommand extends AbstractCommand {
 		
 		
 		GameService gs = GameService.getInstance();
-		List<Game> list = gs.getGames();
+		List<GameInterface> list = gs.getGames();
 		if (list.size() == 0) {
 			userSession.send("There are no games in progress.");
 			return;
@@ -48,9 +50,16 @@ public class GamesCommand extends AbstractCommand {
 		
 		StringBuilder b = new StringBuilder();
 		for(int i=0;i<list.size();i++) {
-			Game g = list.get(i);
-			b.append(String.format("%3d ---- %-17s ---- %-17s [ %3d %3d] x:xx:xx x:xx:xx (%2d-%2d)\n",g.getGameNumber(),g.getWhite().getUser().getUserName(),g.getBlack().getUser().getUserName(),g.getTime(),g.getIncrement(),g.getWhiteBoardStrength(),g.getBlackBoardStrength()));
+			GameInterface g = list.get(i);
+			if (g instanceof Game) {
+				b.append(String.format("%3d ---- %-17s ---- %-17s [ %3d %3d] x:xx:xx x:xx:xx (%2d-%2d)\n",g.getGameNumber(),((Game)g).getWhite().getUser().getUserName(),((Game)g).getBlack().getUser().getUserName(),g.getTime(),g.getIncrement(),g.getWhiteBoardStrength(),g.getBlackBoardStrength()));
+			}
+			if (g instanceof ExaminedGame) {
+				ExaminedGame gg = (ExaminedGame)g;
+				b.append(String.format("%3d (Exam. %4d %-11s %4d %-11s) [ uu%3d %3d] ",gg.getGameNumber(),0,gg.getWhiteName(),0,gg.getBlackName(),gg.getTime(),gg.getIncrement()));
+			}
 		}
+		
 		userSession.send(b.toString());
 	}
 

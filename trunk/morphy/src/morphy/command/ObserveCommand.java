@@ -17,7 +17,9 @@
  */
 package morphy.command;
 
+import morphy.game.ExaminedGame;
 import morphy.game.Game;
+import morphy.game.GameInterface;
 import morphy.service.GameService;
 import morphy.service.UserService;
 import morphy.user.UserSession;
@@ -35,8 +37,9 @@ public class ObserveCommand extends AbstractCommand {
 		}
 		
 		GameService gs = GameService.getInstance();
+		UserSession uS = null;
 		
-		Game g = null;
+		GameInterface g = null;
 		if (arguments.matches("[0-9]+")) {
 			g = gs.findGameById(Integer.parseInt(arguments));
 		} else if (arguments.matches("\\w{3,17}")) {
@@ -54,7 +57,9 @@ public class ObserveCommand extends AbstractCommand {
 				userSession.send(b.toString());
 				return;
 			}
-			g = gs.map.get(array[0]);
+			
+			uS = UserService.getInstance().getUserSession(array[0]);
+			g = gs.map.get(uS);
 		}
 		
 		if (g == null) {
@@ -62,8 +67,24 @@ public class ObserveCommand extends AbstractCommand {
 			return;
 		}
 		
-		g.addObserver(userSession);
-		g.processMoveUpdate(userSession);
+		String whiteName = "",blackName = "";	
+		if (g instanceof Game) {
+			Game gg = (Game)g;
+			gg.addObserver(userSession);
+			gg.processMoveUpdate(userSession);
+			whiteName = gg.getWhite().getUser().getUserName();
+			blackName = gg.getBlack().getUser().getUserName();
+		}
+		if (g instanceof ExaminedGame) {
+			ExaminedGame gg = (ExaminedGame)g;
+			gg.addObserver(userSession);
+			gg.processMoveUpdate(userSession);
+			whiteName = gg.getWhiteName();
+			blackName = gg.getBlackName();
+		}
+		userSession.send("You are now observing game " + g.getGameNumber() + ".\nGame " + g.getGameNumber() + ": " + whiteName + " (----) " + blackName + " (----) rated blitz " + g.getTime() + " " + g.getIncrement());
+
+		
 	}
 
 }

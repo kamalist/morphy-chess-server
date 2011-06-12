@@ -27,66 +27,72 @@ import board.printer.Style12Printer;
 import morphy.user.SocketChannelUserSession;
 import morphy.user.UserSession;
 
-public class Game implements GameInterface {
+public class ExaminedGame implements GameInterface {
 	private int gameNumber;
-	private UserSession white;
-	private UserSession black;
+	private String whiteName;
+	private String blackName;
+	private int whiteRating;
+	private int blackRating;
 	private int time;
 	private int increment;
 	private boolean rated;
 	private Variant variant;
 	private Board board;
-	private long timeLastMoveMade;
-	private long timeGameStarted;
-	private long timeGameEnded;
 	private String reason;
 	private String result;
+	private boolean isWhitesMove = true;
+	private long timeGameStarted;
 	
 	private int whiteClock;
 	private int blackClock;
 
+	List<UserSession> examiningUsers;
 	List<UserSession> observers;
 	
-	public Game() {
+	public ExaminedGame() {
 		observers = new ArrayList<UserSession>(0);
+		examiningUsers = new ArrayList<UserSession>(1);
 		
 		setBoard(new Board());
 		getBoard().getLatestMove().setPrinter(new Style12Printer());
 		getBoard().getLatestMove().setCastlingRights("KQkq");
 	}
 	
-	public Game(UserSession white,UserSession black,int time,int increment) {
+	public ExaminedGame(String white,String black,int time,int increment) {
 		this();
-		setWhite(white);
-		setBlack(black);
+		setWhiteName(white);
+		setBlackName(black);
 		setTime(time);
 		setIncrement(increment);
 		setWhiteClock(time * (60*1000));
 		setBlackClock(time * (60*1000));
 	}
 	
+	public void addExaminingUser(UserSession userSession) {
+		examiningUsers.add(userSession);
+	}
+	
 	/** boolean all - true for all, false for observers only. */
 	public void processMoveUpdate(boolean all) {
-		if (all) {
-			getWhite().send(getWhite().getUser().getUserVars().getStyle().print(white, this));
-			getBlack().send(getBlack().getUser().getUserVars().getStyle().print(black, this));
+		UserSession[] examiners = getExaminers();
+		for(int i=0;i<examiners.length;i++) {
+			processMoveUpdate(examiners[i]);
 		}
 		
-		UserSession[] observers = getObservers();
-		for(int i=0;i<observers.length;i++) {
-			observers[i].send(observers[i].getUser().getUserVars().getStyle().print(observers[i], this));
+		if (!all) {	
+			UserSession[] observers = getObservers();
+			for(int i=0;i<observers.length;i++) {
+				processMoveUpdate(observers[i]);
+			}
 		}
+	}
+	
+	public UserSession[] getExaminers() {
+		return examiningUsers.toArray(new UserSession[examiningUsers.size()]);
 	}
 	
 	public void processMoveUpdate(UserSession s) {
 		s.send(s.getUser().getUserVars().getStyle().print(s, this));
-	}
-	
-	public String generateGameInfoLine() {
-		// TODO add provshow=1
-		Game g = this;
-		String g1 = "\n<g1> " + g.getGameNumber() + " p=0 t=" + g.getVariant().name() + " r=" + (g.isRated()?"1":"0") + " u=" + String.format("%s,%s",g.getWhite().getUser().isRegistered()?"1":"0",g.getBlack().getUser().isRegistered()?"1":"0") + " it="+(g.getTime()*60)+","+(g.getTime()*60) + " i="+g.getIncrement()+","+g.getIncrement()+" pt=0 rt=1589,2100 ts=0,0\n";
-		return g1;
 	}
 	
 	public void addObserver(UserSession observer) {
@@ -96,6 +102,10 @@ public class Game implements GameInterface {
 	
 	public UserSession[] getObservers() {
 		return observers.toArray(new UserSession[observers.size()]);
+	}
+	
+	public List<UserSession> getObserversAsList() {
+		return observers;
 	}
 	
 	public int getWhiteBoardStrength() {
@@ -118,22 +128,6 @@ public class Game implements GameInterface {
 		strength += board.getLatestMove().getAllSquaresWithPiece(Piece.BLACK_KING).length*0;
 		strength += board.getLatestMove().getAllSquaresWithPiece(Piece.BLACK_QUEEN).length*9;
 		return strength;
-	}
-
-	public void setWhite(UserSession white) {
-		this.white = white;
-	}
-
-	public UserSession getWhite() {
-		return white;
-	}
-
-	public void setBlack(UserSession black) {
-		this.black = black;
-	}
-
-	public UserSession getBlack() {
-		return black;
 	}
 
 	public void setTime(int time) {
@@ -184,30 +178,6 @@ public class Game implements GameInterface {
 		return variant;
 	}
 
-	public void touchLastMoveMadeTime() {
-		timeLastMoveMade = System.currentTimeMillis();
-	}
-
-	public long getTimeLastMoveMade() {
-		return timeLastMoveMade;
-	}
-
-	public void setTimeGameStarted(long timeGameStarted) {
-		this.timeGameStarted = timeGameStarted;
-	}
-
-	public long getTimeGameStarted() {
-		return timeGameStarted;
-	}
-
-	public void setTimeGameEnded(long timeGameEnded) {
-		this.timeGameEnded = timeGameEnded;
-	}
-
-	public long getTimeGameEnded() {
-		return timeGameEnded;
-	}
-
 	public void setResult(String result) {
 		this.result = result;
 	}
@@ -238,5 +208,53 @@ public class Game implements GameInterface {
 
 	public int getBlackClock() {
 		return blackClock;
+	}
+
+	public void setWhitesMove(boolean isWhitesMove) {
+		this.isWhitesMove = isWhitesMove;
+	}
+
+	public boolean isWhitesMove() {
+		return isWhitesMove;
+	}
+
+	public void setTimeGameStarted(long timeGameStarted) {
+		this.timeGameStarted = timeGameStarted;
+	}
+
+	public long getTimeGameStarted() {
+		return timeGameStarted;
+	}
+
+	public void setWhiteName(String whiteName) {
+		this.whiteName = whiteName;
+	}
+
+	public String getWhiteName() {
+		return whiteName;
+	}
+
+	public void setBlackName(String blackName) {
+		this.blackName = blackName;
+	}
+
+	public String getBlackName() {
+		return blackName;
+	}
+
+	public void setWhiteRating(int whiteRating) {
+		this.whiteRating = whiteRating;
+	}
+
+	public int getWhiteRating() {
+		return whiteRating;
+	}
+
+	public void setBlackRating(int blackRating) {
+		this.blackRating = blackRating;
+	}
+
+	public int getBlackRating() {
+		return blackRating;
 	}
 }

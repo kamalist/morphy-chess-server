@@ -17,7 +17,9 @@
  */
 package morphy.command;
 
+import morphy.game.ExaminedGame;
 import morphy.game.Game;
+import morphy.game.GameInterface;
 import morphy.service.GameService;
 import morphy.service.UserService;
 import morphy.user.UserSession;
@@ -30,7 +32,7 @@ public class AllObserversCommand extends AbstractCommand {
 	public void process(String arguments, UserSession userSession) {
 		GameService gs = GameService.getInstance();
 		
-		Game g = null;
+		GameInterface g = null;
 		if (arguments.matches("[0-9]+")) {
 			g = gs.findGameById(Integer.parseInt(arguments));
 		} else if (arguments.matches("\\w{3,17}")) {
@@ -52,13 +54,37 @@ public class AllObserversCommand extends AbstractCommand {
 		}
 		
 		if (g == null) { userSession.send(getContext().getUsage()); return; }
-		UserSession[] arr = g.getObservers();
 		
 		StringBuilder b = new StringBuilder();
-		b.append("Observing " + String.format("%3d",g.getGameNumber()) + " [" + g.getWhite().getUser().getUserName() + " vs. " + g.getBlack().getUser().getUserName() + "]: "); 
-		for(UserSession s : arr) {
-			b.append(s.getUser().getUserName() + " ");
+		UserSession[] arr = null;
+		if (g instanceof Game) { 
+			Game gg = (Game)g;
+			arr = gg.getObservers();
+			
+			
+			b.append("Observing " + String.format("%3d",gg.getGameNumber()) + " [" + gg.getWhite().getUser().getUserName() + " vs. " + gg.getBlack().getUser().getUserName() + "]: "); 
+			for(UserSession s : arr) {
+				b.append(s.getUser().getUserName() + " ");
+			}
 		}
+		
+		if (g instanceof ExaminedGame) {
+			ExaminedGame gg = (ExaminedGame)g;
+			arr = gg.getObservers();
+			
+			
+			b.append("Examining " + String.format("%3d",gg.getGameNumber()) + " (scratch): "); 
+			
+			UserSession[] examiners = gg.getExaminers();
+			for(UserSession s : examiners) {
+				b.append("#" + s.getUser().getUserName() + " ");
+			}
+			
+			for(UserSession s : arr) {
+				b.append(s.getUser().getUserName() + " ");
+			}
+		}
+		
 		b.append("(" + arr.length + " " + (arr.length==1?"user":"users") + ")\n\n  1 game displayed (of " + gs.getCurrentNumberOfGames() + " in progress).");
 		userSession.send(b.toString());
 		return;

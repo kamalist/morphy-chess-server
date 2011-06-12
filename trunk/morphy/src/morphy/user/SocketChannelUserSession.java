@@ -32,6 +32,7 @@ import java.util.TreeMap;
 
 import morphy.Morphy;
 import morphy.channel.Channel;
+import morphy.game.Game;
 import morphy.game.request.MatchRequest;
 import morphy.game.request.Request;
 import morphy.service.DBConnectionService;
@@ -133,14 +134,18 @@ public class SocketChannelUserSession implements UserSession,
 				rs.removeAllRequestsTo(this);
 				
 				GameService gs = GameService.getInstance();
-				morphy.game.Game g = gs.map.get(this);
+				morphy.game.GameInterface g = gs.map.get(this);
 				if (g != null) {
-					g.setReason(user.getUserName() + " forfeits by disconnection");
-					g.setResult(this==g.getWhite()?"0-1":"1-0");
-					gs.endGame(g);
-					final String line = "\n{Game " + g.getGameNumber() + " (" + g.getWhite().getUser().getUserName() + " vs. " + g.getBlack().getUser().getUserName() + ") " + g.getReason() + "} " + g.getResult() + "";
-					if (this != g.getWhite()) g.getWhite().send(line);
-					if (this != g.getBlack()) g.getBlack().send(line);
+					if (g instanceof Game) {
+						Game gg = (Game)g;
+						gg.setReason(user.getUserName() + " forfeits by disconnection");
+						gg.setResult(this==gg.getWhite()?"0-1":"1-0");
+						gs.endGame(gg);
+						final String line = "\n{Game " + g.getGameNumber() + " (" + gg.getWhite().getUser().getUserName() + " vs. " + gg.getBlack().getUser().getUserName() + ") " + gg.getReason() + "} " + gg.getResult() + "";
+						if (this != gg.getWhite()) gg.getWhite().send(line);
+						if (this != gg.getBlack()) gg.getBlack().send(line);
+					}
+					
 				}
 				
 				UserSession[] sessions = UserService.getInstance().fetchAllUsersWithVariable("pin","1");
