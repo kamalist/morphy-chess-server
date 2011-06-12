@@ -21,8 +21,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import morphy.game.ExaminedGame;
 import morphy.game.Game;
+import morphy.game.GameInterface;
 import morphy.game.MatchParams;
+import morphy.game.Variant;
 import morphy.user.SocketChannelUserSession;
 import morphy.user.UserSession;
 
@@ -34,8 +37,8 @@ public class GameService implements Service {
 	private static final GameService singletonInstance = new GameService();
 	
 	protected int mostConcurrentGames = 0;
-	public HashMap<UserSession,Game> map = new HashMap<UserSession,Game>();
-	protected List<Game> games;
+	public HashMap<UserSession,GameInterface> map = new HashMap<UserSession,GameInterface>();
+	protected List<GameInterface> games;
 	
 	public static GameService getInstance() {
 		return singletonInstance;
@@ -115,15 +118,60 @@ public class GameService implements Service {
 		return g;
 	}
 	
+	public void unexamineGame(UserSession userSession) {
+		ExaminedGame g = (ExaminedGame)map.get(userSession);
+		games.remove(g);
+		map.remove(userSession);
+		
+		final String line = userSession.getUser().getUserName() + " stopped examining game " + g.getGameNumber() + ".\n\n" +
+				"Removing game " + g.getGameNumber() + " from observation list.";
+		
+		UserSession[] examiners = g.getExaminers();
+		for(int i=0;i<examiners.length;i++) {
+			if (examiners[i] == userSession) {
+				examiners[i].send("You are no longer examining game " + g.getGameNumber() + ".");
+			} else {
+				examiners[i].send(line);
+			}
+		}
+
+		UserSession[] observers = g.getObservers();
+		for(int i=0;i<observers.length;i++) {
+			observers[i].send(line);
+			((SocketChannelUserSession)observers[i]).getGamesObserving().remove(g.getGameNumber());
+		}
+		
+		((SocketChannelUserSession)userSession).setExamining(false);
+	}
+	
+	public ExaminedGame createExaminedGame(UserSession userSession) {
+		ExaminedGame g = new ExaminedGame();
+		g.addExaminingUser(userSession);
+		g.setVariant(Variant.blitz);
+		g.setWhiteName(userSession.getUser().getUserName());
+		g.setBlackName(userSession.getUser().getUserName());
+		g.setGameNumber(2);
+		g.setTimeGameStarted(System.currentTimeMillis());
+		
+		games.add(g);
+		map.put(userSession, g);
+		
+		((SocketChannelUserSession)userSession).setExamining(true);
+		userSession.send("Starting a game in examine (scratch) mode.");
+		g.processMoveUpdate(true);
+		
+		return g;
+	}
 	
 	
-	public List<Game> getGames() {
+	
+	public List<GameInterface> getGames() {
 		return games;
 	}
 	
 	/** O(N) performance */
-	public Game findGameById(int id) {
-		for(Game g : games) {
+	public GameInterface findGameById(int id) {
+		for(GameInterface g : games) {
 			if (g.getGameNumber() == id)
 				return g;
 		}
@@ -131,7 +179,7 @@ public class GameService implements Service {
 	}
 	
 	public GameService() {
-		games = new ArrayList<Game>();
+		games = new ArrayList<GameInterface>();
 		
 		if (LOG.isInfoEnabled())
 			LOG.info("Initialized GameService.");

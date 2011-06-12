@@ -15,13 +15,30 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package morphy.game.style;
+package morphy.command;
 
-import morphy.game.GameInterface;
+import morphy.service.GameService;
+import morphy.user.SocketChannelUserSession;
 import morphy.user.UserSession;
 
-/** All style implementations (1-15) should implement this interface. */
-public interface StyleInterface {
-	/** Prints <tt>board</tt> to <tt>userSession</tt> */
-	public String print(UserSession userSession,GameInterface g);
+public class ExamineCommand extends AbstractCommand {
+
+	public ExamineCommand() {
+		super("examine");
+	}
+	
+	public void process(String arguments, UserSession userSession) {
+		
+		SocketChannelUserSession sess = (SocketChannelUserSession)userSession;
+		if (sess.isPlaying()) {
+			userSession.send("You are playing a game.");
+			return;
+		}
+		if (sess.isExamining()) {
+			userSession.send("You are already examining a game.");
+			return;
+		}
+		
+		GameService.getInstance().createExaminedGame(userSession);
+	}
 }

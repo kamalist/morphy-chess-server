@@ -373,8 +373,11 @@ public class SocketConnectionService implements Service {
 				while(rs.next()) {
 					String username = rs.getString(1);
 					UserSession sess = us.getUserSession(username);
-					if (sess != null && sess.isConnected()) sess.send("Notification: " + name + " has arrived.");
-					arrivalNotedBy.add(sess.getUser().getUserName());
+					if (sess != null && sess.isConnected()) {
+						sess.send("Notification: " + name + " has arrived.");
+						arrivalNotedBy.add(sess.getUser().getUserName());
+					}
+					
 				}
 			} catch(SQLException e) { Morphy.getInstance().onError(e); }
 			if (arrivalNotedBy.size() > 0) {

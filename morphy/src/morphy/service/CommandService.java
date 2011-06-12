@@ -33,9 +33,13 @@ import morphy.command.AdminCommand;
 import morphy.command.AllObserversCommand;
 import morphy.command.AnnounceCommand;
 import morphy.command.AnnunregCommand;
+import morphy.command.BclockCommand;
+import morphy.command.BnameCommand;
+import morphy.command.BratingCommand;
 import morphy.command.BugWhoCommand;
 import morphy.command.Command;
 import morphy.command.DateCommand;
+import morphy.command.ExamineCommand;
 import morphy.command.FingerCommand;
 import morphy.command.GamesCommand;
 import morphy.command.HandlesCommand;
@@ -45,6 +49,7 @@ import morphy.command.IVariablesCommand;
 import morphy.command.InchannelCommand;
 import morphy.command.ItShoutCommand;
 import morphy.command.MatchCommand;
+import morphy.command.MexamineCommand;
 import morphy.command.MovesCommand;
 import morphy.command.NewsCommand;
 import morphy.command.NukeCommand;
@@ -61,11 +66,17 @@ import morphy.command.ShowListCommand;
 import morphy.command.ShutdownCommand;
 import morphy.command.SummonCommand;
 import morphy.command.TellCommand;
+import morphy.command.UnexamineCommand;
 import morphy.command.UptimeCommand;
 import morphy.command.VariablesCommand;
+import morphy.command.WclockCommand;
 import morphy.command.WhoCommand;
 import morphy.command.WithdrawCommand;
+import morphy.command.WnameCommand;
+import morphy.command.WratingCommand;
 import morphy.command.ZNotifyCommand;
+import morphy.game.ExaminedGame;
+import morphy.game.Game;
 import morphy.user.SocketChannelUserSession;
 
 import org.apache.commons.lang.StringUtils;
@@ -101,9 +112,14 @@ public class CommandService implements Service {
 		AnnounceCommand.class,
 		AnnunregCommand.class,
 	
+		BclockCommand.class,
+		BnameCommand.class,
+		BratingCommand.class,
 		BugWhoCommand.class,
 		
 		DateCommand.class,
+		
+		ExamineCommand.class,
 		
 		FingerCommand.class,
 		
@@ -118,6 +134,7 @@ public class CommandService implements Service {
 		IVariablesCommand.class,
 		
 		MatchCommand.class,
+		MexamineCommand.class,
 		MovesCommand.class,
 		
 		NewsCommand.class,
@@ -142,12 +159,16 @@ public class CommandService implements Service {
 		
 		TellCommand.class,
 		
+		UnexamineCommand.class,
 		UptimeCommand.class,
 		
 		VariablesCommand.class,
 		
+		WclockCommand.class,
 		WhoCommand.class,
 		WithdrawCommand.class,
+		WnameCommand.class,
+		WratingCommand.class,
 		
 		ZNotifyCommand.class
 	};
@@ -222,17 +243,31 @@ public class CommandService implements Service {
 		command = command.trim();
 		
 		if (Board.isValidSAN(command)) {
-			morphy.game.Game g = GameService.getInstance().map.get(userSession);
+			morphy.game.GameInterface g = GameService.getInstance().map.get(userSession);
+			
+			//if ((SocketChannelUserSession)userSession).isPlaying()
+			
 			if (g != null) {
 				try {
-					g.getBoard().move(g.getWhite().equals(userSession),command);
-					g.getBoard().getLatestMove().setPrinter(new Style12Printer());
-					g.touchLastMoveMadeTime();
-					g.processMoveUpdate(true);
+					if (g instanceof Game) {
+						Game gg = (Game)g;
+						gg.getBoard().move(gg.getWhite().equals(userSession),command);
+						gg.getBoard().getLatestMove().setPrinter(new Style12Printer());
+						gg.touchLastMoveMadeTime();
+						gg.processMoveUpdate(true);
+					}
+					if (g instanceof ExaminedGame) {
+						ExaminedGame gg = (ExaminedGame)g;
+						gg.getBoard().move(gg.isWhitesMove(),command);
+						gg.getBoard().getLatestMove().setPrinter(new Style12Printer());
+						gg.setWhitesMove(!gg.isWhitesMove());
+						gg.processMoveUpdate(true);
+					}
 				} catch(WrongColorToMoveException e) { userSession.send("It is not your move."); }
 				catch(IllegalMoveException e) { userSession.send("Illegal move (" + command + ")."); }
 			} else {
 				userSession.send("You are not playing or examining a game.");
+				
 			}
 			return;
 		}
