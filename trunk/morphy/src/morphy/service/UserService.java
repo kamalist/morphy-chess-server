@@ -23,7 +23,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 
+import morphy.user.SocketChannelUserSession;
 import morphy.user.UserSession;
+import morphy.utils.SocketUtils;
 import morphy.utils.john.DBConnection;
 import morphy.utils.john.ServerList;
 
@@ -146,13 +148,25 @@ public class UserService implements Service {
 	public void addLoggedInUser(UserSession sess) {
 		userNameToSessionMap.put(sess.getUser().getUserName()
 				.toLowerCase(), sess);
+		logConnection(sess,true);
+	}
+	
+	/** 
+	 * This logs a connect/disconnect to the database server.
+	 * @param sess UserSession instance that is connecting or disconnecting
+	 * @param isConnection true if login, false if logout.
+	 * @return If the query to the database server was successful.
+	 */
+	private boolean logConnection(UserSession sess,boolean isConnection) {
+		String query = "INSERT INTO `logins` (`id`,`username`,`timestamp`,`type`,`ipAddress`) VALUES(NULL,'" + sess.getUser().getUserName() + "',UTC_TIMESTAMP(),'" + (isConnection?"login":"logout") + "','" +  SocketUtils.getIpAddress(((SocketChannelUserSession)sess).getChannel().socket()) + "')";
+		return DBConnectionService.getInstance().getDBConnection().executeQuery(query);
 	}
 
 	public void dispose() {
-//		final UserSession[] arr = getLoggedInUsers();
-//		for(UserSession s : arr) {
-//			s.disconnect();
-//		}
+		final UserSession[] arr = getLoggedInUsers();
+		for(UserSession s : arr) {
+			logConnection(s,false);
+		}
 		
 		userNameToSessionMap.clear();
 	}
@@ -186,6 +200,7 @@ public class UserService implements Service {
 				&& userSession.getUser().getUserName() != null) {
 			userNameToSessionMap.remove(userSession.getUser().getUserName()
 					.toLowerCase());
+			logConnection(userSession,false);
 		}
 	}
 

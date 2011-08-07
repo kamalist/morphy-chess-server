@@ -191,9 +191,19 @@ public class MessagesCommand extends AbstractCommand {
 		return b.toString();
 	}
 	
+	protected static String formatIdListForQuery(String columnName,int[] arr) {
+		StringBuilder b = new StringBuilder();
+		b.append("`" + columnName + "` IN (");
+		for(int i=0;i<arr.length;i++) {
+			b.append(arr[i] + "" + (i!=arr.length-1?",":""));
+		}
+		b.append(")");
+		return b.toString();
+	}
+	
 	/** This is only called in the <tt>printMessages()</tt> method. */
 	private String formatMessage(int messno,String username,long date,String tzone,String message,boolean read) {
-		final java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("EEE MMM d, HH:mm z yyyy");
+		final java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("EEE MMM dd, HH:mm z yyyy");
 		TimeZone tz = TimeZoneUtils.getTimeZone(tzone);
 		sdf.setTimeZone(tz);
 		// note that this deviates from FICS slightly be adding the (previously unread) text to the string.
