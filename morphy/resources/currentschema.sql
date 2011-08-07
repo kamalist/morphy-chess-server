@@ -127,6 +127,24 @@ CREATE TABLE `list_entry` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `logins`
+--
+
+DROP TABLE IF EXISTS `logins`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `logins` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` char(17) NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `type` enum('login','logout') NOT NULL,
+  `ipAddress` char(15) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_id_index` (`username`)
+) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=latin1 CHECKSUM=1 ROW_FORMAT=FIXED;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `messages`
 --
 
@@ -353,4 +371,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-08-07  9:37:34
+-- Dump completed on 2011-08-07 14:33:00

@@ -49,6 +49,8 @@ import morphy.command.ISetCommand;
 import morphy.command.IVariablesCommand;
 import morphy.command.InchannelCommand;
 import morphy.command.ItShoutCommand;
+import morphy.command.LLoginsCommand;
+import morphy.command.LoginsCommand;
 import morphy.command.MatchCommand;
 import morphy.command.MessageCommand;
 import morphy.command.MessagesCommand;
@@ -139,6 +141,9 @@ public class CommandService implements Service {
 		ISetCommand.class,
 		ItShoutCommand.class,
 		IVariablesCommand.class,
+		
+		LLoginsCommand.class,
+		LoginsCommand.class,
 		
 		MatchCommand.class,
 		MessageCommand.class,
