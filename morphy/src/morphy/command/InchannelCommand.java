@@ -65,20 +65,30 @@ public class InchannelCommand extends AbstractCommand {
 					userSession.send(str.toString());
 				}
 			} else {
-				StringBuilder str = new StringBuilder(50);
-				str.append(userName + " is in the following channels:\n");
 				UserService uS = UserService.getInstance();
 				UserSession sess = uS.getUserSession(userName);
+				
 				if (sess == null) {
 					userSession.send(userName + " is not logged in.");
+					return;
 				}
+				
+				StringBuilder str = new StringBuilder(50);
+				str.append(sess.getUser().getUserName() + " is in the following channels:");
+				
+				
 				final int numUsers = sess.getUser().getLists().get(
 						PersonalList.channel).size();
-				for (int i = 0; i < numUsers; i++) {
-					str.append(sess.getUser().getLists().get(
-							PersonalList.channel).get(i));
-					if (i != numUsers + 1)
-						str.append(" ");
+				if (numUsers == 0) {
+					str.append(" No channels found.");
+				} else {
+					str.append("\n");
+					for (int i = 0; i < numUsers; i++) {
+						str.append(sess.getUser().getLists().get(
+								PersonalList.channel).get(i));
+						if (i != numUsers + 1)
+							str.append(" ");
+					}
 				}
 				userSession.send(str.toString());
 			}

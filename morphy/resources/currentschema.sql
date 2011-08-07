@@ -81,11 +81,18 @@ DROP TABLE IF EXISTS `game`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `game` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `White` varchar(17) NOT NULL,
-  `Black` varchar(17) NOT NULL,
-  `Reason` varchar(75) NOT NULL,
+  `White` int(11) NOT NULL,
+  `Black` int(11) NOT NULL,
+  `Reason` varchar(90) NOT NULL,
   `Result` enum('1-0','0-1','1/2-1/2','*') NOT NULL,
-  PRIMARY KEY (`id`)
+  `Time` int(3) NOT NULL,
+  `Increment` int(3) NOT NULL,
+  `Rated` enum('0','1') NOT NULL,
+  `StartTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `EndTime` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  PRIMARY KEY (`id`),
+  KEY `WhiteIndex` (`White`),
+  KEY `BlackIndex` (`Black`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -117,6 +124,27 @@ CREATE TABLE `list_entry` (
   `value` varchar(17) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `messages`
+--
+
+DROP TABLE IF EXISTS `messages`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `messages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `from_user_id` int(11) NOT NULL,
+  `to_user_id` int(11) NOT NULL,
+  `message` varchar(2000) NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `read` enum('0','1') NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `from_user_id_index` (`from_user_id`),
+  KEY `to_user_id_index` (`to_user_id`),
+  FULLTEXT KEY `message_fulltext` (`message`)
+) ENGINE=MyISAM AUTO_INCREMENT=12 DEFAULT CHARSET=latin1 CHECKSUM=1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -177,9 +205,8 @@ CREATE TABLE `personallist` (
   `user_id` int(11) NOT NULL,
   `name` varchar(45) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `user_id_UNIQUE` (`user_id`),
-  UNIQUE KEY `name_UNIQUE` (`name`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+  UNIQUE KEY `UNIQUE` (`user_id`,`name`)
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -194,7 +221,7 @@ CREATE TABLE `personallist_entry` (
   `personallist_id` int(11) NOT NULL,
   `value` varchar(17) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -314,7 +341,7 @@ CREATE TABLE `users` (
   `email` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username_UNIQUE` (`username`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -326,4 +353,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-06-08  0:03:34
+-- Dump completed on 2011-08-07  9:37:34

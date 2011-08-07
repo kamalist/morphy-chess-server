@@ -37,6 +37,7 @@ import morphy.command.BclockCommand;
 import morphy.command.BnameCommand;
 import morphy.command.BratingCommand;
 import morphy.command.BugWhoCommand;
+import morphy.command.ClearmessagesCommand;
 import morphy.command.Command;
 import morphy.command.DateCommand;
 import morphy.command.ExamineCommand;
@@ -49,6 +50,8 @@ import morphy.command.IVariablesCommand;
 import morphy.command.InchannelCommand;
 import morphy.command.ItShoutCommand;
 import morphy.command.MatchCommand;
+import morphy.command.MessageCommand;
+import morphy.command.MessagesCommand;
 import morphy.command.MexamineCommand;
 import morphy.command.MovesCommand;
 import morphy.command.NewsCommand;
@@ -95,7 +98,9 @@ public class CommandService implements Service {
 					"tm|ca|sr|td|censor|gnotify|noplay|" +
 					"notify|channel|idlenotify)");
 	
-	private static final Class<?>[] socketCommandsClasses = { 
+	private static final Class<?>[] socketCommandsClasses = {
+		// please try to maintain this list in alphabetical order
+		
 		AbortCommand.class,
 		AcceptCommand.class,
 		
@@ -117,6 +122,8 @@ public class CommandService implements Service {
 		BratingCommand.class,
 		BugWhoCommand.class,
 		
+		ClearmessagesCommand.class,
+		
 		DateCommand.class,
 		
 		ExamineCommand.class,
@@ -134,6 +141,8 @@ public class CommandService implements Service {
 		IVariablesCommand.class,
 		
 		MatchCommand.class,
+		MessageCommand.class,
+		MessagesCommand.class,
 		MexamineCommand.class,
 		MovesCommand.class,
 		
