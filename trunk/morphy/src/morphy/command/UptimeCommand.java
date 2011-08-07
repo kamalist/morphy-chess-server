@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ public class UptimeCommand extends AbstractCommand {
 		SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd, HH:mm z yyyy");
 		
 		StringBuilder b = new StringBuilder();
-		b.append("Morphy ICS 0.00.01: compiled on Jun  5 2011 at 10:26:00\n");
+		b.append("Morphy ICS 0.00.01: compiled on Aug  7 2011 at 09:45:13\n");
 		b.append("The server has been up since " + sdf.format(Morphy.getInstance().getUpSinceTime()) + ".\n");
 		
 		long diff = System.currentTimeMillis()-Morphy.getInstance().getUpSinceTime();
@@ -48,11 +48,11 @@ public class UptimeCommand extends AbstractCommand {
 
 		UserService us = UserService.getInstance();
 		GameService gs = GameService.getInstance();
-		b.append("There are currently " + us.getLoggedInUserCount() + " players, with a high of 2055 since last restart.\n");
+		b.append("There are currently " + us.getLoggedInUserCount() + " players, with a high of XXX since last restart.\n");
 		b.append("There are currently " + gs.getCurrentNumberOfGames() + " games, with a high of " + gs.getHighestNumberOfGames() + " since last restart.\n");
 
 		b.append("Player limit: " + PreferenceService.getInstance().getInt(PreferenceKeys.ThreadServiceMaxThreads) + " users (+ 10 admins)\n");
-		b.append("Unregistered user restriction at 250 users.\n");
+		b.append("Unregistered user restriction at XXX users.\n");
 		
 		userSession.send(b.toString());
 		return;

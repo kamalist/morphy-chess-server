@@ -98,7 +98,8 @@ public class DBConnection {
 			if (LOG.isInfoEnabled()) {
 				LOG.info("Executed query: " + query);
 			}
-			return getConnection().createStatement().execute(query);
+			getConnection().createStatement().execute(query);
+			return true;
 		} catch(SQLException se) {
 			if (LOG.isErrorEnabled()) {
 				LOG.error(se);

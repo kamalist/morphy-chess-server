@@ -53,10 +53,12 @@ public class QtellCommand extends AbstractCommand {
 		UserSession sendTo = UserService.getInstance().getUserSession(userName);
 		if (sendTo != null) {
 			sendTo.send(":" + message);
+			userSession.send("*qtell " + userName + " 0*");
+		} else {
+			userSession.send("*qtell " + userName + " 1*");
 		}
 	
-		userSession.send("*qtell " + userName + " "
-				+ ((sendTo.isConnected()) ? "0" : "1") + "*");
+		
 	}
 
 }

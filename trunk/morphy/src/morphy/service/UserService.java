@@ -80,7 +80,7 @@ public class UserService implements Service {
 	/**
 	 * Returns the list of usernames that start with the <tt>partial</tt> parameter.
 	 * If the username <tt>partial</tt> is logged on, returns that user.
-	 * Otherwise, returns all users starting with <tt>partial</tt>.
+	 * Otherwise, returns all (logged in) users starting with <tt>partial</tt>.
 	 * If more than one value is in the array, the user needs to be told that that handle is ambiguous.
 	 * In this algorithm, online users should be given priority.
 	 * @param partial
@@ -143,9 +143,9 @@ public class UserService implements Service {
 		}
 	}
 
-	public void addLoggedInUser(UserSession userSessopm) {
-		userNameToSessionMap.put(userSessopm.getUser().getUserName()
-				.toLowerCase(), userSessopm);
+	public void addLoggedInUser(UserSession sess) {
+		userNameToSessionMap.put(sess.getUser().getUserName()
+				.toLowerCase(), sess);
 	}
 
 	public void dispose() {
@@ -162,7 +162,7 @@ public class UserService implements Service {
 	 * currently online as a guest.
 	 */
 	public boolean isValidUsername(String username) {
-		return isRegistered(username) || isLoggedIn(username);
+		return isLoggedIn(username) || isRegistered(username);
 	}
 
 	public int getLoggedInUserCount() {
@@ -196,6 +196,7 @@ public class UserService implements Service {
 		}
 	}
 
+	/** This method requires a call to the database if the username is not logged in. */
 	public boolean isRegistered(String username) {
 		if (isLoggedIn(username)) {
 			return getUserSession(username).getUser().isRegistered();
@@ -215,6 +216,7 @@ public class UserService implements Service {
 		return false;
 	}
 	
+	/** Returns the user's id if successful, or 0 otherwise. */
 	public int getDBID(String username) {
 		try {
 			DBConnection conn = DBConnectionService.getInstance().getDBConnection();
@@ -228,6 +230,21 @@ public class UserService implements Service {
 			e.printStackTrace(System.err);
 		}
 		return 0;
+	}
+	
+	/** Corrects capitalizations of username. For example: JohnTheGreat -> johnthegreat.<br />
+	 * This fetches right from disk, and doesn't use data in memory whatsoever. */
+	public String correctCapsUsername(String username) {
+		try {
+			DBConnection conn = DBConnectionService.getInstance().getDBConnection();
+			java.sql.ResultSet results = conn.executeQueryWithRS("SELECT `username` FROM `users` WHERE `username` LIKE '" + username + "'");
+			if (results.next()) {
+				return results.getString(1);
+			}
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+		}
+		return null;
 	}
 
 	public String getTags(String username) {
