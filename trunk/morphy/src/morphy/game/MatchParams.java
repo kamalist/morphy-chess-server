@@ -19,7 +19,7 @@ package morphy.game;
 
 /** A MatchParam instance should also be flexible enough to support a seek. */
 public class MatchParams {
-	public static enum ColorRequested { White,Black,Neither }
+	public static enum ColorRequested { White,Black,Neither; };
 	
 	private int time;
 	private int increment;

@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -71,7 +71,10 @@ public class BugWhoCommand extends AbstractCommand {
 		if (showUnpartnered) {
 			b.append("Unpartnered players with bugopen on\n\n");
 			b.append("2789:ChIcKeNcRoSsRoAd(FM)(CA)  1369^bachio");
+			b.append("\n\n 71 players displayed (of 1702). (*) indicates system administrator.");
 		}
+		
+		
 		
 		userSession.send(b.toString());
 	}

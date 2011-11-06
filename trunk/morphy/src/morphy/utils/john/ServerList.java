@@ -19,7 +19,11 @@ package morphy.utils.john;
 
 import morphy.user.UserLevel;
 
-public class ServerList {
+public class ServerList implements Comparable<ServerList> {
+	public static enum CompareBy { Name,Public };
+	private static CompareBy compareBy = CompareBy.Name;
+	public static void setCompareBy(CompareBy col) { compareBy = col; }
+	
 	public enum ListType {
 		IPAddress,Username,Integer,String;
 	}
@@ -83,5 +87,15 @@ public class ServerList {
 
 	public boolean isPublic() {
 		return isPublic;
+	}
+
+	/** If compareBy = Public, Public lists will come before Private lists.<br />
+	 * If compareBy = Name, Lists will be sorted in alphabetical order. */
+	public int compareTo(ServerList o) {
+		if (compareBy == CompareBy.Name) {
+			return name.compareTo(o.name);
+		} else {
+			return new Boolean(o.isPublic).compareTo(isPublic);
+		}
 	}
 }

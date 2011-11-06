@@ -38,6 +38,7 @@ public class GamesCommand extends AbstractCommand {
 //			return;
 //		}
 
+//		 2 (Exam. 2531 GMKanep     2109 PerttuAntt) [ su120   0] W: 25
 //		30 2677 GMFressinet 2705 GMBacrot   [ su120   0] 1:31:00 -1:32:00 (39-39) B:  7
 		
 		
@@ -47,20 +48,29 @@ public class GamesCommand extends AbstractCommand {
 			userSession.send("There are no games in progress.");
 			return;
 		}
+		java.util.Collections.sort(list);
 		
 		StringBuilder b = new StringBuilder();
 		for(int i=0;i<list.size();i++) {
 			GameInterface g = list.get(i);
 			if (g instanceof Game) {
-				b.append(String.format("%3d ---- %-17s ---- %-17s [ %3d %3d] x:xx:xx x:xx:xx (%2d-%2d)\n",g.getGameNumber(),((Game)g).getWhite().getUser().getUserName(),((Game)g).getBlack().getUser().getUserName(),g.getTime(),g.getIncrement(),g.getWhiteBoardStrength(),g.getBlackBoardStrength()));
+				String whiteUsername = chompUsername(((Game)g).getWhite().getUser().getUserName(),11);
+				String blackUsername = chompUsername(((Game)g).getBlack().getUser().getUserName(),11);
+				b.append(String.format("%3d ---- %-11s ---- %-11s [ %3d %3d] x:xx:xx x:xx:xx (%2d-%2d)\n",g.getGameNumber(),whiteUsername,blackUsername,g.getTime(),g.getIncrement(),g.getWhiteBoardStrength(),g.getBlackBoardStrength()));
 			}
 			if (g instanceof ExaminedGame) {
 				ExaminedGame gg = (ExaminedGame)g;
-				b.append(String.format("%3d (Exam. %4d %-11s %4d %-11s) [ uu%3d %3d] ",gg.getGameNumber(),0,gg.getWhiteName(),0,gg.getBlackName(),gg.getTime(),gg.getIncrement()));
+				String whiteUsername = chompUsername(gg.getWhiteName(),11);
+				String blackUsername = chompUsername(gg.getBlackName(),11);
+				b.append(String.format("%3d (Exam. %4d %-11s %4d %-11s) [ uu%3d %3d] \n",gg.getGameNumber(),0,whiteUsername,0,blackUsername,gg.getTime(),gg.getIncrement()));
 			}
 		}
 		
 		userSession.send(b.toString());
+	}
+	
+	public static String chompUsername(String username,int len) {
+		if (username.length() > len) return username.substring(0,len); else return username;
 	}
 
 }

@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +21,9 @@ import morphy.channel.Channel;
 import morphy.service.ChannelService;
 import morphy.service.UserService;
 import morphy.user.PersonalList;
+import morphy.user.SocketChannelUserSession;
 import morphy.user.UserSession;
+import morphy.user.UserVars;
 import morphy.utils.MorphyStringUtils;
 
 public class TellCommand extends AbstractCommand {
@@ -72,6 +74,11 @@ public class TellCommand extends AbstractCommand {
 					userName = matches[0];
 				}
 				
+				/*if (userName.contains(",")) { 
+					String[] matches = userName.split(",");
+					
+				}*/
+				
 				UserSession personToTell = UserService.getInstance()
 						.getUserSession(userName);
 				if (personToTell == null) {
@@ -86,32 +93,46 @@ public class TellCommand extends AbstractCommand {
 						return;
 					}
 					
+					UserVars uv = personToTell.getUser().getUserVars();
+					
 					if (!userSession.getUser().isRegistered()
-							&& personToTell.getUser().getUserVars()
-									.getVariables().get("tell").equals("0")) {
+							&& uv.getVariables().get("tell").equals("0")) {
 						userSession
 								.send("Player \""
 										+ personToTell.getUser().getUserName()
 										+ "\" isn't listening to unregistered user's tells.");
 						return;
 					}
+					
+					boolean highlight = uv.getVariables().get("highlight").equals("1");
 
-					personToTell.send(UserService.getInstance().getTags(
-							userSession.getUser().getUserName())
-							+ " tells you: " + message);
+					personToTell.send((highlight?(((char)27)+"[7m"):"") +
+							UserService.getInstance().getTags(userSession.getUser().getUserName()) +
+							(highlight?(((char)27)+"[0m"):"") + " tells you: " + message);
 					String s = "(told "
 							+ personToTell.getUser().getUserName() + "";
-					String busyString = personToTell.getUser().getUserVars().getVariables().get("busy");
-					int minutes = (int)(personToTell.getIdleTimeMillis()/60000);
-					if (!busyString.equals("")) {
-						s += ", who " + busyString + " ";
+					
+					boolean isPlaying = ((SocketChannelUserSession)personToTell).isPlaying();
+					boolean isExamining = ((SocketChannelUserSession)personToTell).isExamining();
+					
+					if (isPlaying) {
+						s += ", who is playing";
+					} else if (isExamining) {
+						s += ", who is examining a game";
+					} else {
+						String busyString = uv.getVariables().get("busy");
+						int minutes = (int)(personToTell.getIdleTimeMillis()/60000);
 						
+						if (!busyString.equals("")) {
+							s += ", who " + busyString + " ";
+							
+							int seconds = (int)(personToTell.getIdleTimeMillis()/1000);
+							if (minutes > 0) { s += "(idle: " + minutes + " mins)"; }
+							else { s += " (idle: " + seconds + " secs)"; }
+						} else if (minutes >= 5) {
+							s += ", who has been idle for " + minutes + " mins";
+						}
 						
-						int seconds = (int)(personToTell.getIdleTimeMillis()/1000);
-						if (minutes > 0) { s += "(idle: " + minutes + " mins)"; }
-						else { s += " (idle: " + seconds + " secs)"; }
-					} else if (minutes >= 5) {
-						s += ", who has been idle for " + minutes + " mins";
 					}
 					
 					userSession.send(s + ")");

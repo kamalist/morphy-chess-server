@@ -33,8 +33,8 @@ public class UnexamineCommand extends AbstractCommand {
 		if (!sess.isExamining()) {
 			userSession.send("You are not examining or setting up a game.");
 			return;
+		} else {
+			GameService.getInstance().unexamineGame(userSession);
 		}
-		
-		GameService.getInstance().unexamineGame(userSession);
 	}
 }

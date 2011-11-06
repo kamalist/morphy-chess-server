@@ -91,8 +91,8 @@ public class ExaminedGame implements GameInterface {
 		return examiningUsers.toArray(new UserSession[examiningUsers.size()]);
 	}
 	
-	public void processMoveUpdate(UserSession s) {
-		s.send(s.getUser().getUserVars().getStyle().print(s, this));
+	public String processMoveUpdate(UserSession s) {
+		return s.getUser().getUserVars().getStyle().print(s, this);
 	}
 	
 	public void addObserver(UserSession observer) {
@@ -256,5 +256,12 @@ public class ExaminedGame implements GameInterface {
 
 	public int getBlackRating() {
 		return blackRating;
+	}
+
+	/** Used to put examined games before games 
+	 * being played in "games" output */
+	public int compareTo(GameInterface o) {
+		if (o instanceof Game) return -1; 
+		else return new Integer(gameNumber).compareTo(o.getGameNumber());		
 	}
 }

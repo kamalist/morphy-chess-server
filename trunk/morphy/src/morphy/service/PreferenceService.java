@@ -39,7 +39,6 @@ public class PreferenceService extends PropertiesConfiguration implements
 	private PreferenceService() {
 		super();
 		setAutoSave(false);
-		loadDefaults();
 		File propertiesFile = new File(PROPERTIES_FILE);
 		FileInputStream fileIn = null;
 
@@ -52,6 +51,7 @@ public class PreferenceService extends PropertiesConfiguration implements
 		} catch (Throwable t) {
 			Morphy.getInstance().onError(
 					"Error loading properties file: " + PROPERTIES_FILE, t);
+			loadDefaults();
 		} finally {
 			if (fileIn != null) {
 				try {
@@ -97,7 +97,7 @@ public class PreferenceService extends PropertiesConfiguration implements
 	}
 
 	protected void loadDefaults() {
-		setProperty(PreferenceKeys.SocketConnectionServicePorts, 5000);
+		setProperty(PreferenceKeys.SocketConnectionServicePorts, 5000); // "23,5000"
 		setProperty(PreferenceKeys.SocketConnectionServiceHost, "127.0.0.1");
 		setProperty(PreferenceKeys.SocketConnectionServiceCharEncoding, "UTF-8");
 		setProperty(
@@ -109,6 +109,6 @@ public class PreferenceService extends PropertiesConfiguration implements
 		setProperty(PreferenceKeys.ThreadServiceMaxThreads, 1000);
 		setProperty(PreferenceKeys.ThreadServiceKeepAlive, 120);
 
-		setProperty(PreferenceKeys.ValidUserNameRegEx, "\\w{3,15}");
+		setProperty(PreferenceKeys.ValidUserNameRegEx, "\\w{3,17}");
 	}
 }

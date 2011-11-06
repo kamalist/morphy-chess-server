@@ -28,6 +28,7 @@ import morphy.command.VariablesCommand.variables;
 import morphy.game.request.MatchRequest;
 import morphy.game.request.PartnershipRequest;
 import morphy.game.request.Request;
+import morphy.game.style.StyleInterface;
 import morphy.service.RequestService;
 import morphy.user.UserInfoList;
 import morphy.user.UserSession;
@@ -302,8 +303,10 @@ public class SetCommand extends AbstractCommand {
 							if (!is0or1(message)) throw new BadValueException("noescape");
 							returnmessage = "You will" + (message.equals("0")?" not":"") + " request noescape when games start.";
 							break;
-						case style: 
-							if (Integer.parseInt(message) < 1 || Integer.parseInt(message) > 12) throw new BadValueException("style");
+						case style:
+							if (!StringUtils.isNumeric(message)) throw new BadValueException("style");
+							int style = Integer.parseInt(message);
+							if (style < 1 || style > 13) throw new BadValueException("style");
 							returnmessage = "Style " + message + " set.";
 							break;
 						case flip: 
@@ -370,7 +373,24 @@ public class SetCommand extends AbstractCommand {
 					uv.update(setWhat.toLowerCase(),message);
 					
 					if (var == variables.style) {
-						userSession.getUser().getUserVars().setStyle(new morphy.game.style.Style12()); // style 12 hard coded for now
+						int style = Integer.parseInt(message);
+						StyleInterface si = null;
+						si = getStyle(style);
+						/*if (style == 1) { } else
+						if (style == 2) { } else
+						if (style == 3) { } else
+						if (style == 4) { } else
+						if (style == 5) { } else
+						if (style == 6) { } else
+						if (style == 7) { } else
+						if (style == 8) { } else
+						if (style == 9) { } else
+						if (style == 10) { } else
+						if (style == 11) { } else
+						if (style == 12) { si = new morphy.game.style.Style12(); } else
+						if (style == 13) { si = new morphy.game.style.Style13(); }*/
+						
+						userSession.getUser().getUserVars().setStyle(si);
 					}
 					
 					RequestService rq = RequestService.getInstance();
@@ -406,6 +426,22 @@ public class SetCommand extends AbstractCommand {
 		} else {
 			userSession.send( String.format("No such variable \"%s\".", setWhat ) );
 		}
+	}
+	
+	/** Uses reflection  */
+	private StyleInterface getStyle(int styleNum) {
+		try {
+			Class<?> myClass = Class.forName("morphy.game.style.Style" + styleNum);
+			return (StyleInterface) myClass.newInstance();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace(System.err);
+		} catch (InstantiationException e) {
+			e.printStackTrace(System.err);
+		} catch (IllegalAccessException e) {
+			e.printStackTrace(System.err);
+		}
+		return null;
 	}
 	
 	private variables[] findAllMatches(variables[] vars,String varname) {

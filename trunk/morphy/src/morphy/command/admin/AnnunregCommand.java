@@ -15,8 +15,9 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package morphy.command;
+package morphy.command.admin;
 
+import morphy.command.AbstractCommand;
 import morphy.service.UserService;
 import morphy.user.UserSession;
 
@@ -41,6 +42,7 @@ public class AnnunregCommand extends AbstractCommand {
 					sentTo++;
 			}
 		}
+		sentTo--; // The sending user doesn't count
 		userSession.send("(Announcement sent to " + sentTo + " unregistered players)");
 	}
 }

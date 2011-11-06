@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,11 +21,15 @@ import board.PositionState;
 import morphy.game.ExaminedGame;
 import morphy.game.Game;
 import morphy.game.GameInterface;
+import morphy.game.Variant;
 import morphy.user.UserSession;
+import morphy.user.UserVars;
 
 /** Class implementing the style12 string. */
 public class Style12 implements StyleInterface {
 
+	public Style12() { }
+	
 	public String print(UserSession userSession, GameInterface g) {
 		PositionState p = g.getBoard().getLatestMove();
 		
@@ -38,8 +42,11 @@ public class Style12 implements StyleInterface {
 		
 		//System.err.println(p.getNotation() + " " + p.getVerboseNotation() + " " + p.getFEN());
 		int myrelation = 0;
-		
+		boolean isBughouse = false;
+		boolean isExaminedGame = false;
+		boolean isPaused = false;
 		if (g instanceof ExaminedGame) {
+			isExaminedGame = true;
 			ExaminedGame eg = (ExaminedGame)g;
 			java.util.Arrays.sort(eg.getExaminers());
 			if (java.util.Arrays.binarySearch(eg.getExaminers(),userSession) >= 0) {
@@ -53,18 +60,27 @@ public class Style12 implements StyleInterface {
 			Game gg = (Game)g;
 			
 			boolean amIPlaying = userSession.getUser().getUserName().equals(gg.getWhite().getUser().getUserName()) || userSession.getUser().getUserName().equals(gg.getBlack().getUser().getUserName());
-			if (!amIPlaying) myrelation = 0;
-			boolean amIWhite = userSession.getUser().getUserName().equals(gg.getWhite().getUser().getUserName());
-			boolean whitesMove = !p.isWhitesMove();
-			if ((amIWhite && whitesMove) || (!amIWhite && !whitesMove)) myrelation = 1;
-			if (amIWhite && !whitesMove || !amIWhite && whitesMove) myrelation = -1;
+			if (!amIPlaying) { myrelation = 0; } else {
+				boolean amIWhite = userSession.getUser().getUserName().equals(gg.getWhite().getUser().getUserName());
+				boolean whitesMove = !p.isWhitesMove();
+				if ((amIWhite && whitesMove) || (!amIWhite && !whitesMove)) myrelation = 1;
+				if ((amIWhite && !whitesMove) || (!amIWhite && whitesMove)) myrelation = -1;
+				
+			}
+			isBughouse = gg.getVariant() == Variant.bughouse || gg.getVariant() == Variant.frbughouse;
+			isPaused = !gg.isClockTicking();
 		}
 		
+		UserVars uv = userSession.getUser().getUserVars();
 		
-		String whiteName = (g instanceof ExaminedGame?((ExaminedGame)g).getWhiteName():((Game)g).getWhite().getUser().getUserName());
-		String blackName = (g instanceof ExaminedGame?((ExaminedGame)g).getBlackName():((Game)g).getBlack().getUser().getUserName());
-		String style12string = "" + p.draw() + "" + (p.isWhitesMove()?"B":"W") + " -1 " + (p.canWhiteCastleKingside()?"1":"0") + " " + (p.canWhiteCastleQueenside()?"1":"0") + " " + (p.canBlackCastleKingside()?"1":"0") + " " + (p.canBlackCastleQueenside()?"1":"0") + " 0 " + g.getGameNumber() + " " + whiteName + " " + blackName + " " + myrelation + " " + (g.getTime()) + " " + g.getIncrement() + " " + g.getWhiteBoardStrength() + " " + g.getBlackBoardStrength() + " " + g.getWhiteClock() + " " + g.getBlackClock() + " " + (g.getBoard().getPositions().size()/2) + " " + verboseNotation + " (0:00" + (userSession.getUser().getUserVars().getIVariables().get("ms").equals("1")?".000":"") + ") " + notation + " 0 0 0";
-		System.err.println(userSession.getUser().getUserName() + " > " + style12string);
+		int numMoves = g.getBoard().getPositions().size();
+		int lag = 0; // requires timeseal...
+		int moveNumber = numMoves/2;
+		isPaused = ((isBughouse||numMoves>2)&&!isExaminedGame); 
+		String whiteName = (isExaminedGame?((ExaminedGame)g).getWhiteName():((Game)g).getWhite().getUser().getUserName());
+		String blackName = (isExaminedGame?((ExaminedGame)g).getBlackName():((Game)g).getBlack().getUser().getUserName());
+		String style12string = "" + p.draw() + "" + (p.isWhitesMove()?"B":"W") + " -1 " + (p.canWhiteCastleKingside()?"1":"0") + " " + (p.canWhiteCastleQueenside()?"1":"0") + " " + (p.canBlackCastleKingside()?"1":"0") + " " + (p.canBlackCastleQueenside()?"1":"0") + " 0 " + g.getGameNumber() + " " + whiteName + " " + blackName + " " + myrelation + " " + (g.getTime()) + " " + g.getIncrement() + " " + g.getWhiteBoardStrength() + " " + g.getBlackBoardStrength() + " " + g.getWhiteClock() + " " + g.getBlackClock() + " " + moveNumber + " " + verboseNotation + " (0:00" + (uv.getIVariables().get("ms").equals("1")?".000":"") + ") " + notation + " " + ((uv.getVariables().get("flip").equals("1")?"0":"1")) + " " + (isPaused?"1":"0") + " " + lag + "" + (uv.getVariables().get("bell").equals("1")?((char)7):"");
+		System.err.println(String.format("%-17s",userSession.getUser().getUserName()) + " > " + style12string);
 		return style12string;
 	}
 }

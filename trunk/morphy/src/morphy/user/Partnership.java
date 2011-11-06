@@ -15,28 +15,16 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package morphy.game;
+package morphy.user;
 
-import board.Board;
-
-public interface GameInterface extends Comparable<GameInterface> {
-	public Board getBoard();
-	public int getGameNumber();
-	public int getTime();
-	public int getIncrement();
-	public int getWhiteBoardStrength();
-	public int getBlackBoardStrength();
-	public int getWhiteClock();
-	public int getBlackClock();
-	public boolean isRated();
-	public long getTimeGameStarted();
-	public Variant getVariant();
+/** A class representing a bughouse partnership.<br />
+ * This class is managed by the PartnershipService class. */
+public class Partnership {
+	public UserSession a;
+	public UserSession b;
 	
-	public void setGameNumber(int num);
-	public void setTime(int time);
-	public void setIncrement(int increment);
-	public void setRated(boolean rated);
-	
-	public void processMoveUpdate(boolean all);
-	public String processMoveUpdate(morphy.user.UserSession userSession);
+	public Partnership(UserSession a,UserSession b) {
+		this.a = a;
+		this.b = b;
+	}
 }

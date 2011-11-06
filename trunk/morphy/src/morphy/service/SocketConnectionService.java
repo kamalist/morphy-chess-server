@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 
 import morphy.Morphy;
+import morphy.channel.Channel;
 import morphy.properties.PreferenceKeys;
 import morphy.service.ScreenService.Screen;
 import morphy.user.PersonalList;
@@ -44,6 +45,7 @@ import morphy.user.SocketChannelUserSession;
 import morphy.user.User;
 import morphy.user.UserLevel;
 import morphy.user.UserSession;
+import morphy.user.UserVars;
 import morphy.utils.BufferUtils;
 import morphy.utils.MorphyStringUtils;
 import morphy.utils.SocketUtils;
@@ -66,7 +68,8 @@ public class SocketConnectionService implements Service {
 	protected Thread selectionThread = null;
 
 	protected Map<Socket, SocketChannelUserSession> socketToSession = new HashMap<Socket, SocketChannelUserSession>();
-
+	protected Map<Socket, StringBuilder> socketInputForCmd = new HashMap<Socket, StringBuilder>();
+	
 	protected Runnable selectSocketRunnable = new Runnable() {
 		public void run() {
 			try {
@@ -134,14 +137,29 @@ public class SocketConnectionService implements Service {
 							PreferenceKeys.SocketConnectionServiceMaxCommunicationBytes);
 			serverSocketChannel = ServerSocketChannel.open();
 			serverSocketChannel.configureBlocking(false);
-			serverSocketChannel
-					.socket()
-					.bind(
-							new java.net.InetSocketAddress(
-									PreferenceService
-											.getInstance()
-											.getInt(
-													PreferenceKeys.SocketConnectionServicePorts)));
+			
+			/*Object obj = PreferenceService.getInstance().getProperty(PreferenceKeys.SocketConnectionServicePorts.toString());
+			System.out.println(obj.getClass());
+			if (obj instanceof java.util.ArrayList) {
+				//System.out.println((java.util.ArrayList<String>)obj);
+				String[] arr = ((java.util.ArrayList<String>)obj).toArray(new String[0]);
+				System.out.println(java.util.Arrays.toString(arr));
+				//serverSocketChannel.socket().
+				for(int i=0;i<arr.length;i++) {
+					serverSocketChannel.socket().bind( 
+							new java.net.InetSocketAddress( Integer.parseInt(arr[i]) ));
+					if (LOG.isInfoEnabled()) {
+						LOG.info("Listening on port " + arr[i]);
+					}
+				}
+			} else {
+				if (LOG.isInfoEnabled()) {
+					serverSocketChannel.socket().bind( new java.net.InetSocketAddress( 5000 ));
+					LOG.info("LOAD CONFIG FAILED - Listening on port 5000");
+				}
+			}*/
+			
+			serverSocketChannel.socket().bind( new java.net.InetSocketAddress( PreferenceService.getInstance().getInt(PreferenceKeys.SocketConnectionServicePorts.toString()) ));
 			serverSocketSelector = Selector.open();
 			serverSocketChannel.register(serverSocketSelector,
 					SelectionKey.OP_ACCEPT);
@@ -232,7 +250,7 @@ public class SocketConnectionService implements Service {
 								+ "\" is a registered name.  If it is yours, type the password.\n"
 								+ "If not, just hit return to try another name.\n\n"
 								+ "" + "password: ",userSession);
-				
+				/*try { userSession.getChannel().configureBlocking(true); } catch(Exception e) { e.printStackTrace(System.err); }*/
 				try {
 					DBConnection conn = DBConnectionService.getInstance().getDBConnection();
 					java.sql.Statement s = conn.getStatement();
@@ -269,6 +287,9 @@ public class SocketConnectionService implements Service {
 			userSession.getUser().setUserLevel(isGuest?UserLevel.Guest:UserLevel.Player);
 			userSession.getUser().setRegistered(!isGuest);
 			userSession.getUser().setUserVars(new morphy.user.UserVars(userSession.getUser()));
+			if (isGuest) {
+				userSession.getUser().getUserVars().getVariables().put("rated", "0");
+			}
 			userSession.setHasLoggedIn(true);
 			instance.addLoggedInUser(userSession);
 			userSession.getUser().setDBID(instance.getDBID(name));
@@ -282,7 +303,16 @@ public class SocketConnectionService implements Service {
 				java.sql.ResultSet rs = conn.executeQueryWithRS(query);
 				try {
 					while(rs.next()) {
-						userSession.getUser().getLists().get(PersonalList.valueOf(rs.getString(1))).add(rs.getString(2));
+						PersonalList pl = PersonalList.valueOf(rs.getString(1));
+						String val = rs.getString(2);
+						userSession.getUser().getLists().get(pl).add(val);
+						if (pl == PersonalList.channel) {
+							int channelNum = Integer.parseInt(val);
+							Channel c = ChannelService.getInstance().getChannel(channelNum);
+							if (c != null) {
+								c.addListener(userSession);
+							}
+						}
 					}
 				} catch(SQLException e) { Morphy.getInstance().onError(e); }
 				
@@ -373,8 +403,10 @@ public class SocketConnectionService implements Service {
 				while(rs.next()) {
 					String username = rs.getString(1);
 					UserSession sess = us.getUserSession(username);
+					UserVars uv = sess.getUser().getUserVars();
+					boolean highlight = uv.getVariables().get("highlight").equals("1");
 					if (sess != null && sess.isConnected()) {
-						sess.send("Notification: " + name + " has arrived.");
+						sess.send("Notification: " + (highlight?((char)27)+"[7m":"") + name + (highlight?((char)27)+"[0m":"") + " has arrived.");
 						arrivalNotedBy.add(sess.getUser().getUserName());
 					}
 					
@@ -393,7 +425,9 @@ public class SocketConnectionService implements Service {
 					String username = rs.getString(1);
 					if (arrivalNotedBy.contains(username)) continue;
 					UserSession sess = us.getUserSession(username);
-					if (sess != null && sess.isConnected()) sess.send("Notification: " + name + " has arrived and isn't on your notify list.");
+					UserVars uv = sess.getUser().getUserVars();
+					boolean highlight = uv.getVariables().get("highlight").equals("1");
+					if (sess != null && sess.isConnected()) sess.send("Notification: " + (highlight?((char)27)+"[7m":"") + name + (highlight?((char)27)+"[0m":"") + " has arrived and isn't on your notify list.");
 				}
 			} catch(SQLException e) { Morphy.getInstance().onError(e); }
 			// Notification: ChannelBot has arrived and isn't on your notify list.
@@ -514,11 +548,21 @@ public class SocketConnectionService implements Service {
 						} else if (message == null) {
 							session.disconnect();
 						} else if (message.length() > 0) {
-							if (LOG.isInfoEnabled()) {
-								LOG.info("Read: "
-										+ session.getUser().getUserName() + " "
-										+ message);
+							/*if (!socketInputForCmd.containsKey(channel.socket())) {
+								socketInputForCmd.put(channel.socket(), new StringBuilder());
 							}
+							int c = (int)message.charAt(0);
+							if (c != 10 && c != 13) {
+								socketInputForCmd.get(channel.socket()).append(message);
+								//LOG.info(c);
+							} else {
+								message = socketInputForCmd.get(channel.socket()).toString();
+								socketInputForCmd.put(channel.socket(), new StringBuilder()); 
+								LOG.info("Read: "
+										+ session.getUser().getUserName() + " \""
+										+ message + "\"");
+							}
+							LOG.info(c + " " + socketInputForCmd.get(channel.socket()));*/
 							
 							if (message.startsWith("$$")) {
 								message = message.substring(2);
@@ -528,10 +572,15 @@ public class SocketConnectionService implements Service {
 							}
 							
 							session.getInputBuffer().append(message);
-
+							if (session.getInputBuffer().indexOf("\n") != -1) {
+								LOG.info("Read: "
+									+ session.getUser().getUserName() + " \""
+									+ message + "\"");
+							}
 							int carrageReturnIndex = -1;
 							while ((carrageReturnIndex = session
 									.getInputBuffer().indexOf("\n")) != -1) {
+								
 								String command = session.getInputBuffer()
 										.substring(0, carrageReturnIndex)
 										.trim();

@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ public class Game implements GameInterface {
 	private long timeGameEnded;
 	private String reason;
 	private String result;
+	private boolean isClockTicking;
 	
 	private int whiteClock;
 	private int blackClock;
@@ -78,14 +79,16 @@ public class Game implements GameInterface {
 		}
 	}
 	
-	public void processMoveUpdate(UserSession s) {
-		s.send(s.getUser().getUserVars().getStyle().print(s, this));
+	/** Sends a single player the style 12 string (again).<br /> 
+	 * Useful for the "refresh" command, etc. */
+	public String processMoveUpdate(UserSession s) {
+		return s.getUser().getUserVars().getStyle().print(s, this);
 	}
 	
-	public String generateGameInfoLine() {
+	public String generateGameInfoLine(boolean provshow) {
 		// TODO add provshow=1
 		Game g = this;
-		String g1 = "\n<g1> " + g.getGameNumber() + " p=0 t=" + g.getVariant().name() + " r=" + (g.isRated()?"1":"0") + " u=" + String.format("%s,%s",g.getWhite().getUser().isRegistered()?"1":"0",g.getBlack().getUser().isRegistered()?"1":"0") + " it="+(g.getTime()*60)+","+(g.getTime()*60) + " i="+g.getIncrement()+","+g.getIncrement()+" pt=0 rt=1589,2100 ts=0,0\n";
+		String g1 = "\n<g1> " + g.getGameNumber() + " p=0 t=" + g.getVariant().name() + " r=" + (g.isRated()?"1":"0") + " u=" + String.format("%s,%s",g.getWhite().getUser().isRegistered()?"1":"0",g.getBlack().getUser().isRegistered()?"1":"0") + " it="+(g.getTime()*60)+","+ g.getIncrement() + " i="+(g.getTime()*60)+","+g.getIncrement()+" pt=0 rt=0" + (provshow?"P":"") + ",0" + (provshow?"P":"E") + " ts=0,0 m=2 n=0\n";
 		return g1;
 	}
 	
@@ -184,8 +187,9 @@ public class Game implements GameInterface {
 		return variant;
 	}
 
-	public void touchLastMoveMadeTime() {
+	public long touchLastMoveMadeTime() {
 		timeLastMoveMade = System.currentTimeMillis();
+		return timeLastMoveMade;
 	}
 
 	public long getTimeLastMoveMade() {
@@ -238,5 +242,20 @@ public class Game implements GameInterface {
 
 	public int getBlackClock() {
 		return blackClock;
+	}
+
+	/** Used to put examined games before games 
+	 * being played in "games" output */
+	public int compareTo(GameInterface o) {
+		if (o instanceof ExaminedGame) return -1; 
+		else return new Integer(gameNumber).compareTo(o.getGameNumber());
+	}
+
+	public void setClockTicking(boolean isClockTicking) {
+		this.isClockTicking = isClockTicking;
+	}
+
+	public boolean isClockTicking() {
+		return isClockTicking;
 	}
 }

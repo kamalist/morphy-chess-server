@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -60,8 +60,12 @@ public class AbortRequest implements Request {
 	}
 
 	public void declineAction() {
-		// TODO Auto-generated method stub
-
+		RequestService rs = RequestService.getInstance();
+		rs.removeRequestFrom(from,this);
+		rs.removeRequestTo(to,this);
+		
+		from.send(to.getUser().getUserName() + " declines the abort request.");
+		to.send("You decline the abort request from " + from.getUser().getUserName() + ".");
 	}
 
 	public void setRequestNumber(int i) {

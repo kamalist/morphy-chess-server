@@ -36,7 +36,8 @@ public class ShowListCommand extends AbstractCommand {
 	public void process(String arguments, UserSession userSession) {
 		if (arguments.indexOf(" ") != -1)
 			arguments = arguments.substring(0, arguments.indexOf(" "));
-
+		arguments = arguments.trim();
+		
 		String listName = arguments.toLowerCase();
 		ServerListManagerService serv = ServerListManagerService.getInstance();
 		if (listName.equals("")) {
@@ -82,6 +83,7 @@ public class ShowListCommand extends AbstractCommand {
 		
 		if (arr.length == 0) {
 			// try parsing for serverList
+			//System.out.println("\"" + listName + "\"");
 			ServerList[] sl_arr = getLists(serv, listName);
 			if (sl_arr.length >= 2) {
 			

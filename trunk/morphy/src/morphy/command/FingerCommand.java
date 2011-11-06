@@ -90,7 +90,7 @@ public class FingerCommand extends AbstractCommand {
 		str.append("On for: "
 				+ MorphyStringUtils.formatTime(loggedInMillis)
 				+ "\tIdle: "
-				+ ((idleTimeMillis <= 999) ? (idleTimeMillis + " secs") : MorphyStringUtils.formatTime(idleTimeMillis)));
+				+ ((idleTimeMillis <= 999) ? "0 secs" : MorphyStringUtils.formatTime(idleTimeMillis)));
 		GameService gs = GameService.getInstance();
 		if (query.isPlaying()) {	
 			Game g = (Game)gs.map.get(query);

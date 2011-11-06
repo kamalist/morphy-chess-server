@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import morphy.Morphy;
 import morphy.channel.Channel;
 import morphy.game.Game;
 import morphy.game.request.MatchRequest;
+import morphy.game.request.PartnershipRequest;
 import morphy.game.request.Request;
 import morphy.service.DBConnectionService;
 import morphy.service.GameService;
@@ -55,21 +56,27 @@ public class SocketChannelUserSession implements UserSession,
 
 	protected User user;
 	protected SocketChannel channel;
-	protected StringBuilder inputBuffer = new StringBuilder(400);
+	protected StringBuilder inputBuffer;
 	protected long lastReceivedTime;
 	protected boolean hasLoggedIn = false;
-	protected long loginTime = System.currentTimeMillis();
-	protected Map<UserSessionKey, Object> objectMap = new TreeMap<UserSessionKey, Object>();
-	protected Timer idleLogoutTimer = new Timer();
+	protected long loginTime;
+	protected Map<UserSessionKey, Object> objectMap;
+	protected Timer idleLogoutTimer;
 	protected Channel lastChannelToldTo = null;
 	protected UserSession lastPersonToldTo = null;
 	protected boolean isPlaying = false;
 	protected boolean isExamining = false;
-	protected List<Integer> gamesObserving = new ArrayList<Integer>();
+	protected List<Integer> gamesObserving;
 
 	public SocketChannelUserSession(User user, SocketChannel channel) {
 		this.user = user;
 		this.channel = channel;
+		
+		inputBuffer = new StringBuilder(400);
+		loginTime = System.currentTimeMillis();
+		objectMap = new TreeMap<UserSessionKey, Object>();
+		if (!UserService.getInstance().isAdmin(user.getUserName())) idleLogoutTimer = new Timer();
+		gamesObserving = new ArrayList<Integer>();
 
 		if (LOG.isInfoEnabled()) {
 			LOG.info("Created SocketChannelUserSession user "
@@ -79,9 +86,15 @@ public class SocketChannelUserSession implements UserSession,
 	}
 	
 	public void scheduleIdleTimeout() {
+		if (idleLogoutTimer != null)
+			idleLogoutTimer.cancel();
+		
 		// admins don't idle out
-		if (UserService.getInstance().isAdmin(getUser().getUserName()))
+		if (UserService.getInstance().isAdmin(getUser().getUserName())) {
 			return;
+		}
+		
+		/*LOG.info("scheduling " + getUser().getUserName() + " for idle logout (60 minutes)");*/
 		
 		final int millis = 60*60*1000;
 		
@@ -96,7 +109,7 @@ public class SocketChannelUserSession implements UserSession,
 						disconnect();
 					} else {
 						idleLogoutTimer.purge();
-						scheduleIdleTimeout();
+						scheduleIdleTimeout(); // recursion
 					}
 			} }, 60*60*1000);
 	}
@@ -107,7 +120,7 @@ public class SocketChannelUserSession implements UserSession,
 				String v = getNotifyNames();
 				if (!v.equals("")) send("Your departure was noted by the following: " + v);
 				send(ScreenService.getInstance().getScreen(Screen.Logout));
-				getUser().getUserVars().dumpToDB();
+				if (getUser().isRegistered()) { getUser().getUserVars().dumpToDB(); }
 				channel.close();
 			} catch (Throwable t) {
 				if (LOG.isErrorEnabled())
@@ -122,12 +135,21 @@ public class SocketChannelUserSession implements UserSession,
 					LOG.info("Disconnected user " + user.getUserName());
 				}
 				
+				if (idleLogoutTimer != null) {
+					idleLogoutTimer.cancel();
+				}
+					
 				RequestService rs = RequestService.getInstance();
 				List<Request> list = rs.getRequestsTo(this);
 				if (list != null) {
 					for(Request r : list) {
+						String toUsername = r.getTo().getUser().getUserName();
 						if (r.getClass() == MatchRequest.class) {
-							r.getFrom().send(r.getTo().getUser().getUserName() + " whom you were challenging, has departed.\nChallenge to " + r.getTo().getUser().getUserName() + " withdrawn.");
+							r.getFrom().send(toUsername + " whom you were challenging, has departed.\nChallenge to " + toUsername + " withdrawn.");
+						}
+						if (r.getClass() == PartnershipRequest.class) {
+							r.getFrom().send(toUsername + ", whom you were offering a partnership with, has departed.\n" +
+									"Partnership offer to " + toUsername + " withdrawn.");
 						}
 					}
 				}
@@ -148,23 +170,37 @@ public class SocketChannelUserSession implements UserSession,
 					
 				}
 				
-				UserSession[] sessions = UserService.getInstance().fetchAllUsersWithVariable("pin","1");
-				for(UserSession s : sessions) {
-					s.send(String.format("[%s has disconnected.]",getUser().getUserName()));
-				}
-				
-				String query = "SELECT u.username FROM personallist pl INNER JOIN personallist_entry ple ON (pl.id = ple.personallist_id) INNER JOIN users u ON (u.id = pl.user_id) WHERE pl.`name` = 'notify' && ple.`value` LIKE '" + getUser().getUserName() + "';";
-				DBConnectionService dbcs = DBConnectionService.getInstance();
-				ResultSet resultSet = dbcs.getDBConnection().executeQueryWithRS(query);
-				try {
-					UserService us = UserService.getInstance();
-					while(resultSet.next()) {
-						String username = resultSet.getString(1);
-						UserSession sess = us.getUserSession(username);
-						if (sess != null && sess.isConnected()) sess.send("Notification: " + getUser().getUserName() + " has departed.");
-					} 
-				} catch(SQLException e) { Morphy.getInstance().onError(e); }
+				sendDisconnectPinNotifications();
+				sendDisconnectNotifications();
 			}
+		}
+	}
+	
+	private void sendDisconnectPinNotifications() {
+		UserSession[] sessions = UserService.getInstance().fetchAllUsersWithVariable("pin","1");
+		for(UserSession s : sessions) {
+			s.send(String.format("[%s has disconnected.]",getUser().getUserName()));
+		}
+	}
+	
+	private void sendDisconnectNotifications() {
+		// Notifications are only sent if this user is registered.
+		if (getUser().isRegistered()) {
+			String query = "SELECT u.username FROM personallist pl INNER JOIN personallist_entry ple ON (pl.id = ple.personallist_id) INNER JOIN users u ON (u.id = pl.user_id) WHERE pl.`name` = 'notify' && ple.`value` LIKE '" + getUser().getUserName() + "';";
+			DBConnectionService dbcs = DBConnectionService.getInstance();
+			ResultSet resultSet = dbcs.getDBConnection().executeQueryWithRS(query);
+			try {
+				UserService us = UserService.getInstance();
+				while(resultSet.next()) {
+					String username = resultSet.getString(1);
+					UserSession sess = us.getUserSession(username);
+					
+					if (sess != null && sess.isConnected()) {
+						boolean highlight = sess.getUser().getUserVars().getVariables().get("highlight").equals("1");
+						sess.send("Notification: " + (highlight?((char)27)+"[7m":"") + getUser().getUserName() + (highlight?((char)27)+"[0m":"") + " has departed.");
+					}
+				} 
+			} catch(SQLException e) { Morphy.getInstance().onError(e); }
 		}
 	}
 
@@ -229,7 +265,8 @@ public class SocketChannelUserSession implements UserSession,
 						Date d = new Date();
 						java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm");
 						String tzone = getUser().getUserVars().getVariables().get("tzone").toUpperCase();
-						if (tzone.equals("SERVER")) tzone = TimeZone.getDefault().getDisplayName(TimeZone.getDefault().inDaylightTime(d),TimeZone.SHORT);
+						TimeZone tz = TimeZone.getDefault();
+						if (tzone.equals("SERVER")) tzone = tz.getDisplayName(tz.inDaylightTime(d),TimeZone.SHORT);
 						sdf.setTimeZone(TimeZoneUtils.getTimeZone(tzone));
 						prompt = sdf.format(d) + "_" + prompt;
 					}
@@ -237,7 +274,8 @@ public class SocketChannelUserSession implements UserSession,
 				
 				ByteBuffer buffer = BufferUtils
 						.createBuffer(SocketConnectionService.getInstance()
-								.formatMessage(this, message + "\n" + prompt + " "));
+								.formatMessage(this, message + "\n\r" + prompt + " "));
+				System.out.println((message + "\n\r" + prompt + " ").replace("\n","\\n").replace("\r","\\r"));
 				channel.write(buffer);
 			} else {
 				if (LOG.isInfoEnabled()) {
@@ -280,6 +318,9 @@ public class SocketChannelUserSession implements UserSession,
 				o.getUser().getUserName());
 	}
 	
+	/** Gets the player names who have this user on their notify list.<br />
+	 * Note that this method has poor performance, O(N), where N = number of logged in players.<br />
+	 * Returns an empty string if no names. */
 	private String getNotifyNames() {
 		StringBuilder b = new StringBuilder();
 		final UserSession[] arr = UserService.getInstance().getLoggedInUsers();

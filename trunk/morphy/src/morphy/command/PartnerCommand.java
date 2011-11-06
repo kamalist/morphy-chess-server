@@ -21,8 +21,10 @@ import java.util.List;
 
 import morphy.game.request.PartnershipRequest;
 import morphy.game.request.Request;
+import morphy.service.PartnershipService;
 import morphy.service.RequestService;
 import morphy.service.UserService;
+import morphy.user.Partnership;
 import morphy.user.UserSession;
 
 public class PartnerCommand extends AbstractCommand {
@@ -32,9 +34,17 @@ public class PartnerCommand extends AbstractCommand {
 
 	public void process(String arguments, UserSession userSession) {		
 		if (arguments.trim().equals("")) {
-			boolean hasPartner = true;
+			PartnershipService ps = PartnershipService.getInstance();
+			
+			boolean hasPartner = ps.getPartnershipMap().containsKey(userSession);
 			if (hasPartner) {
 				userSession.send("You no longer have a bughouse partner.");
+				Partnership p = ps.getPartnershipMap().get(userSession);
+				ps.removePartnership(p);
+				UserSession partner = null;
+				if (p.a == userSession) { partner = p.b; } else { partner = p.a; }
+				if (partner != null) { partner.send("Your partner has ended partnership.\n" +
+						"You no longer have a bughouse partner."); }
 				return;
 			} else {
 				userSession.send("You do not have a bughouse partner.");
@@ -60,7 +70,7 @@ public class PartnerCommand extends AbstractCommand {
 		if (possibleMatches.length == 1) {
 			username = possibleMatches[0];
 			
-			if (username.equals(userSession.getUser().getUserName())) {
+			if (username.equalsIgnoreCase(userSession.getUser().getUserName())) {
 				userSession.send("You can't be your own bughouse partner.");
 				return;
 			}
@@ -70,6 +80,12 @@ public class PartnerCommand extends AbstractCommand {
 			RequestService rs = RequestService.getInstance();
 			List<Request> list = rs.findAllToRequestsByType(userSession,PartnershipRequest.class);
 			if (list == null || list.size() == 0) {
+				boolean isRecipientOpenForBug = sess.getUser().getUserVars().getVariables().get("bugopen").equals("1");
+				if (!isRecipientOpenForBug) {
+					userSession.send(sess.getUser().getUserName() + " is not open for bughouse.");
+					return;
+				}
+				
 				boolean isOpenForBug = userSession.getUser().getUserVars().getVariables().get("bugopen").equals("1");
 				userSession.send((!isOpenForBug?"Setting you open for bughouse.\n":"") + "Making a partnership offer to " + sess.getUser().getUserName() + ".");
 				if (!isOpenForBug) userSession.getUser().getUserVars().getVariables().put("bugopen","1");

@@ -15,23 +15,25 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package morphy.command;
+package morphy.command.admin;
 
-import morphy.service.UserService;
+import morphy.command.AbstractCommand;
 import morphy.user.UserSession;
 
-public class AnnounceCommand extends AbstractCommand {
-	public AnnounceCommand() {
-		super("announce");
+public class AdminCommand extends AbstractCommand {
+	public AdminCommand() {
+		super("admin");
 	}
 
 	public void process(String arguments, UserSession userSession) {
-		if (arguments.equals("")) {
-			userSession.send(getContext().getUsage());
-			return;
+		morphy.user.UserVars uv = userSession.getUser().getUserVars();
+		String val = uv.getVariables().get("showadmintag");
+		if (val.equals("1")) {
+			uv.getVariables().put("showadmintag","0");
+			userSession.send("Admin mode (*) is now not shown.");
+		} else if (val.equals("0")) {
+			uv.getVariables().put("showadmintag","1");
+			userSession.send("Admin mode (*) is now shown.");
 		}
-		
-		UserService.getInstance().sendAnnouncement(userSession.getUser().getUserName(),arguments);
-		userSession.send("(Announcement sent to " + UserService.getInstance().getLoggedInUserCount() + " players)");
 	}
 }

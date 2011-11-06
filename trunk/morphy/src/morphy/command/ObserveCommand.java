@@ -71,7 +71,7 @@ public class ObserveCommand extends AbstractCommand {
 		if (g instanceof Game) {
 			Game gg = (Game)g;
 			gg.addObserver(userSession);
-			gg.processMoveUpdate(userSession);
+			userSession.send(gg.processMoveUpdate(userSession));
 			whiteName = gg.getWhite().getUser().getUserName();
 			blackName = gg.getBlack().getUser().getUserName();
 		}

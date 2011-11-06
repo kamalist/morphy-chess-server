@@ -92,7 +92,7 @@ public class LoginsCommand extends AbstractCommand {
 		
 		if (limit > count) limit = count;
 		
-		query = "SELECT `id` FROM `logins` WHERE `username` LIKE '" + username + "' ORDER BY `id` DESC";
+		query = "SELECT `id` FROM (SELECT `id` FROM `logins` WHERE `username` LIKE '" + username + "' ORDER BY `id` DESC) LIMIT " + limit;
 		rs = DBConnectionService.getInstance().getDBConnection().executeQueryWithRS(query);
 		int[] arr = new int[limit];
 		try {

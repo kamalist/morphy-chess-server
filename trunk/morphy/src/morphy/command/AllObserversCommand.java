@@ -30,8 +30,9 @@ public class AllObserversCommand extends AbstractCommand {
 	}
 
 	public void process(String arguments, UserSession userSession) {
-		GameService gs = GameService.getInstance();
+		arguments = arguments.trim();
 		
+		GameService gs = GameService.getInstance();
 		GameInterface g = null;
 		if (arguments.matches("[0-9]+")) {
 			g = gs.findGameById(Integer.parseInt(arguments));
