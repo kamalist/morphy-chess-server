@@ -15,23 +15,24 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package morphy.command;
+package morphy.command.admin;
 
-import morphy.Morphy;
+import morphy.command.AbstractCommand;
 import morphy.service.UserService;
 import morphy.user.UserSession;
 
-public class ShutdownCommand extends AbstractCommand {
-	public ShutdownCommand() {
-		super("shutdown");
+public class AnnounceCommand extends AbstractCommand {
+	public AnnounceCommand() {
+		super("announce");
 	}
 
 	public void process(String arguments, UserSession userSession) {
-		UserService us = UserService.getInstance();
-		UserSession[] arr = us.getLoggedInUsers();
-		for(UserSession s : arr) {
-			s.send(" **** Server is shutting down now. **** ");
+		if (arguments.equals("")) {
+			userSession.send(getContext().getUsage());
+			return;
 		}
-		Morphy.getInstance().shutdown();
+		
+		UserService.getInstance().sendAnnouncement(userSession.getUser().getUserName(),arguments);
+		userSession.send("(Announcement sent to " + UserService.getInstance().getLoggedInUserCount() + " players)");
 	}
 }

@@ -15,8 +15,9 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package morphy.command;
+package morphy.command.admin;
 
+import morphy.command.AbstractCommand;
 import morphy.service.UserService;
 import morphy.user.UserSession;
 

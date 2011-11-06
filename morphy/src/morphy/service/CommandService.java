@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,17 +22,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import morphy.command.AbortCommand;
 import morphy.command.AcceptCommand;
 import morphy.command.AddListCommand;
 import morphy.command.AddPlayerCommand;
-import morphy.command.AdminCommand;
 import morphy.command.AllObserversCommand;
-import morphy.command.AnnounceCommand;
-import morphy.command.AnnunregCommand;
 import morphy.command.BclockCommand;
 import morphy.command.BnameCommand;
 import morphy.command.BratingCommand;
@@ -40,6 +36,7 @@ import morphy.command.BugWhoCommand;
 import morphy.command.ClearmessagesCommand;
 import morphy.command.Command;
 import morphy.command.DateCommand;
+import morphy.command.DeclineCommand;
 import morphy.command.ExamineCommand;
 import morphy.command.FingerCommand;
 import morphy.command.GamesCommand;
@@ -57,9 +54,9 @@ import morphy.command.MessagesCommand;
 import morphy.command.MexamineCommand;
 import morphy.command.MovesCommand;
 import morphy.command.NewsCommand;
-import morphy.command.NukeCommand;
 import morphy.command.ObserveCommand;
 import morphy.command.PartnerCommand;
+import morphy.command.PauseCommand;
 import morphy.command.PendingCommand;
 import morphy.command.QtellCommand;
 import morphy.command.QuitCommand;
@@ -68,7 +65,6 @@ import morphy.command.SRCommand;
 import morphy.command.SetCommand;
 import morphy.command.ShoutCommand;
 import morphy.command.ShowListCommand;
-import morphy.command.ShutdownCommand;
 import morphy.command.SummonCommand;
 import morphy.command.TellCommand;
 import morphy.command.UnexamineCommand;
@@ -80,9 +76,15 @@ import morphy.command.WithdrawCommand;
 import morphy.command.WnameCommand;
 import morphy.command.WratingCommand;
 import morphy.command.ZNotifyCommand;
+import morphy.command.admin.AdminCommand;
+import morphy.command.admin.AnnounceCommand;
+import morphy.command.admin.AnnunregCommand;
+import morphy.command.admin.NukeCommand;
+import morphy.command.admin.ShutdownCommand;
 import morphy.game.ExaminedGame;
 import morphy.game.Game;
 import morphy.user.SocketChannelUserSession;
+import morphy.utils.MorphyStringUtils;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -100,20 +102,31 @@ public class CommandService implements Service {
 					"tm|ca|sr|td|censor|gnotify|noplay|" +
 					"notify|channel|idlenotify)");
 	
+	
+	/** Returns lists with a given prefix (case insensitive).<br />
+	 * Returns a zero-length array if none found. */
+	private String[] completeListAlias(String prefix) {
+		prefix = prefix.toLowerCase();
+		String[] lists = { "fm","im","gm","wfm","wim","wgm","blind","teams",
+				"computer","tm","ca","sr","td","censor","gnotify","noplay",
+				"notify","channel","idlenotify","admin" };
+		
+		List<String> found = new ArrayList<String>();
+		for(String item : lists) {
+			if (item.startsWith(prefix)) {
+				found.add(item);
+			}
+		}
+		return found.toArray(new String[found.size()]);
+	}
+	
 	private static final Class<?>[] socketCommandsClasses = {
 		// please try to maintain this list in alphabetical order
 		
 		AbortCommand.class,
 		AcceptCommand.class,
-		
-//	 	AddCensorCommand.class,
-//	 	AddGnotifyCommand.class,
 	 	AddListCommand.class,
-//	 	AddNopartnerCommand.class,
-//		AddNoplayCommand.class,
-//		AddNotifyCommand.class,
 	 	AddPlayerCommand.class,
-//		AddRemoteCommand.class,
 		AdminCommand.class,
 		AllObserversCommand.class,
 		AnnounceCommand.class,
@@ -127,6 +140,7 @@ public class CommandService implements Service {
 		ClearmessagesCommand.class,
 		
 		DateCommand.class,
+		DeclineCommand.class,
 		
 		ExamineCommand.class,
 		
@@ -158,6 +172,7 @@ public class CommandService implements Service {
 		
 		PartnerCommand.class,
 		PendingCommand.class,
+		PauseCommand.class,
 		
 		QtellCommand.class,
 		QuitCommand.class,
@@ -256,22 +271,33 @@ public class CommandService implements Service {
 	public void processCommandAndCheckAliases(String command,SocketChannelUserSession userSession) {
 		command = command.trim();
 		
-		if (Board.isValidSAN(command)) {
+		boolean isMove = Board.isValidSAN(command);
+		if (isMove && command.startsWith("+")) isMove = false;
+		if (isMove) {
 			morphy.game.GameInterface g = GameService.getInstance().map.get(userSession);
-			
-			//if ((SocketChannelUserSession)userSession).isPlaying()
-			
 			if (g != null) {
 				try {
 					if (g instanceof Game) {
 						Game gg = (Game)g;
-						gg.getBoard().move(gg.getWhite().equals(userSession),command);
+						/*if (!gg.isClockTicking()) {
+							userSession.send("The clock is paused, use \"unpause\" to resume.\n\n"+gg.processMoveUpdate(userSession));
+							return;
+						}*/
+						boolean isWhiteMove = gg.getWhite().equals(userSession);
+						//long last = gg.getTimeLastMoveMade();
+						//if (last == 0L) last = System.currentTimeMillis();
+						gg.getBoard().move(isWhiteMove,command);
 						gg.getBoard().getLatestMove().setPrinter(new Style12Printer());
-						gg.touchLastMoveMadeTime();
+						/*long newt = gg.touchLastMoveMadeTime();
+						if (isWhiteMove) { gg.setWhiteClock((gg.getWhiteClock()-(int)(newt-last)) + (gg.getIncrement()*1000)); }
+						else { gg.setBlackClock((gg.getBlackClock()-(int)(newt-last)) + (gg.getIncrement()*1000)); }*/
+						
 						gg.processMoveUpdate(true);
 					}
 					if (g instanceof ExaminedGame) {
 						ExaminedGame gg = (ExaminedGame)g;
+						System.out.println("gg.isWhitesMove = " + gg.isWhitesMove());
+						//gg.getBoard().getLatestMove().isWhitesMove();
 						gg.getBoard().move(gg.isWhitesMove(),command);
 						gg.getBoard().getLatestMove().setPrinter(new Style12Printer());
 						gg.setWhitesMove(!gg.isWhitesMove());
@@ -281,7 +307,6 @@ public class CommandService implements Service {
 				catch(IllegalMoveException e) { userSession.send("Illegal move (" + command + ")."); }
 			} else {
 				userSession.send("You are not playing or examining a game.");
-				
 			}
 			return;
 		}
@@ -298,10 +323,34 @@ public class CommandService implements Service {
 			content = command.substring(spaceIndex + 1);
 		}
 		
-		Matcher m = listAliasPattern.matcher(keyword);
-		if (m.matches()) {
-			String what = regexHelper(m.group(1));
-			String whatlist = m.group(2);
+		//Matcher m = listAliasPattern.matcher(keyword);
+		//if (m.matches()) {
+		if (keyword.startsWith("+") || keyword.startsWith("-") || keyword.startsWith("=")) {
+			String what = regexHelper(""+keyword.charAt(0));
+			String whatlist = keyword.substring(1);
+			if (whatlist.equals("")) {
+				if (what.equals("addlist")) { userSession.send(new AddListCommand().getContext().getUsage()); return; }
+				if (what.equals("removelist")) { userSession.send(new RemoveListCommand().getContext().getUsage()); return; }
+				if (what.equals("showlist")) {
+					// all lists are shown to the user
+					//boolean isAdmin = UserService.getInstance().isAdmin(userSession.getUser().getUserName());
+					new ShowListCommand().process("", userSession);
+					return;
+				}
+			}
+			
+			// find possible matches
+			String[] possible = completeListAlias(whatlist);
+			if (possible.length > 1) {
+				userSession.send("Ambiguous list - matches: " + MorphyStringUtils.toDelimitedString(possible,", ") + ".");
+				return;
+			} else if (possible.length == 0) {
+				userSession.send("\"" + whatlist + "\" does not match any list name.");
+				return;
+			} else if (possible.length == 1) {
+				whatlist = possible[0];
+			}
+			
 			String s = what + " " + whatlist + " " + content;
 			processCommand(s,userSession);
 		} else if (keyword.equals("=") && content.equals("")) { 
@@ -338,6 +387,9 @@ public class CommandService implements Service {
 		commands.clear();
 		firstWordToCommandMap.clear();
 
+		if (LOG.isInfoEnabled()) {
+			LOG.info("Command disposed.");
+		}
 	}
 
 	public Command getCommand(String keyword) {
@@ -380,6 +432,31 @@ public class CommandService implements Service {
 			userSession.send(keyword + ": Command not found.");
 		}
 	}
+	
+	/*public String showLists(boolean isAdmin) {
+		ServerListManagerService s = ServerListManagerService.getInstance();
+		List<ServerList> list = s.getLists();
+		ServerList.setCompareBy(ServerList.CompareBy.Name);
+		java.util.Collections.sort(list);
+		StringBuilder b = new StringBuilder("Lists:\n\n");
+		for(ServerList sl : list) {
+			if (sl.isPublic()) {
+				String listName = sl.getName().toLowerCase();
+				if (listName.equals("admin")) continue;
+				b.append(String.format("%-20s %s\n",listName,"is PUBLIC"));
+			}
+			// if they're not public, then they're administrative lists
+		}
+		
+		PersonalList[] personalLists = PersonalList.sortByName();
+		for(PersonalList pl : personalLists) {
+			b.append(String.format("%-20s %s\n",pl.name(),"is PRIVATE"));
+		}
+		
+		int len = b.length();
+		b = b.deleteCharAt(len-1);
+		return b.toString();
+	}*/
 	
 	public void debug() {
 		java.util.Set<String> keys = firstWordToCommandMap.keySet();

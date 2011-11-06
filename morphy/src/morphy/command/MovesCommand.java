@@ -19,6 +19,7 @@ package morphy.command;
 
 import java.text.SimpleDateFormat;
 
+import morphy.game.ExaminedGame;
 import morphy.game.Game;
 import morphy.game.GameInterface;
 import morphy.service.GameService;
@@ -51,7 +52,10 @@ public class MovesCommand extends AbstractCommand {
 			s = UserService.getInstance().getUserSession(arguments);
 		}
 
-		if (s != null && g == null) g = (Game)gs.map.get(s);
+		if (s != null && g == null) {
+			if (g instanceof Game) g = (Game)gs.map.get(s);
+			if (g instanceof ExaminedGame) g = (ExaminedGame)gs.map.get(s);
+		}
 		if (g == null) { System.err.println("args = \"" + arguments + "\""); }
 		
 		StringBuilder b = new StringBuilder();
@@ -64,18 +68,17 @@ public class MovesCommand extends AbstractCommand {
 		
 		
 		if (g instanceof Game) { 
-			b.append(((Game)g).getWhite().getUser().getUserName() + " (2151) vs. " + 
-					((Game)g).getBlack().getUser().getUserName() + " (UNR) --- " + sdf.format(g.getTimeGameStarted()) + "\n");
+			b.append(((Game)g).getWhite().getUser().getUserName() + " (UNR) vs. " + 
+					((Game)g).getBlack().getUser().getUserName() + " (UNR) --- " + sdf.format(g.getTimeGameStarted()) + "\n\r");
 		}
-		b.append((g.isRated()?"Rated":"Unrated") + " " + g.getVariant().name() + " match, initial time: " + g.getTime() + " minutes, increment: " + g.getIncrement() + " seconds.\n\n");
+		b.append((g.isRated()?"Rated":"Unrated") + " " + g.getVariant().name() + " match, initial time: " + g.getTime() + " minutes, increment: " + g.getIncrement() + " seconds.\n\r\n\r");
 
 		if (g instanceof Game) { 
-			b.append("Move  " + ((Game)g).getWhite().getUser().getUserName() + "            " 
-					+ ((Game)g).getBlack().getUser().getUserName() + "            \n"); 
+			b.append(String.format("%4s  %-21s   %-21s\n\r","Move",((Game)g).getWhite().getUser().getUserName(),((Game)g).getBlack().getUser().getUserName())); 
 		}
-		b.append("----  ---------------------   ---------------------\n"); //21
+		b.append("----  ---------------------   ---------------------\n\r"); //21
 		//b.append("  1.  e4      (0:00.000)      e5      (0:00.000)   \n");
-		b.append("      {Still in progress} *");
+		b.append("      {Still in progress} *\n\r");
 		
 		userSession.send(b.toString());
 

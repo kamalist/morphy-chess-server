@@ -19,7 +19,9 @@ package morphy.command;
 
 import java.util.List;
 
+import morphy.game.ExaminedGame;
 import morphy.game.Game;
+import morphy.game.GameInterface;
 import morphy.game.request.AbortRequest;
 import morphy.game.request.Request;
 import morphy.service.GameService;
@@ -35,11 +37,12 @@ public class AbortCommand extends AbstractCommand {
 	public void process(String arguments, UserSession userSession) {
 		GameService gs = GameService.getInstance();
 		
-		Game g = (Game)gs.map.get(userSession);
-		if (g == null) {
+		GameInterface gi = gs.map.get(userSession);
+		if (gi == null || (gi instanceof ExaminedGame)) {
 			userSession.send("You are not playing a game.");
 			return;
 		}
+		Game g = (Game)gi;
 		
 		RequestService rs = RequestService.getInstance();
 		List<Request> list = rs.findAllToRequestsByType(userSession,AbortRequest.class);

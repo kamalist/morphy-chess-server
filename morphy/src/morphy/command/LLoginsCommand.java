@@ -38,13 +38,16 @@ public class LLoginsCommand extends AbstractCommand {
 	public void process(String arguments, UserSession userSession) {		
 		/* Sun Aug  7, 12:00 MDT 2011: GuestGYKQ(U)         logout */
 		
+		boolean empty = StringUtils.isEmpty(arguments);
+		boolean numeric = StringUtils.isNumeric(arguments);
+		
 		int limit = 10; //200
 		arguments = arguments.trim();
-		if (StringUtils.isEmpty(arguments)) {
+		if (empty) {
 			limit = 10;
-		} else if (StringUtils.isNumeric(arguments) && !StringUtils.isEmpty(arguments)) {
+		} else if (numeric && !empty) {
 			limit = Integer.parseInt(arguments);
-		} else if (StringUtils.isAlpha(arguments)) {
+		} else if (!numeric && !empty) {
 			userSession.send(getContext().getUsage());
 			return;
 		}

@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package morphy.service;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
 
 import morphy.game.ExaminedGame;
 import morphy.game.Game;
@@ -37,6 +38,8 @@ public class GameService implements Service {
 	private static final GameService singletonInstance = new GameService();
 	
 	protected int mostConcurrentGames = 0;
+	protected int stackSize = 0;
+	protected Stack<Integer> stack = new Stack<Integer>();
 	public HashMap<UserSession,GameInterface> map = new HashMap<UserSession,GameInterface>();
 	protected List<GameInterface> games;
 	
@@ -69,6 +72,9 @@ public class GameService implements Service {
 		((SocketChannelUserSession)g.getBlack()).setPlaying(false);
 		map.put(g.getWhite(),null);
 		map.put(g.getBlack(),null);
+		
+		// recycle this game number
+		stack.push(g.getGameNumber());
 	}
 	
 	public Game createGame(UserSession white,UserSession black,MatchParams params) {
@@ -79,30 +85,32 @@ public class GameService implements Service {
 		g.setIncrement(params.getIncrement());
 		g.setRated(params.isRated());
 		g.setVariant(params.getVariant());
-		g.setGameNumber(1);
+		g.setGameNumber(getNextAvailableGameNumber());
 		g.setTimeGameStarted(System.currentTimeMillis());
 		g.setWhiteClock(g.getTime() * (60*1000));
 		g.setBlackClock(g.getTime() * (60*1000));
+		g.setClockTicking(false);
 		
 		map.put(g.getWhite(),g);
 		map.put(g.getBlack(),g);
 	
 		String line = "Creating: " + g.getWhite().getUser().getUserName() + " (----) " + g.getBlack().getUser().getUserName() + " (----) " + (g.isRated()?"rated":"unrated") + " " + g.getVariant().name() + " " + g.getTime() + " " + g.getIncrement();
 
-		String tmpLine = g.getBlack().getUser().getUserName() + " accepts the match offer.\n\n"+line+"\n"+generateGin(g,true)+"\n";
+		String tmpLine = g.getBlack().getUser().getUserName() + " accepts the match offer.\n\r\n\r"+line+"\n\r"+generateGin(g,true)+"\n\r";
 		if (g.getWhite().getUser().getUserVars().getIVariables().get("gameinfo").equals("1")) {
-			tmpLine += g.generateGameInfoLine();
+			boolean provshow = g.getWhite().getUser().getUserVars().getVariables().get("provshow").equals("1");
+			tmpLine += g.generateGameInfoLine(provshow);
 		}
-		tmpLine += "\n"+g.getWhite().getUser().getUserVars().getStyle().print(white,g);
+		tmpLine += "\n\r"+g.processMoveUpdate(g.getWhite());
 		g.getWhite().send(tmpLine);
 		
-		tmpLine = "You accept the match offer from " + g.getWhite().getUser().getUserName()+".\n\n"+line+"\n"+generateGin(g,true)+"\n";
+		tmpLine = "You accept the match offer from " + g.getWhite().getUser().getUserName()+".\n\r\n\r"+line+"\n\r"+generateGin(g,true)+"\n\r";
 		if (g.getBlack().getUser().getUserVars().getIVariables().get("gameinfo").equals("1")) {
-			tmpLine += g.generateGameInfoLine();
+			boolean provshow = g.getBlack().getUser().getUserVars().getVariables().get("provshow").equals("1");
+			tmpLine += g.generateGameInfoLine(provshow);
 		}
-		tmpLine += "\n"+g.getBlack().getUser().getUserVars().getStyle().print(black,g);
+		tmpLine += "\n\r"+g.processMoveUpdate(g.getBlack());
 		g.getBlack().send(tmpLine);
-		
 		
 		g.processMoveUpdate(false);
 		
@@ -122,13 +130,14 @@ public class GameService implements Service {
 		ExaminedGame g = (ExaminedGame)map.get(userSession);
 		games.remove(g);
 		map.remove(userSession);
+		stack.push(g.getGameNumber());
 		
 		final String line = userSession.getUser().getUserName() + " stopped examining game " + g.getGameNumber() + ".\n\n" +
 				"Removing game " + g.getGameNumber() + " from observation list.";
 		
 		UserSession[] examiners = g.getExaminers();
 		for(int i=0;i<examiners.length;i++) {
-			if (examiners[i] == userSession) {
+			if (examiners[i].equals(userSession)) {
 				examiners[i].send("You are no longer examining game " + g.getGameNumber() + ".");
 			} else {
 				examiners[i].send(line);
@@ -138,7 +147,7 @@ public class GameService implements Service {
 		UserSession[] observers = g.getObservers();
 		for(int i=0;i<observers.length;i++) {
 			observers[i].send(line);
-			((SocketChannelUserSession)observers[i]).getGamesObserving().remove(g.getGameNumber());
+			((SocketChannelUserSession)observers[i]).getGamesObserving().remove(new Integer(g.getGameNumber()));
 		}
 		
 		((SocketChannelUserSession)userSession).setExamining(false);
@@ -150,20 +159,19 @@ public class GameService implements Service {
 		g.setVariant(Variant.blitz);
 		g.setWhiteName(userSession.getUser().getUserName());
 		g.setBlackName(userSession.getUser().getUserName());
-		g.setGameNumber(2);
+		g.setGameNumber(GameService.getInstance().getNextAvailableGameNumber());
 		g.setTimeGameStarted(System.currentTimeMillis());
+		g.setWhitesMove(true);
+		//g.getBoard().
 		
 		games.add(g);
 		map.put(userSession, g);
 		
 		((SocketChannelUserSession)userSession).setExamining(true);
-		userSession.send("Starting a game in examine (scratch) mode.");
-		g.processMoveUpdate(true);
+		userSession.send("Starting a game in examine (scratch) mode.\n\n" + g.processMoveUpdate(userSession));
 		
 		return g;
 	}
-	
-	
 	
 	public List<GameInterface> getGames() {
 		return games;
@@ -190,7 +198,11 @@ public class GameService implements Service {
 	 * to be assigned to a board.
 	 */
 	public int getNextAvailableGameNumber() {
-		return 0;
+		if (stack.empty()) {
+			stackSize++;
+			stack.push(new Integer(stackSize));
+		}
+		return stack.pop();
 	}
 	
 	/** Returns the number of games currently being played. */
@@ -198,19 +210,14 @@ public class GameService implements Service {
 		return games.size();
 	}
 	
-	/**
-	 * 
-	 */
-	public void addGame() {
-		
+	/*
+	public int addGame() {
+		return getNextAvailableGameNumber();
 	}
-	
-	/**
-	 * 
-	 */
-	public void removeGame() {
-		
-	}
+
+	public void removeGame(int gamenumber) {
+		stack.push(gamenumber);
+	}*/
 	
 	/** Returns the most number of games played 
 	 * at any given time on the server since loaded. */
@@ -219,10 +226,13 @@ public class GameService implements Service {
 	}
 
 	public void dispose() {
+		map.clear();
+		games.clear();
+		stack.clear();
 		
-		
-		if (LOG.isInfoEnabled())
+		if (LOG.isInfoEnabled()) {
 			LOG.info("GameService disposed.");
+		}
 	}
 	
 	

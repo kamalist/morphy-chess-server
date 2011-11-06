@@ -17,34 +17,36 @@
  */
 package morphy.game.request;
 
-import morphy.game.MatchParams;
+import morphy.game.Game;
+import morphy.game.GameInterface;
 import morphy.service.GameService;
 import morphy.service.RequestService;
 import morphy.user.UserSession;
 
-public class MatchRequest implements Request {
-	
+public class PauseRequest implements Request {
+
 	private UserSession from;
 	private UserSession to;
-	private MatchParams params;
 	private int requestNumber;
-	public MatchRequest(UserSession from,UserSession to,MatchParams params) {
+	
+	public PauseRequest(UserSession from,UserSession to) {
 		this.from = from;
 		this.to = to;
-		this.params = params;
 	}
 	
-	public boolean areMatchParamsSame(MatchParams mp) {
-		return params.getTime() == mp.getTime() && 
-			params.getIncrement() == mp.getIncrement() && 
-			params.isRated() == mp.isRated() &&
-			params.getColorRequested() == mp.getColorRequested() &&
-			params.getVariant() == mp.getVariant();
-	}
-
 	public void acceptAction() {
 		GameService gs = GameService.getInstance();
-		gs.createGame(from, to, params);
+		GameInterface g = gs.map.get(from);
+		if (g instanceof Game) {
+			Game gg = ((Game)g); 
+			gg.setClockTicking(false);
+			gg.processMoveUpdate(false);
+		}
+		String toUsername = to.getUser().getUserName();
+		from.send(toUsername + " accepts the pause request.");
+		from.send(g.processMoveUpdate(from) + "\nGame " + g.getGameNumber() + ": Game clock paused.");
+		String fromUsername = from.getUser().getUserName();
+		to.send("You accept the pause request from " + fromUsername + ".\n\n"+g.processMoveUpdate(to) + "\nGame " + g.getGameNumber() + ": Game clock paused.");
 		
 		RequestService rs = RequestService.getInstance();
 		rs.removeRequestFrom(from,this);
@@ -52,20 +54,14 @@ public class MatchRequest implements Request {
 	}
 
 	public void declineAction() {
-		to.send("You decline the match offer from " + from.getUser().getUserName() + ".");
-		from.send(to.getUser().getUserName() + " declines the match offer.");
-		
 		RequestService rs = RequestService.getInstance();
 		rs.removeRequestFrom(from,this);
 		rs.removeRequestTo(to,this);
-	}
-
-	public void setParams(MatchParams params) {
-		this.params = params;
-	}
-
-	public MatchParams getParams() {
-		return params;
+		
+		String toUsername = to.getUser().getUserName();
+		from.send(toUsername + " declines the pause request.");
+		String fromUsername = from.getUser().getUserName();
+		to.send("You decline the pause request from " + fromUsername + ".");
 	}
 
 	public void setRequestNumber(int i) {
@@ -75,21 +71,13 @@ public class MatchRequest implements Request {
 	public int getRequestNumber() {
 		return requestNumber;
 	}
-	
+
 	public UserSession getFrom() {
 		return from;
 	}
 
-	public void setFrom(UserSession from) {
-		this.from = from;
-	}
-
 	public UserSession getTo() {
 		return to;
-	}
-
-	public void setTo(UserSession to) {
-		this.to = to;
 	}
 
 }

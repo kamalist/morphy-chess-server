@@ -15,24 +15,24 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package morphy.command;
+package morphy.command.admin;
 
+import morphy.Morphy;
+import morphy.command.AbstractCommand;
+import morphy.service.UserService;
 import morphy.user.UserSession;
 
-public class AdminCommand extends AbstractCommand {
-	public AdminCommand() {
-		super("admin");
+public class ShutdownCommand extends AbstractCommand {
+	public ShutdownCommand() {
+		super("shutdown");
 	}
 
 	public void process(String arguments, UserSession userSession) {
-		morphy.user.UserVars uv = userSession.getUser().getUserVars();
-		String val = uv.getVariables().get("showadmintag");
-		if (val.equals("1")) {
-			uv.getVariables().put("showadmintag","0");
-			userSession.send("Admin mode (*) is now not shown.");
-		} else if (val.equals("0")) {
-			uv.getVariables().put("showadmintag","1");
-			userSession.send("Admin mode (*) is now shown.");
+		UserService us = UserService.getInstance();
+		UserSession[] arr = us.getLoggedInUsers();
+		for(UserSession s : arr) {
+			s.send(" **** Server is shutting down now. **** ");
 		}
+		Morphy.getInstance().shutdown();
 	}
 }

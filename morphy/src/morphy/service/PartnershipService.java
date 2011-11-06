@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,8 +17,10 @@
  */
 package morphy.service;
 
-//import java.util.HashMap;
+import java.util.HashMap;
+import java.util.Map;
 
+import morphy.user.Partnership;
 import morphy.user.UserSession;
 
 import org.apache.commons.logging.Log;
@@ -28,17 +30,43 @@ public class PartnershipService implements Service {
 	protected static Log LOG = LogFactory.getLog(PartnershipService.class);
 	private static final PartnershipService singletonInstance = new PartnershipService();
 	
-	//private HashMap<UserSession,Partnership> partnershipMap = new HashMap<UserSession,Partnership>();
+	private Map<UserSession,Partnership> partnershipMap;
 	
 	public static PartnershipService getInstance() {
 		return singletonInstance;
 	}
 	
+	public PartnershipService() {
+		partnershipMap = new HashMap<UserSession,Partnership>(5);
+	}
+	
+	/** Adds a partnership service between two players. */
 	public void addPartnership(UserSession a,UserSession b) {
+		Partnership p = new Partnership(a,b);
+		partnershipMap.put(a,p);
+		partnershipMap.put(b,p);
+	}
+	
+	/** Destroys a partnership, where <tt>userSession</tt> is one of the partners on the team. */
+	public void removePartnership(UserSession userSession) {
+		Partnership p = partnershipMap.get(userSession);
 		
+		partnershipMap.remove(p.a);
+		partnershipMap.remove(p.b);
+	}
+	
+	public void removePartnership(Partnership p) {
+		removePartnership(p.a);
 	}
 
 	public void dispose() {
-		
+		partnershipMap.clear();
+		if (LOG.isInfoEnabled()) {
+			LOG.info("PartnershipService disposed.");
+		}
+	}
+
+	public Map<UserSession, Partnership> getPartnershipMap() {
+		return partnershipMap;
 	}
 }

@@ -23,4 +23,17 @@ public enum PersonalList {
 	public String toString() {
 		return name();
 	}
+	
+	public static PersonalList[] sortByName() {
+		PersonalList[] pl = PersonalList.values();
+		String[] stringArr = new String[pl.length];
+		for(int i=0;i<pl.length;i++) {
+			stringArr[i] = pl[i].name();
+		}
+		java.util.Arrays.sort(stringArr);
+		for(int i=0;i<stringArr.length;i++) {
+			pl[i] = PersonalList.valueOf(stringArr[i]);
+		}
+		return pl;
+	}
 }

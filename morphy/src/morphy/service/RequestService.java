@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
 
 import morphy.game.request.Request;
 import morphy.user.UserSession;
@@ -36,29 +37,27 @@ public class RequestService implements Service {
 		return singletonInstance;
 	}
 	
+	protected int stackSize = 0;
+	protected Stack<Integer> stack = new Stack<Integer>();
+	
 	private HashMap<UserSession,List<Request>> fromMap;
 	private HashMap<UserSession,List<Request>> toMap;
-	private List<Integer> availableRequestNumbers; 
 
 	public RequestService() {
 		fromMap = new HashMap<UserSession,List<Request>>();
 		toMap = new HashMap<UserSession,List<Request>>();
-		availableRequestNumbers = new ArrayList<Integer>(10);
-		for(int i=1;i<10;i++) {
-			availableRequestNumbers.add(new Integer(i));
-		}
 	}
 	
-	private int getNextAvailableNumber() {
-		if (availableRequestNumbers.size() == 0) {
-			LOG.info("There are no more available request numbers available, they need to be refilled. (TODO).");
+	public int getNextAvailableNumber() {
+		if (stack.empty()) {
+			stackSize++;
+			stack.push(new Integer(stackSize));
 		}
-		return availableRequestNumbers.get(0);
+		return stack.pop();
 	}
 	
 	public void addRequest(UserSession from,UserSession to,Request req) {
 		req.setRequestNumber(getNextAvailableNumber());
-		availableRequestNumbers.remove(0);
 		if (!fromMap.containsKey(from)) {
 			fromMap.put(from,new ArrayList<Request>(10));
 		}
@@ -109,10 +108,10 @@ public class RequestService implements Service {
 	public List<Request> findAllFromRequestsByType(UserSession userSession,Class<? extends Request> type) {
 		if (!fromMap.containsKey(userSession)) return null;
 		
-		List<Request> rList = fromMap.get(userSession);
+		final Request[] rList = fromMap.get(userSession).toArray(new Request[0]);
 		List<Request> copy = new ArrayList<Request>();
-		for(int i=0;i<rList.size();i++) {
-			Request r = rList.get(i); 
+		for(int i=0;i<rList.length;i++) {
+			Request r = rList[i]; 
 			if (r.getClass() == type) { copy.add(r); }
 		}
 		return copy;
@@ -121,10 +120,10 @@ public class RequestService implements Service {
 	public List<Request> findAllToRequestsByType(UserSession userSession,Class<? extends Request> type) {
 		if (!toMap.containsKey(userSession)) return null;
 		
-		List<Request> rList = toMap.get(userSession);
+		final Request[] rList = toMap.get(userSession).toArray(new Request[0]);
 		List<Request> copy = new ArrayList<Request>();
-		for(int i=0;i<rList.size();i++) {
-			Request r = rList.get(i); 
+		for(int i=0;i<rList.length;i++) {
+			Request r = rList[i];
 			if (r.getClass() == type) { copy.add(r); }
 		}
 		return copy;
@@ -138,10 +137,8 @@ public class RequestService implements Service {
 		for(int i=0;i<rList.size();i++) {
 			Request r = rList.get(i); 
 			if (r.getClass() == type) {
-				 rList.remove(i--); 
-				if (!availableRequestNumbers.contains(r.getRequestNumber())) {
-					availableRequestNumbers.add(0,r.getRequestNumber());
-				}
+				rList.remove(i--); 
+				recycleRequestNumber(r.getRequestNumber());
 			}
 		}
 	}
@@ -153,10 +150,8 @@ public class RequestService implements Service {
 		for(int i=0;i<rList.size();i++) {
 			Request r = rList.get(i); 
 			if (r.getClass() == type) {
-				 rList.remove(i--); 
-				if (!availableRequestNumbers.contains(r.getRequestNumber())) {
-					availableRequestNumbers.add(0,r.getRequestNumber());
-				}
+				rList.remove(i--); 
+				recycleRequestNumber(r.getRequestNumber());
 			}
 		}
 	}
@@ -183,14 +178,17 @@ public class RequestService implements Service {
 	}
 	
 	public void recycleRequestNumber(int num) {
-		if (!availableRequestNumbers.contains(num)) {
-			availableRequestNumbers.add(new Integer(num));
-		}
+		stack.push(new Integer(num));
 	}
 	
 	public void dispose() {
-		if (LOG.isInfoEnabled())
+		fromMap.clear();
+		toMap.clear();
+		stack.clear();
+		
+		if (LOG.isInfoEnabled()) {
 			LOG.info("RequestService Disposed.");
+		}
 	}
 
 }

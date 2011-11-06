@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -45,7 +45,11 @@ public class DBConnectionService implements Service {
 	}
 	
 	public void dispose() {
-
+		//Connection.closeConnection();
+		
+		if (LOG.isInfoEnabled()) {
+			LOG.info("DBConnectionService disposed.");
+		}
 	}
 
 }
