@@ -76,6 +76,7 @@ import morphy.command.WithdrawCommand;
 import morphy.command.WnameCommand;
 import morphy.command.WratingCommand;
 import morphy.command.ZNotifyCommand;
+import morphy.command.admin.AHelpCommand;
 import morphy.command.admin.AddCommentCommand;
 import morphy.command.admin.AdminCommand;
 import morphy.command.admin.AnnounceCommand;
@@ -129,6 +130,7 @@ public class CommandService implements Service {
 	 	AddListCommand.class,
 	 	AddPlayerCommand.class,
 		AdminCommand.class,
+		AHelpCommand.class,
 		AllObserversCommand.class,
 		AnnounceCommand.class,
 		AnnunregCommand.class,
