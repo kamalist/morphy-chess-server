@@ -33,6 +33,7 @@ import java.util.TreeMap;
 import morphy.Morphy;
 import morphy.channel.Channel;
 import morphy.game.Game;
+import morphy.game.GameInterface;
 import morphy.game.request.MatchRequest;
 import morphy.game.request.PartnershipRequest;
 import morphy.game.request.Request;
@@ -67,7 +68,10 @@ public class SocketChannelUserSession implements UserSession,
 	protected boolean isPlaying = false;
 	protected boolean isExamining = false;
 	protected List<Integer> gamesObserving;
-
+	
+	protected List<SocketChannelUserSession> multipleLogins;
+	protected SocketChannelUserSession multipleLoginsParent;
+	
 	public SocketChannelUserSession(User user, SocketChannel channel) {
 		this.user = user;
 		this.channel = channel;
@@ -83,6 +87,15 @@ public class SocketChannelUserSession implements UserSession,
 					+ user.getUserName() + " "
 					+ channel.socket().getInetAddress());
 		}
+		multipleLogins = new ArrayList<SocketChannelUserSession>(0);
+	}
+	
+	public void addParentOnMultipleLogins(SocketChannelUserSession e) {
+		multipleLoginsParent = e;
+	}
+	
+	public void addUserOnMultipleLogins(SocketChannelUserSession e) {
+		multipleLogins.add(e);
 	}
 	
 	public void scheduleIdleTimeout() {
@@ -101,11 +114,19 @@ public class SocketChannelUserSession implements UserSession,
 		if (idleLogoutTimer != null)
 			idleLogoutTimer.cancel();
 		
+		final UserSession sess = this;
 		idleLogoutTimer = new Timer();
 		idleLogoutTimer.schedule(new java.util.TimerTask() {
 			public void run() {
 					if (getIdleTimeMillis() >= millis-1) {
 						send("\n\n**** Auto-logout because you were idle for 60 minutes ****\n");
+						if (isExamining()) { 
+							GameService gs = GameService.getInstance();
+							GameInterface gi = gs.map.get(sess);
+							if (gi != null) {
+								gs.unexamineGame(sess);
+							}
+						}
 						disconnect();
 					} else {
 						idleLogoutTimer.purge();
@@ -130,6 +151,7 @@ public class SocketChannelUserSession implements UserSession,
 			if (user.getUserName() != null) {
 				UserService.getInstance().removeLoggedInUser(this);
 				SocketConnectionService.getInstance().removeUserSession(this);
+				GameService.getInstance().map.remove(this);
 
 				if (LOG.isInfoEnabled()) {
 					LOG.info("Disconnected user " + user.getUserName());
@@ -255,6 +277,20 @@ public class SocketChannelUserSession implements UserSession,
 
 	public void send(String message) {
 		try {
+			/* this logic block should be commented out to get rid of multiple-login implementation. */
+			if (multipleLoginsParent != null) {
+				List<SocketChannelUserSession> list = multipleLoginsParent.multipleLogins;
+				multipleLoginsParent.multipleLogins = null;
+				multipleLoginsParent.send(message);
+				multipleLoginsParent.multipleLogins = list;			
+			} else {
+				if (multipleLogins != null) {
+					for(SocketChannelUserSession sess : multipleLogins) {
+						if (sess != null) sess.send(message);
+					}
+				}
+			}
+			
 			if (isConnected()) {
 				String prompt = "fics% ";
 					HashMap<String,String> map = getUser().getUserVars().getVariables();
@@ -276,7 +312,11 @@ public class SocketChannelUserSession implements UserSession,
 						.createBuffer(SocketConnectionService.getInstance()
 								.formatMessage(this, message + "\n\r" + prompt + " "));
 				System.out.println((message + "\n\r" + prompt + " ").replace("\n","\\n").replace("\r","\\r"));
-				channel.write(buffer);
+				try {
+					channel.write(buffer);
+				} catch(java.io.IOException e) { 
+					Morphy.getInstance().onError("IOException while trying to write to channel.",e);
+				}
 			} else {
 				if (LOG.isInfoEnabled()) {
 					LOG.info("Tried to send message to a logged off user "

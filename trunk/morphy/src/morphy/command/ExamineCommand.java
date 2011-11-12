@@ -39,6 +39,13 @@ public class ExamineCommand extends AbstractCommand {
 			return;
 		}
 		
+		if (!arguments.equals("")) {
+			if (arguments.matches("\\w{3,17}")) {
+				userSession.send("There is no stored game " + arguments + " vs. " + userSession.getUser().getUserName());
+				return;
+			}
+		}
+		
 		GameService.getInstance().createExaminedGame(userSession);
 	}
 }

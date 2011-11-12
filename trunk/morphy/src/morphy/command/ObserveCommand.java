@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,10 +22,12 @@ import morphy.game.Game;
 import morphy.game.GameInterface;
 import morphy.service.GameService;
 import morphy.service.UserService;
+import morphy.user.SocketChannelUserSession;
 import morphy.user.UserSession;
 
 public class ObserveCommand extends AbstractCommand {
-
+	private static enum FoundBy { GameNumber,Username };
+	
 	public ObserveCommand() {
 		super("observe");
 	}
@@ -39,9 +41,11 @@ public class ObserveCommand extends AbstractCommand {
 		GameService gs = GameService.getInstance();
 		UserSession uS = null;
 		
+		FoundBy foundBy = null;
 		GameInterface g = null;
 		if (arguments.matches("[0-9]+")) {
 			g = gs.findGameById(Integer.parseInt(arguments));
+			foundBy = FoundBy.GameNumber;
 		} else if (arguments.matches("\\w{3,17}")) {
 			String[] array = UserService.getInstance().completeHandle(arguments);
 			if (array.length == 0) {
@@ -60,11 +64,25 @@ public class ObserveCommand extends AbstractCommand {
 			
 			uS = UserService.getInstance().getUserSession(array[0]);
 			g = gs.map.get(uS);
+			foundBy = FoundBy.Username;
 		}
 		
 		if (g == null) {
 			userSession.send("There is no such game.");
 			return;
+		}
+		
+		if (((SocketChannelUserSession)userSession).getGamesObserving().contains(g.getGameNumber())) {
+			//You are already observing game 515.
+			//You are already observing caspiwins's game.
+			
+			if (foundBy == FoundBy.GameNumber) {
+				userSession.send("You are already observing game " + g.getGameNumber() + ".");
+				return;
+			} else if (foundBy == FoundBy.Username && uS != null) {
+				userSession.send("You are already observing " + uS.getUser().getUserName() + "'s game.");
+				return;
+			}
 		}
 		
 		String whiteName = "",blackName = "";	
@@ -82,9 +100,8 @@ public class ObserveCommand extends AbstractCommand {
 			whiteName = gg.getWhiteName();
 			blackName = gg.getBlackName();
 		}
-		userSession.send("You are now observing game " + g.getGameNumber() + ".\nGame " + g.getGameNumber() + ": " + whiteName + " (----) " + blackName + " (----) rated blitz " + g.getTime() + " " + g.getIncrement());
-
-		
+		userSession.send("You are now observing game " + g.getGameNumber() + ".\nGame " + g.getGameNumber() + ": " + whiteName + " (----) " + blackName + " (----) rated blitz " + g.getTime() + " " + g.getIncrement() + "\n\n" + g.processMoveUpdate(userSession));
+		return;
 	}
 
 }

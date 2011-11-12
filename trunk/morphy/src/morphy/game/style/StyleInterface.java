@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,8 +20,11 @@ package morphy.game.style;
 import morphy.game.GameInterface;
 import morphy.user.UserSession;
 
-/** All style implementations (1-15) should implement this interface. */
+/** All style implementations (1-15) should implement this interface. 
+ * Each style MUST have a getSingletonInstance() method. Each class should set the default constructor to private.<br />
+ * By doing this, we will save heap space by having multiple pointers to a single object rather than multiple objects. */
 public interface StyleInterface {
 	/** Prints <tt>board</tt> to <tt>userSession</tt> */
 	public String print(UserSession userSession,GameInterface g);
+	//public Class<? extends StyleInterface> getSingletonInstance();
 }

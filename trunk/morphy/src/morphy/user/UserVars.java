@@ -58,7 +58,7 @@ public class UserVars {
 	
 	private void initialize() {
 		// set defaults
-		setStyle(new Style12());
+		setStyle(Style12.getSingletonInstance());
 		
 		variables.put("time","2");
 		variables.put("inc","12");
@@ -176,7 +176,11 @@ public class UserVars {
 		StringBuilder insertcols = new StringBuilder(200);
 		StringBuilder insertvals = new StringBuilder(200);
 		for(int i=0;i<keys.length;i++) {
-			if (keys[i].equals("busy") || keys[i].equals("showadmintag") || keys[i].equals("showsrtag") || keys[i].equals("user_id") || keys[i].equals("id")) continue;
+			if (keys[i].equals("busy") || 
+					keys[i].equals("showadmintag") || 
+					keys[i].equals("showsrtag") || 
+					keys[i].equals("user_id") || 
+					keys[i].equals("id")) continue;
 			insertcols.append("`" + keys[i] + "`");
 			if (i != keys.length-1) insertcols.append(",");
 			insertvals.append("'" + values[i] + "'");
@@ -185,12 +189,17 @@ public class UserVars {
 		
 		StringBuilder update = new StringBuilder(500);
 		for(int i=0;i<keys.length;i++) {
-			if (keys[i].equals("busy") || keys[i].equals("showadmintag") || keys[i].equals("showsrtag") || keys[i].equals("user_id") || keys[i].equals("id")) continue;
+			if (keys[i].equals("busy") || 
+					keys[i].equals("showadmintag") || 
+					keys[i].equals("showsrtag") || 
+					keys[i].equals("user_id") || 
+					keys[i].equals("id")) continue;
 			update.append("`" + keys[i] + "` = '" + values[i] + "'");
 			if (i != keys.length-1) update.append(",");
 		}
 		
-		query = "INSERT INTO `user_vars` (`id`,`user_id`," + insertcols.toString() + ") VALUES (NULL," + userid + "," + insertvals.toString() + ") ON DUPLICATE KEY UPDATE "+update.toString();
+		query = "INSERT INTO `user_vars` (`id`,`user_id`," + insertcols.toString() + ") VALUES " +
+				"(NULL," + userid + "," + insertvals.toString() + ") ON DUPLICATE KEY UPDATE " + update.toString();
 
 		conn.executeQuery(query.toString());
 		

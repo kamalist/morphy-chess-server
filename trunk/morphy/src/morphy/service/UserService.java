@@ -63,8 +63,8 @@ public class UserService implements Service {
 	}
 
 	public String generateAnonymousHandle() {
-		StringBuilder s = new StringBuilder();
-		Random r = new Random();
+		final StringBuilder s = new StringBuilder();
+		final Random r = new Random();
 		for (int i = 0; i < 4; i++) {
 			s.append((char) (65 + r.nextInt(26)));
 		}
@@ -72,9 +72,10 @@ public class UserService implements Service {
 	}
 	
 	public String generatePassword(int maxlen) {
-		StringBuilder s = new StringBuilder();
+		final StringBuilder s = new StringBuilder();
+		final Random rnd = new Random();
 		for (int i = 0; i < maxlen; i++) {
-			s.append((char) (65 + new Random().nextInt(26)));
+			s.append((char) (65 + rnd.nextInt(26)));
 		}
 		return s.toString().toLowerCase();
 	}

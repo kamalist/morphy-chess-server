@@ -2,7 +2,7 @@
 --
 -- Host: localhost    Database: morphyics
 -- ------------------------------------------------------
--- Server version	5.5.9-log
+-- Server version	5.5.12-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -49,13 +49,12 @@ DROP TABLE IF EXISTS `comment`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `comment` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `commentfile_id` int(11) DEFAULT NULL,
-  `who_user_id` int(11) DEFAULT NULL,
-  `comment` varchar(300) DEFAULT NULL,
+  `commentfile_id` int(11) NOT NULL,
+  `who_user_id` int(11) NOT NULL,
+  `comment` varchar(300) NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `tzone` varchar(4) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -66,10 +65,11 @@ DROP TABLE IF EXISTS `commentfile`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `commentfile` (
-  `id` int(11) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id_UNIQUE` (`user_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -141,7 +141,7 @@ CREATE TABLE `logins` (
   `ipAddress` char(15) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `user_id_index` (`username`)
-) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=latin1 CHECKSUM=1 ROW_FORMAT=FIXED;
+) ENGINE=MyISAM AUTO_INCREMENT=387 DEFAULT CHARSET=latin1 CHECKSUM=1 ROW_FORMAT=FIXED;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -239,7 +239,7 @@ CREATE TABLE `personallist_entry` (
   `personallist_id` int(11) NOT NULL,
   `value` varchar(17) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=17 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -356,7 +356,7 @@ CREATE TABLE `users` (
   `registeredSince` timestamp NULL DEFAULT NULL,
   `adminLevel` enum('Player','Admin','SuperAdmin','HeadAdmin') DEFAULT 'Player',
   `lastLogin` timestamp NULL DEFAULT NULL,
-  `email` varchar(45) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username_UNIQUE` (`username`)
 ) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
@@ -371,4 +371,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-08-07 14:33:00
+-- Dump completed on 2011-11-11 22:39:18

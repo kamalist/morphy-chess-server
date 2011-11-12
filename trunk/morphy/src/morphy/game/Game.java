@@ -22,8 +22,8 @@ import java.util.List;
 
 import board.Board;
 import board.Piece;
-import board.printer.Style12Printer;
 
+import morphy.service.GameService;
 import morphy.user.SocketChannelUserSession;
 import morphy.user.UserSession;
 
@@ -52,7 +52,7 @@ public class Game implements GameInterface {
 		observers = new ArrayList<UserSession>(0);
 		
 		setBoard(new Board());
-		getBoard().getLatestMove().setPrinter(new Style12Printer());
+		getBoard().getLatestMove().setPrinter(GameService.getInstance().style12Printer);
 		getBoard().getLatestMove().setCastlingRights("KQkq");
 	}
 	

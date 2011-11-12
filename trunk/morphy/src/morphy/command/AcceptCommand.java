@@ -34,6 +34,10 @@ public class AcceptCommand extends AbstractCommand {
 		
 		if (arguments.matches("[0-9]+")) {
 			Request r = rs.getRequestTo(userSession,Integer.parseInt(arguments));
+			if (r == null) { 
+				userSession.send("There is no offer " + arguments + " to accept.\nType \"pending\" to see the list of offers.");
+				return;
+			}
 			if (!r.getTo().equals(userSession)) {
 				userSession.send("There is no offer " + arguments + " to accept.\nType \"pending\" to see the list of offers.");
 				return;

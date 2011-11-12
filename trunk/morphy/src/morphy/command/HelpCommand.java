@@ -51,6 +51,11 @@ public class HelpCommand extends AbstractCommand {
 			}
 			userSession.send(result.toString());
 		} else {
+			if (argument.contains(" ")) {
+				userSession.send(getContext().getUsage());
+				return;
+			}
+			
 			Command command = CommandService.getInstance().getCommand(argument);
 			if (command == null || !command.willProcess(userSession)) {
 				userSession.send("No help avaliable on \"" + argument + "\".");

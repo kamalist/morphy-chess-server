@@ -19,6 +19,7 @@ package morphy.command;
 
 import morphy.channel.Channel;
 import morphy.service.ChannelService;
+import morphy.service.HighlightService;
 import morphy.service.UserService;
 import morphy.user.PersonalList;
 import morphy.user.SocketChannelUserSession;
@@ -104,11 +105,13 @@ public class TellCommand extends AbstractCommand {
 						return;
 					}
 					
-					boolean highlight = uv.getVariables().get("highlight").equals("1");
-
-					personToTell.send((highlight?(((char)27)+"[7m"):"") +
-							UserService.getInstance().getTags(userSession.getUser().getUserName()) +
-							(highlight?(((char)27)+"[0m"):"") + " tells you: " + message);
+					boolean highlight = !uv.getVariables().get("highlight").equals("0");
+					HighlightService hl = HighlightService.getSingletonInstance();
+					String line = (highlight?hl.before(userSession):"") +
+						UserService.getInstance().getTags(userSession.getUser().getUserName()) +
+						(highlight?hl.after():"") + " tells you: " + message;
+					personToTell.send(line);
+					
 					String s = "(told "
 							+ personToTell.getUser().getUserName() + "";
 					
