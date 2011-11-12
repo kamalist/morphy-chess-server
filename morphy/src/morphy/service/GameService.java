@@ -33,9 +33,12 @@ import morphy.user.UserSession;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import board.printer.Style12Printer;
+
 public class GameService implements Service {
 	protected static Log LOG = LogFactory.getLog(GameService.class);
 	private static final GameService singletonInstance = new GameService();
+	public Style12Printer style12Printer = Style12Printer.getSingletonInstance();
 	
 	protected int mostConcurrentGames = 0;
 	protected int stackSize = 0;
@@ -128,26 +131,41 @@ public class GameService implements Service {
 	
 	public void unexamineGame(UserSession userSession) {
 		ExaminedGame g = (ExaminedGame)map.get(userSession);
-		games.remove(g);
-		map.remove(userSession);
-		stack.push(g.getGameNumber());
-		
-		final String line = userSession.getUser().getUserName() + " stopped examining game " + g.getGameNumber() + ".\n\n" +
-				"Removing game " + g.getGameNumber() + " from observation list.";
-		
+			
 		UserSession[] examiners = g.getExaminers();
 		for(int i=0;i<examiners.length;i++) {
 			if (examiners[i].equals(userSession)) {
 				examiners[i].send("You are no longer examining game " + g.getGameNumber() + ".");
 			} else {
-				examiners[i].send(line);
+				examiners[i].send(userSession.getUser().getUserName() + " stopped examining game " + g.getGameNumber() + ".");
 			}
 		}
-
+		g.removeExaminingUser(userSession);
+		
+		String line = null;
+		if (examiners.length == 1) {
+			// This was the only examiner
+			games.remove(g);
+			map.remove(userSession);
+			stack.push(g.getGameNumber());
+			
+			/*line = userSession.getUser().getUserName() + " stopped examining game " + g.getGameNumber() + ".\n\n" +
+			"Removing game " + g.getGameNumber() + " from observation list.";*/
+			line = userSession.getUser().getUserName() + " stopped examining game " + g.getGameNumber() + ".\n\n" +
+				"Game " + g.getGameNumber() + " (which you were observing) has no examiners.\n" + 
+				"Removing game " + g.getGameNumber() + " from observation list.";
+		} else {
+			// There are multiple examiners - what does an observer see?
+			line = userSession.getUser().getUserName() + " stopped examining game " + g.getGameNumber() + ".";
+		}
+		
 		UserSession[] observers = g.getObservers();
 		for(int i=0;i<observers.length;i++) {
-			observers[i].send(line);
-			((SocketChannelUserSession)observers[i]).getGamesObserving().remove(new Integer(g.getGameNumber()));
+			if (line != null) observers[i].send(line);
+			if (examiners.length == 1) {
+				SocketChannelUserSession sess = ((SocketChannelUserSession)observers[i]); 
+				sess.getGamesObserving().remove(new Integer(g.getGameNumber()));
+			}
 		}
 		
 		((SocketChannelUserSession)userSession).setExamining(false);
@@ -177,7 +195,8 @@ public class GameService implements Service {
 		return games;
 	}
 	
-	/** O(N) performance */
+	/** O(N) performance<br/>
+	 * Returns null if not found */
 	public GameInterface findGameById(int id) {
 		for(GameInterface g : games) {
 			if (g.getGameNumber() == id)

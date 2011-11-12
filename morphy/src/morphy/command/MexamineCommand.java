@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -35,6 +35,11 @@ public class MexamineCommand extends AbstractCommand {
 	public void process(String arguments, UserSession userSession) {
 		arguments = arguments.trim();
 		
+		if (arguments.equals("")) {
+			userSession.send(getContext().getUsage());
+			return;
+		}
+		
 		GameService gs = GameService.getInstance();
 		UserService us = UserService.getInstance();
 		
@@ -53,7 +58,7 @@ public class MexamineCommand extends AbstractCommand {
 		ArrayList<String> list = new ArrayList<String>();
 		for(UserSession s : arr) {
 			String username = s.getUser().getUserName();
-			if (username.toLowerCase().startsWith(arguments)) {
+			if (username.toLowerCase().startsWith(arguments.toLowerCase())) {
 				list.add(username);
 			}
 		}
@@ -93,8 +98,7 @@ public class MexamineCommand extends AbstractCommand {
 			gs.map.put(mysess,eg);
 			
 			sess.send(mysess.getUser().getUserName() + " is now an examiner of game " + g.getGameNumber() + ".");
-			mysess.send("Removing game " + g.getGameNumber() + " from observation list.\n\n" + sess.getUser().getUserName() + " has made you an examiner of game " + g.getGameNumber() + ".");
-			eg.processMoveUpdate(mysess);
+			mysess.send("Removing game " + g.getGameNumber() + " from observation list.\n\n" + sess.getUser().getUserName() + " has made you an examiner of game " + g.getGameNumber() + ".\n\n" + eg.processMoveUpdate(sess));
 		}
 		
 	}

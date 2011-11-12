@@ -22,7 +22,6 @@ import java.util.List;
 
 import board.Board;
 import board.Piece;
-import board.printer.Style12Printer;
 
 import morphy.user.SocketChannelUserSession;
 import morphy.user.UserSession;
@@ -49,13 +48,13 @@ public class ExaminedGame implements GameInterface {
 	List<UserSession> examiningUsers;
 	List<UserSession> observers;
 	
+	private UserSession userLastMoveMadeBy;
+	
 	public ExaminedGame() {
 		observers = new ArrayList<UserSession>(0);
 		examiningUsers = new ArrayList<UserSession>(1);
 		
 		setBoard(new Board());
-		getBoard().getLatestMove().setPrinter(new Style12Printer());
-		getBoard().getLatestMove().setCastlingRights("KQkq");
 	}
 	
 	public ExaminedGame(String white,String black,int time,int increment) {
@@ -72,17 +71,21 @@ public class ExaminedGame implements GameInterface {
 		examiningUsers.add(userSession);
 	}
 	
+	public void removeExaminingUser(UserSession userSession) {
+		examiningUsers.remove(userSession);
+	}
+	
 	/** boolean all - true for all, false for observers only. */
 	public void processMoveUpdate(boolean all) {
 		UserSession[] examiners = getExaminers();
 		for(int i=0;i<examiners.length;i++) {
-			processMoveUpdate(examiners[i]);
+			examiners[i].send(processMoveUpdate(examiners[i]));
 		}
 		
 		if (!all) {	
 			UserSession[] observers = getObservers();
 			for(int i=0;i<observers.length;i++) {
-				processMoveUpdate(observers[i]);
+				observers[i].send(processMoveUpdate(observers[i]));
 			}
 		}
 	}
@@ -92,7 +95,11 @@ public class ExaminedGame implements GameInterface {
 	}
 	
 	public String processMoveUpdate(UserSession s) {
-		return s.getUser().getUserVars().getStyle().print(s, this);
+		String str = s.getUser().getUserVars().getStyle().print(s, this);
+		if (getUserLastMoveMadeBy() != null) {
+			str += "\n\nGame " + getGameNumber() + ": " + getUserLastMoveMadeBy().getUser().getUserName() + " moves: " + getBoard().getLatestMove().getPrettyNotation();
+		}
+		return str;
 	}
 	
 	public void addObserver(UserSession observer) {
@@ -256,6 +263,14 @@ public class ExaminedGame implements GameInterface {
 
 	public int getBlackRating() {
 		return blackRating;
+	}
+
+	public void setUserLastMoveMadeBy(UserSession userLastMoveMadeBy) {
+		this.userLastMoveMadeBy = userLastMoveMadeBy;
+	}
+
+	public UserSession getUserLastMoveMadeBy() {
+		return userLastMoveMadeBy;
 	}
 
 	/** Used to put examined games before games 

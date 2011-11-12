@@ -35,7 +35,21 @@ public class AllObserversCommand extends AbstractCommand {
 		GameService gs = GameService.getInstance();
 		GameInterface g = null;
 		if (arguments.matches("[0-9]+")) {
-			g = gs.findGameById(Integer.parseInt(arguments));
+			int gameNumber = 0;
+			try {
+				// NumberFormatException is thrown when 
+				// the argument is out of range for Integer
+				gameNumber = Integer.parseInt(arguments);
+			} catch(NumberFormatException e) {
+				gameNumber = 0;
+			} finally {
+				
+			}
+			g = gs.findGameById(gameNumber);
+			if (g == null) {
+				userSession.send("There is no such game.");
+				return;
+			}
 		} else if (arguments.matches("\\w{3,17}")) {
 			String[] array = UserService.getInstance().completeHandle(arguments);
 			if (array.length == 0) {

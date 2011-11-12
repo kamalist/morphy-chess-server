@@ -28,7 +28,12 @@ import morphy.user.UserVars;
 
 public class Style13 implements StyleInterface {
 
-	public Style13() { }
+	private static Style13 singletonInstance = new Style13();
+	public static Style13 getSingletonInstance() {
+		return singletonInstance;
+	}
+	
+	private Style13() { }
 	
 	// http://pueblo.sourceforge.net/doc/manual/ansi_color_codes.html
 	// http://bluesock.org/~willg/dev/ansi.html#ansicodes

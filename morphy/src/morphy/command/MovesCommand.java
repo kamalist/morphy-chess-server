@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import morphy.game.Game;
 import morphy.game.GameInterface;
 import morphy.service.GameService;
 import morphy.service.UserService;
+import morphy.user.SocketChannelUserSession;
 import morphy.user.UserSession;
 import morphy.utils.john.TimeZoneUtils;
 
@@ -45,6 +46,13 @@ public class MovesCommand extends AbstractCommand {
 		UserSession s = null;
 		if (arguments.equals("")) {
 			s = userSession;
+			
+			SocketChannelUserSession sess = (SocketChannelUserSession)s;
+			if (!sess.isExamining() && 
+				!sess.isPlaying() && 
+				sess.getGamesObserving().isEmpty()) {
+				sess.send("You are neither playing, observing nor examining a game.");
+			}
 		} else if (arguments.matches("[0-9]+")) {
 			int id = Integer.parseInt(arguments);
 			g = gs.findGameById(id);
@@ -53,8 +61,9 @@ public class MovesCommand extends AbstractCommand {
 		}
 
 		if (s != null && g == null) {
-			if (g instanceof Game) g = (Game)gs.map.get(s);
-			if (g instanceof ExaminedGame) g = (ExaminedGame)gs.map.get(s);
+			g = gs.map.get(s);
+			//if (g instanceof Game) g = (Game)gs.map.get(s);
+			//if (g instanceof ExaminedGame) g = (ExaminedGame)gs.map.get(s);
 		}
 		if (g == null) { System.err.println("args = \"" + arguments + "\""); }
 		
@@ -67,17 +76,21 @@ public class MovesCommand extends AbstractCommand {
 		if (sdf.getTimeZone() == null) sdf.setTimeZone(java.util.TimeZone.getDefault());
 		
 		
-		if (g instanceof Game) { 
+		if (g instanceof Game) {
 			b.append(((Game)g).getWhite().getUser().getUserName() + " (UNR) vs. " + 
 					((Game)g).getBlack().getUser().getUserName() + " (UNR) --- " + sdf.format(g.getTimeGameStarted()) + "\n\r");
+		} else if (g instanceof ExaminedGame) {
+			ExaminedGame eg = (ExaminedGame)g;
+			b.append(eg.getWhiteName() + " (" + eg.getWhiteRating() + ") vs. " + eg.getBlackName() + " (" + eg.getBlackRating() + ") --- " + sdf.format(eg.getTimeGameStarted()) + "\n\r");
 		}
+		
 		b.append((g.isRated()?"Rated":"Unrated") + " " + g.getVariant().name() + " match, initial time: " + g.getTime() + " minutes, increment: " + g.getIncrement() + " seconds.\n\r\n\r");
-
+		
 		if (g instanceof Game) { 
 			b.append(String.format("%4s  %-21s   %-21s\n\r","Move",((Game)g).getWhite().getUser().getUserName(),((Game)g).getBlack().getUser().getUserName())); 
 		}
 		b.append("----  ---------------------   ---------------------\n\r"); //21
-		//b.append("  1.  e4      (0:00.000)      e5      (0:00.000)   \n");
+		//b.append("  1.  e4      (0:00.000)      e5      (0:00.000)   \n\r");
 		b.append("      {Still in progress} *\n\r");
 		
 		userSession.send(b.toString());

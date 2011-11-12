@@ -76,6 +76,7 @@ import morphy.command.WithdrawCommand;
 import morphy.command.WnameCommand;
 import morphy.command.WratingCommand;
 import morphy.command.ZNotifyCommand;
+import morphy.command.admin.AddCommentCommand;
 import morphy.command.admin.AdminCommand;
 import morphy.command.admin.AnnounceCommand;
 import morphy.command.admin.AnnunregCommand;
@@ -91,9 +92,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import board.Board;
-import board.IllegalMoveException;
-import board.WrongColorToMoveException;
-import board.printer.Style12Printer;
+import board.exception.IllegalMoveException;
+import board.exception.WrongColorToMoveException;
 
 public class CommandService implements Service {
 	protected static Log LOG = LogFactory.getLog(CommandService.class);
@@ -125,6 +125,7 @@ public class CommandService implements Service {
 		
 		AbortCommand.class,
 		AcceptCommand.class,
+		AddCommentCommand.class,
 	 	AddListCommand.class,
 	 	AddPlayerCommand.class,
 		AdminCommand.class,
@@ -268,46 +269,56 @@ public class CommandService implements Service {
 		
 	}
 	
-	public void processCommandAndCheckAliases(String command,SocketChannelUserSession userSession) {
-		command = command.trim();
-		
-		boolean isMove = Board.isValidSAN(command);
-		if (isMove && command.startsWith("+")) isMove = false;
-		if (isMove) {
-			morphy.game.GameInterface g = GameService.getInstance().map.get(userSession);
-			if (g != null) {
-				try {
-					if (g instanceof Game) {
-						Game gg = (Game)g;
-						/*if (!gg.isClockTicking()) {
-							userSession.send("The clock is paused, use \"unpause\" to resume.\n\n"+gg.processMoveUpdate(userSession));
-							return;
-						}*/
-						boolean isWhiteMove = gg.getWhite().equals(userSession);
-						//long last = gg.getTimeLastMoveMade();
-						//if (last == 0L) last = System.currentTimeMillis();
-						gg.getBoard().move(isWhiteMove,command);
-						gg.getBoard().getLatestMove().setPrinter(new Style12Printer());
-						/*long newt = gg.touchLastMoveMadeTime();
-						if (isWhiteMove) { gg.setWhiteClock((gg.getWhiteClock()-(int)(newt-last)) + (gg.getIncrement()*1000)); }
-						else { gg.setBlackClock((gg.getBlackClock()-(int)(newt-last)) + (gg.getIncrement()*1000)); }*/
-						
-						gg.processMoveUpdate(true);
-					}
-					if (g instanceof ExaminedGame) {
-						ExaminedGame gg = (ExaminedGame)g;
-						System.out.println("gg.isWhitesMove = " + gg.isWhitesMove());
-						//gg.getBoard().getLatestMove().isWhitesMove();
-						gg.getBoard().move(gg.isWhitesMove(),command);
-						gg.getBoard().getLatestMove().setPrinter(new Style12Printer());
+	public void processGameMove(SocketChannelUserSession userSession,String command) {
+		morphy.game.GameInterface g = GameService.getInstance().map.get(userSession);
+		if (g != null) {
+			try {
+				if (g instanceof Game) {
+					Game gg = (Game)g;
+					/*if (!gg.isClockTicking()) {
+						userSession.send("The clock is paused, use \"unpause\" to resume.\n\n"+gg.processMoveUpdate(userSession));
+						return;
+					}*/
+					boolean isWhiteMove = gg.getWhite().equals(userSession);
+					//long last = gg.getTimeLastMoveMade();
+					//if (last == 0L) last = System.currentTimeMillis();
+					gg.getBoard().move(isWhiteMove,command);
+					gg.getBoard().getLatestMove().setPrinter(GameService.getInstance().style12Printer);
+					/*long newt = gg.touchLastMoveMadeTime();
+					if (isWhiteMove) { gg.setWhiteClock((gg.getWhiteClock()-(int)(newt-last)) + (gg.getIncrement()*1000)); }
+					else { gg.setBlackClock((gg.getBlackClock()-(int)(newt-last)) + (gg.getIncrement()*1000)); }*/
+					
+					gg.processMoveUpdate(true);
+				}
+				if (g instanceof ExaminedGame) {
+					ExaminedGame gg = (ExaminedGame)g;
+					System.out.println("gg.isWhitesMove = " + gg.isWhitesMove());
+					//System.out.println("gg.getBoard().isWhitesMove = " + gg.getBoard().getLatestMove().isWhitesMove());
+					boolean b = gg.getBoard().move(gg.isWhitesMove(),command);
+					if (b) {
+						gg.setUserLastMoveMadeBy(userSession);
+						gg.getBoard().getLatestMove().setPrinter(GameService.getInstance().style12Printer);
 						gg.setWhitesMove(!gg.isWhitesMove());
 						gg.processMoveUpdate(true);
 					}
-				} catch(WrongColorToMoveException e) { userSession.send("It is not your move."); }
-				catch(IllegalMoveException e) { userSession.send("Illegal move (" + command + ")."); }
-			} else {
-				userSession.send("You are not playing or examining a game.");
-			}
+				}
+			} catch(WrongColorToMoveException e) { userSession.send("It is not your move."); System.err.print(e.getMessage()); }
+			catch(IllegalMoveException e) { userSession.send("Illegal move (" + command + ")."); System.err.print(e.getMessage()); }
+		} else {
+			userSession.send("You are not playing or examining a game.");
+		}
+		return;
+	}
+	
+	public void processCommandAndCheckAliases(String command,SocketChannelUserSession userSession) {
+		command = command.trim();	
+		
+		if (command.equals("0-0")) command = "O-O";
+		if (command.equals("0-0-0")) command = "O-O-O";
+		boolean isMove = Board.isValidSAN(command);
+		if (isMove && command.startsWith("+")) isMove = false;
+		if (isMove) {
+			processGameMove(userSession, command);
 			return;
 		}
 		
@@ -365,6 +376,10 @@ public class CommandService implements Service {
 			if (c != null) {
 				processCommand("tell " + c.getNumber() + " " + content,userSession);
 			} else { userSession.send("I don't know who to say that to."); return; }
+		} else if (keyword.equals(":")) {
+			// shout
+		} else if (keyword.equals(";")) {
+			// ptell to bughouse partner
 		} else {
 			processCommand(command,userSession);
 		}
@@ -404,6 +419,7 @@ public class CommandService implements Service {
 	public void processCommand(String command,
 			SocketChannelUserSession userSession) {
 		command = command.trim();
+		
 		String keyword = null;
 		String content = null;
 
@@ -421,7 +437,7 @@ public class CommandService implements Service {
 		if (socketCommand == null) {
 			userSession.send(keyword + ": Command not found.");
 		} else if (socketCommand.willProcess(userSession)) {
-			if (keyword.equals("q") || keyword.equals("qu")) {
+			if (keyword.equals("q") || keyword.equals("qu") || keyword.equals("qui")) {
 				userSession.send("" + UserService.getInstance().getTags(userSession.getUser().getUserName()) + 
 						" tells you: The command 'quit' cannot be abbreviated.");
 				return;

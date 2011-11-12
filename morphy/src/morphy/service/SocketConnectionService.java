@@ -274,12 +274,15 @@ public class SocketConnectionService implements Service {
 				}
 			}
 
-			if (instance.isLoggedIn(name)) {
+			boolean isLoggedIn = instance.isLoggedIn(name);
+			if (isLoggedIn) {
+				/* this code in this logic block should be commented out to support multiple-login. */
 				userSession.send(name + " is already logged in - kicking them out.");
 				
 				UserSession sess = instance.getUserSession(name);
 				sess.send("**** " + name + " has arrived - you can't both be logged in. ****");
 				sess.disconnect();
+				isLoggedIn = !isLoggedIn;
 			}
 			
 			userSession.getUser().setUserName(name);
@@ -291,7 +294,14 @@ public class SocketConnectionService implements Service {
 				userSession.getUser().getUserVars().getVariables().put("rated", "0");
 			}
 			userSession.setHasLoggedIn(true);
-			instance.addLoggedInUser(userSession);
+			if (!isLoggedIn) {
+				instance.addLoggedInUser(userSession);
+			} else {
+				// This code is used for multiple-login.
+				/*SocketChannelUserSession sess = (SocketChannelUserSession) instance.getUserSession(name);
+				sess.addUserOnMultipleLogins(userSession);
+				userSession.addParentOnMultipleLogins(sess);*/
+			}
 			userSession.getUser().setDBID(instance.getDBID(name));
 
 			boolean isHeadAdmin = false;
@@ -317,7 +327,7 @@ public class SocketConnectionService implements Service {
 				} catch(SQLException e) { Morphy.getInstance().onError(e); }
 				
 				Map<PersonalList,Integer> map = new HashMap<PersonalList,Integer>();
-				query = "SELECT name,id FROM personallist WHERE user_id = '" + userSession.getUser().getDBID() + "'";
+				query = "SELECT `name`,`id` FROM `personallist` WHERE `user_id` = '" + userSession.getUser().getDBID() + "'";
 				rs = conn.executeQueryWithRS(query);
 				try {
 					while(rs.next()) {
@@ -403,13 +413,14 @@ public class SocketConnectionService implements Service {
 				while(rs.next()) {
 					String username = rs.getString(1);
 					UserSession sess = us.getUserSession(username);
-					UserVars uv = sess.getUser().getUserVars();
-					boolean highlight = uv.getVariables().get("highlight").equals("1");
-					if (sess != null && sess.isConnected()) {
-						sess.send("Notification: " + (highlight?((char)27)+"[7m":"") + name + (highlight?((char)27)+"[0m":"") + " has arrived.");
-						arrivalNotedBy.add(sess.getUser().getUserName());
+					if (sess != null) {
+						UserVars uv = sess.getUser().getUserVars();
+						boolean highlight = uv.getVariables().get("highlight").equals("1");
+						if (sess != null && sess.isConnected()) {
+							sess.send("Notification: " + (highlight?((char)27)+"[7m":"") + name + (highlight?((char)27)+"[0m":"") + " has arrived.");
+							arrivalNotedBy.add(sess.getUser().getUserName());
+						}
 					}
-					
 				}
 			} catch(SQLException e) { Morphy.getInstance().onError(e); }
 			if (arrivalNotedBy.size() > 0) {
@@ -425,6 +436,7 @@ public class SocketConnectionService implements Service {
 					String username = rs.getString(1);
 					if (arrivalNotedBy.contains(username)) continue;
 					UserSession sess = us.getUserSession(username);
+					if (sess == null) continue;
 					UserVars uv = sess.getUser().getUserVars();
 					boolean highlight = uv.getVariables().get("highlight").equals("1");
 					if (sess != null && sess.isConnected()) sess.send("Notification: " + (highlight?((char)27)+"[7m":"") + name + (highlight?((char)27)+"[0m":"") + " has arrived and isn't on your notify list.");
@@ -564,11 +576,14 @@ public class SocketConnectionService implements Service {
 							}
 							LOG.info(c + " " + socketInputForCmd.get(channel.socket()));*/
 							
+							boolean expandAliases = true; 
 							if (message.startsWith("$$")) {
 								message = message.substring(2);
+								expandAliases = false;
 							} else {
 								session.touchLastReceivedTime();
 								session.getUser().getUserVars().getVariables().put("busy","");
+								expandAliases = true;
 							}
 							
 							session.getInputBuffer().append(message);
@@ -593,9 +608,13 @@ public class SocketConnectionService implements Service {
 								} else if (!session.hasLoggedIn()) {
 									handleLoginPromptText(session, command);
 								} else {
-									CommandService.getInstance()
-											.processCommandAndCheckAliases(
-													command, session);
+									if (expandAliases) {
+										CommandService.getInstance()
+											.processCommandAndCheckAliases(command, session);
+									} else {
+										CommandService.getInstance()
+											.processCommand(command, session);
+									}
 								}
 							}
 						}

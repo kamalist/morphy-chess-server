@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  */
 package morphy.command;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -224,7 +225,7 @@ public class SetCommand extends AbstractCommand {
 							returnmessage = "You will " + nowOrNot + " hear kibitzes.";
 							break;
 						case kiblevel:
-							if (Integer.parseInt(message) < 0 || Integer.parseInt(message) > 10000) throw new BadValueException("kiblevel");
+							if (Integer.parseInt(message) < 0 || Integer.parseInt(message) >= 10000) throw new BadValueException("kiblevel");
 							returnmessage = "Kibitz level now set to " + message + ".";
 							break;
 						case tell:
@@ -376,21 +377,11 @@ public class SetCommand extends AbstractCommand {
 						int style = Integer.parseInt(message);
 						StyleInterface si = null;
 						si = getStyle(style);
-						/*if (style == 1) { } else
-						if (style == 2) { } else
-						if (style == 3) { } else
-						if (style == 4) { } else
-						if (style == 5) { } else
-						if (style == 6) { } else
-						if (style == 7) { } else
-						if (style == 8) { } else
-						if (style == 9) { } else
-						if (style == 10) { } else
-						if (style == 11) { } else
-						if (style == 12) { si = new morphy.game.style.Style12(); } else
-						if (style == 13) { si = new morphy.game.style.Style13(); }*/
-						
-						userSession.getUser().getUserVars().setStyle(si);
+						if (si == null) {
+							userSession.send("That style is not available at this time, please try again later.");
+						} else {
+							userSession.getUser().getUserVars().setStyle(si);
+						}
 					}
 					
 					RequestService rq = RequestService.getInstance();
@@ -432,13 +423,18 @@ public class SetCommand extends AbstractCommand {
 	private StyleInterface getStyle(int styleNum) {
 		try {
 			Class<?> myClass = Class.forName("morphy.game.style.Style" + styleNum);
-			return (StyleInterface) myClass.newInstance();
+			return (StyleInterface) myClass.getMethod("getSingletonInstance").invoke(null);
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace(System.err);
-		} catch (InstantiationException e) {
 			e.printStackTrace(System.err);
 		} catch (IllegalAccessException e) {
+			e.printStackTrace(System.err);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace(System.err);
+		} catch (SecurityException e) {
+			e.printStackTrace(System.err);
+		} catch (InvocationTargetException e) {
+			e.printStackTrace(System.err);
+		} catch (NoSuchMethodException e) {
 			e.printStackTrace(System.err);
 		}
 		return null;

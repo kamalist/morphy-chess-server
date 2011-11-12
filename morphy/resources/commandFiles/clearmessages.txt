@@ -3,6 +3,6 @@ Usage: clearmessages [* | username | n | n-m]
 Aliases: N/A
 SeeAlso: N/A
 LastModifiedBy: johnthegreat
-LastModifiedDate: 2011/08/05
-UserLevel: Guest
+LastModifiedDate: 2011/11/09
+UserLevel: Player
 Help: Messages a user some text.

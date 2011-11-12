@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -53,6 +53,10 @@ public class NewsCommand extends AbstractCommand {
 					f.setTimeZone(TimeZoneUtils.getTimeZone(tzone));
 					str.append(rs.getString(3) + "\n\nPosted by " + rs.getString(6) + (rs.getDate(5)!= null?" (Expires: " + f.format(rs.getDate(5)) + ")":"") + ".");
 					userSession.send(str.toString());
+					return;
+				} else {
+					userSession.send("That news item does not exist, or has expired.");
+					return;
 				}
 			} catch(java.sql.SQLException e) { morphy.Morphy.getInstance().onError("SQLException while trying to retrieve news item #" + arguments,e); }
 				
