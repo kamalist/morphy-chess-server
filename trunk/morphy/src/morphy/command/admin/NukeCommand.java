@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ import morphy.user.UserSession;
 
 public class NukeCommand extends AbstractCommand {
 	public NukeCommand() {
-		super("nuke");
+		super("admin/nuke");
 	}
 
 	public void process(String arguments, UserSession userSession) {		

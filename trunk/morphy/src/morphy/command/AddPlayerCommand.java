@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  */
 package morphy.command;
 
+import morphy.command.AbstractCommand;
 import morphy.service.DBConnectionService;
 import morphy.service.UserService;
 import morphy.user.UserSession;
@@ -24,7 +25,7 @@ import morphy.utils.john.DBConnection;
 
 public class AddPlayerCommand extends AbstractCommand {
 	public AddPlayerCommand() {
-		super("addplayer");
+		super("admin/addplayer");
 	}
 
 	public void process(String arguments, UserSession userSession) {
