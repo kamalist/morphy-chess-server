@@ -29,7 +29,7 @@ import morphy.utils.john.DBConnection;
 
 public class AddCommentCommand extends AbstractCommand {
 	public AddCommentCommand() {
-		super("addcomment");
+		super("admin/addcomment");
 	}
 
 	public void process(String arguments, UserSession userSession) {		
