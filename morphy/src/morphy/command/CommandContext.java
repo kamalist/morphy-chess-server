@@ -101,6 +101,8 @@ public class CommandContext {
 					} else if (StringUtils.startsWithIgnoreCase(currentLine,
 							"Help:")) {
 						isParsingContent = true;
+						helpContent.append(currentLine.substring(5));
+						continue;
 					} else {
 						LOG
 								.warn("Encountered command header without a known keyword "
