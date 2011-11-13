@@ -32,26 +32,30 @@ public class SummonCommand extends AbstractCommand {
 			userSession.send(getContext().getUsage());
 			return;
 		}
+		UserService userService = UserService.getInstance();
 
 		String name = arguments;
-		if (!UserService.getInstance().isValidUsername(name)) {
+		if (!userService.isValidUsername(name)) {
 			userSession.send("There is no player matching the name " + name + ".");
 			return;
 		}
 
 		String myname = userSession.getUser().getUserName();
 		
-		if (UserService.getInstance().getUserSession(name).getUser().isOnList(
-				PersonalList.notify,myname)) {
+		// staff can summon whoever they want whenever they want
+		boolean isConsideredStaff = userService.isConsideredStaff(myname);
+		
+		UserSession to = userService.getUserSession(name);
+		if (to.getUser().isOnList(PersonalList.notify,myname)) {
 			userSession.getUser().getLists().get(PersonalList.idlenotify).add(name);
 			userSession.send("Summoning sent to \"" + name + "\".\n\n[" + name
 					+ "] added to your idlenotify list.");
-		} else {
-			userSession
-				.send("You cannot summon a player who doesn't have you on his/her notify list.");
+		} else if (!isConsideredStaff) {
+			userSession.send("You cannot summon a player who doesn't have you on his/her notify list.");
+			return;
 		}
 		
-		UserService.getInstance().getUserSession(name).send(myname + " needs to speak to you.  To contact him/her type \"tell " + myname + " hello\".");
+		to.send(myname + " needs to speak to you.  To contact him/her type \"tell " + myname + " hello\".");
 	}
 
 }

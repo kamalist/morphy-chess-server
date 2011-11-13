@@ -48,6 +48,8 @@ public class Style12 implements StyleInterface {
 			verboseNotation = verboseNotation.substring(0,1) + verboseNotation.substring(1).toLowerCase();
 		}
 		
+		int numMoves = g.getBoard().getPositions().size();
+		
 		//System.err.println(p.getNotation() + " " + p.getVerboseNotation() + " " + p.getFEN());
 		int myrelation = 0;
 		boolean isBughouse = false;
@@ -67,14 +69,24 @@ public class Style12 implements StyleInterface {
 			}
 		} else if (g instanceof Game) {
 			Game gg = (Game)g;
-			
-			boolean amIPlaying = userSession.getUser().getUserName().equals(gg.getWhite().getUser().getUserName()) || userSession.getUser().getUserName().equals(gg.getBlack().getUser().getUserName());
-			if (!amIPlaying) { myrelation = 0; } else {
-				boolean amIWhite = userSession.getUser().getUserName().equals(gg.getWhite().getUser().getUserName());
-				boolean whitesMove = p.isWhitesMove();
-				if ((amIWhite && whitesMove) || (!amIWhite && !whitesMove)) myrelation = 1;
-				if ((amIWhite && !whitesMove) || (!amIWhite && whitesMove)) myrelation = -1;
-				
+			boolean amIWhite = userSession.getUser().getUserName().equals(gg.getWhite().getUser().getUserName());
+			boolean amIBlack = userSession.getUser().getUserName().equals(gg.getBlack().getUser().getUserName());
+			boolean amIPlaying = amIWhite || amIBlack;
+			java.util.Arrays.sort(gg.getObservers());
+			int pos = java.util.Arrays.binarySearch(gg.getObservers(),userSession);
+			if (pos >= 0) { myrelation = 0; }
+			if (pos < 0 && !amIPlaying) {
+				myrelation = -3;
+			} else {
+				boolean whitesMove = !p.isWhitesMove();
+				if (numMoves == 1) { whitesMove = true; }
+				/*if ((amIWhite && whitesMove) || (!amIWhite && !whitesMove)) myrelation = 1;
+				if ((amIWhite && !whitesMove) || (!amIWhite && whitesMove)) myrelation = -1;*/
+				if (amIWhite == whitesMove) {
+					myrelation = 1;
+				} else {
+					myrelation = -1;
+				}
 			}
 			isBughouse = gg.getVariant() == Variant.bughouse || gg.getVariant() == Variant.frbughouse;
 			isPaused = !gg.isClockTicking();
@@ -82,21 +94,26 @@ public class Style12 implements StyleInterface {
 		
 		UserVars uv = userSession.getUser().getUserVars();
 		
-		int numMoves = g.getBoard().getPositions().size();
+		
 		int lag = 0; // requires timeseal...
 		int moveNumber = numMoves/2;
 		if (moveNumber == 0) moveNumber = 1;
 		isPaused = ((isBughouse||numMoves>2)&&!isExaminedGame); 
-		String whiteName = (isExaminedGame?((ExaminedGame)g).getWhiteName():((Game)g).getWhite().getUser().getUserName());
-		String blackName = (isExaminedGame?((ExaminedGame)g).getBlackName():((Game)g).getBlack().getUser().getUserName());
+		final String whiteName = (isExaminedGame?((ExaminedGame)g).getWhiteName():((Game)g).getWhite().getUser().getUserName());
+		final String blackName = (isExaminedGame?((ExaminedGame)g).getBlackName():((Game)g).getBlack().getUser().getUserName());
 		String whoseMove = (p.isWhitesMove()?"B":"W");
 		if (numMoves == 1) { whoseMove = "W"; }
 		
 		String sign = "";
-		boolean isCheck = p.isInCheck(!p.isWhitesMove());
-		boolean isCheckmate = false;
-		if (isCheckmate) { sign = "#"; } else
-		if (isCheck) { sign = "+"; }
+		
+		final boolean isCheckmate = false;
+		if (isCheckmate) { 
+			sign = "#"; 
+		} else {
+			final boolean isCheck = p.isInCheck(!p.isWhitesMove());
+			if (isCheck) { sign = "+"; }
+		}
+		
 		
 		String style12string = "<12> " + p.draw() + "" + whoseMove + " " + p.getDoublePawnPushFile() + " " + (p.canWhiteCastleKingside()?"1":"0") + " " + (p.canWhiteCastleQueenside()?"1":"0") + " " + (p.canBlackCastleKingside()?"1":"0") + " " + (p.canBlackCastleQueenside()?"1":"0") + " 0 " + g.getGameNumber() + " " + whiteName + " " + blackName + " " + myrelation + " " + (g.getTime()) + " " + g.getIncrement() + " " + g.getWhiteBoardStrength() + " " + g.getBlackBoardStrength() + " " + g.getWhiteClock() + " " + g.getBlackClock() + " " + moveNumber + " " + verboseNotation + " (0:00" + (uv.getIVariables().get("ms").equals("1")?".000":"") + ") " + notation + (sign) + " " + ((uv.getVariables().get("flip").equals("1")?"1":"0")) + " " + (isPaused?"1":"0") + " " + lag + "" + (uv.getVariables().get("bell").equals("1")?((char)7):"");
 		System.err.println(String.format("%-17s",userSession.getUser().getUserName()) + "" + style12string);

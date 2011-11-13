@@ -94,7 +94,11 @@ public class SetCommand extends AbstractCommand {
 						"Plan line " + val + " cleared." : 
 						"Plan line " + val + " changed to '" + message + "'.");
 				userSession.send(returnmess);
-			} 
+				return;
+			} else {
+				userSession.send("No such variable \"" + val + "\".");
+				return;
+			}
 		} else if (setWhat.matches("f[1-9]")) {
 			// var notes
 		} else if (v.length > 0) {

@@ -1,6 +1,6 @@
 /*
  *   Morphy Open Source Chess Server
- *   Copyright (C) 2008-2010  http://code.google.com/p/morphy-chess-server/
+ *   Copyright (C) 2008-2011  http://code.google.com/p/morphy-chess-server/
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -45,6 +45,21 @@ public class UserService implements Service {
 		final ServerListManagerService s = ServerListManagerService
 				.getInstance();
 		return s.isOnList(s.getList("admin"), username);
+	}
+	
+	public boolean isConsideredStaff(String username) {
+		// shortcut so we don't have to check ALL the lists
+		if (isAdmin(username)) return true;
+		
+		final ServerListManagerService s = ServerListManagerService
+		.getInstance();
+		ServerList[] arr = s.getLists().toArray(new ServerList[s.getLists().size()]);
+		for(int i=0;i<arr.length;i++) {
+			ServerList list = arr[i];
+			if (list.getName().equals("admin")) continue; // we already checked this list earlier
+			if (list.isConsideredStaff() && s.isOnList(list, username)) return true;
+		}
+		return false;
 	}
 	
 	/**

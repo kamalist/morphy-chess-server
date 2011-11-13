@@ -115,9 +115,15 @@ public class LoginsCommand extends AbstractCommand {
 			Morphy.getInstance().onError(e);
 		}
 		java.util.Arrays.sort(arr);
-		
-		query = "SELECT `id`,`username`,CONVERT_TZ(`timestamp`,'UTC','SYSTEM'),`type`" + (isAdmin?",`ipAddress`":"") + " " +
-				"FROM `logins` WHERE `username` LIKE '" + username + "' ORDER BY `id` ASC";
+		StringBuilder queryBuilder = new StringBuilder(125);
+		queryBuilder.append("SELECT `id`,`username`,CONVERT_TZ(`timestamp`,'UTC','SYSTEM'),`type`" + (isAdmin?",`ipAddress`":"") + " " +
+				"FROM `logins` WHERE `id` IN ("); // WHERE `username` LIKE '" + username + "'
+		for(int i=0;i<arr.length;i++) {
+			queryBuilder.append(arr[i]);
+			if (i != arr.length-1) queryBuilder.append(",");
+		}
+		queryBuilder.append(") ORDER BY `id` ASC");
+		query = queryBuilder.toString();
 		rs = DBConnectionService.getInstance().getDBConnection().executeQueryWithRS(query);
 		try {
 			while(rs.next()) {
