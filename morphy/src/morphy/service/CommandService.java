@@ -59,6 +59,7 @@ import morphy.command.PauseCommand;
 import morphy.command.PendingCommand;
 import morphy.command.QtellCommand;
 import morphy.command.QuitCommand;
+import morphy.command.RefreshCommand;
 import morphy.command.RemoveListCommand;
 import morphy.command.SRCommand;
 import morphy.command.SetCommand;
@@ -180,6 +181,7 @@ public class CommandService implements Service {
 		QtellCommand.class,
 		QuitCommand.class,
 		
+		RefreshCommand.class,
 		RemoveListCommand.class,
 		
 		SetCommand.class,
@@ -282,13 +284,13 @@ public class CommandService implements Service {
 						return;
 					}*/
 					boolean isWhiteMove = gg.getWhite().equals(userSession);
-					//long last = gg.getTimeLastMoveMade();
-					//if (last == 0L) last = System.currentTimeMillis();
+					long last = gg.getTimeLastMoveMade();
+					if (last == 0L) last = System.currentTimeMillis();
 					gg.getBoard().move(isWhiteMove,command);
 					gg.getBoard().getLatestMove().setPrinter(GameService.getInstance().style12Printer);
-					/*long newt = gg.touchLastMoveMadeTime();
+					long newt = gg.touchLastMoveMadeTime();
 					if (isWhiteMove) { gg.setWhiteClock((gg.getWhiteClock()-(int)(newt-last)) + (gg.getIncrement()*1000)); }
-					else { gg.setBlackClock((gg.getBlackClock()-(int)(newt-last)) + (gg.getIncrement()*1000)); }*/
+					else { gg.setBlackClock((gg.getBlackClock()-(int)(newt-last)) + (gg.getIncrement()*1000)); }
 					
 					gg.processMoveUpdate(true);
 				}

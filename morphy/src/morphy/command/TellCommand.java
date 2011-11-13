@@ -56,6 +56,17 @@ public class TellCommand extends AbstractCommand {
 					userSession.send("That channel should, but does not, exist.");
 				}
 				else {
+					if (!c.hasAccess(userSession.getUser())) {
+						// Only service representatives and admins may send tells to channel 5.
+						/* I want to make this as flexible, hard coding as little as possible.
+						 * This default will currently be incorrect for some channels 
+						 * and will need to be changed later.
+						 */
+						String msg = "admins"; // authorized users
+						userSession.send("Only " + msg + " may send tells to channel " + number + ".");
+						return;
+					}
+
 					int sentTo = channelService.tell(c, message, userSession);
 					String tosend = "(told " + sentTo + " players in channel "
 							+ c.getNumber() + " \"" + c.getName() + "\")";
@@ -64,6 +75,7 @@ public class TellCommand extends AbstractCommand {
 					}
 							
 					userSession.send(tosend);
+					// The ONLY difference between xtell and tell is removing this line...
 					((morphy.user.SocketChannelUserSession)userSession).setLastChannelToldTo(c);
 				}
 			} else {
@@ -140,6 +152,7 @@ public class TellCommand extends AbstractCommand {
 					
 					userSession.send(s + ")");
 					
+					// The ONLY difference between xtell and tell is removing this line...
 					((morphy.user.SocketChannelUserSession)userSession).setLastPersonToldTo(personToTell);
 				}
 			}

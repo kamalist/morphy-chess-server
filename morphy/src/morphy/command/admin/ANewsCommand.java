@@ -15,20 +15,21 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package morphy.command;
+package morphy.command.admin;
 
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
 
+import morphy.command.AbstractCommand;
 import morphy.service.DBConnectionService;
 import morphy.user.UserSession;
 import morphy.utils.john.DBConnection;
 import morphy.utils.john.TimeZoneUtils;
 
-public class NewsCommand extends AbstractCommand {
-	public NewsCommand() {
-		super("news");
+public class ANewsCommand extends AbstractCommand {
+	public ANewsCommand() {
+		super("admin/anews");
 	}
 	
 	private static final Pattern isRangePattern = Pattern.compile("^[0-9]+-[0-9]+$");
@@ -55,7 +56,7 @@ public class NewsCommand extends AbstractCommand {
 				return;
 			}
 			
-			String query = "SELECT n.id,n.name,n.content,n.posted_timestamp,n.expires_timestamp,u.username FROM newsitems n INNER JOIN users u ON (u.id = n.posted_by_user_id) WHERE n.id = '" + id + "' && n.visibility = 'Public'"; 
+			String query = "SELECT n.id,n.name,n.content,n.posted_timestamp,n.expires_timestamp,u.username FROM newsitems n INNER JOIN users u ON (u.id = n.posted_by_user_id) WHERE n.id = '" + id + "' && n.visibility = 'Admin'"; 
 			
 			DBConnectionService service = DBConnectionService.getInstance();
 			DBConnection conn = service.getDBConnection();
@@ -80,45 +81,46 @@ public class NewsCommand extends AbstractCommand {
 				}
 			} catch(java.sql.SQLException e) { morphy.Morphy.getInstance().onError("SQLException while trying to retrieve news item #" + arguments,e); }
 				
-		} else if (arguments.equals("") || arguments.equals("all") || isRange) {
-			int limit = 10;
-			String message = null;
-			if (arguments.equals("")) {
-				limit = 10;
-				message = "Index of the last few news items:";
-			}
-			if (arguments.equals("all")) { 
-				limit = 9999;
-				message = "Index of all news items:";
-			}
-			
-			StringBuilder b = new StringBuilder("SELECT id,name,posted_timestamp FROM newsitems WHERE visibility = 'Public'"); 
-			
-			if (isRange) {
-				String[] arr = arguments.split("-"); 
-				b.append(" && id BETWEEN " + arr[0] + " AND " + arr[1] + " ");
-				message = "Index of news items " + arr[0] + "-" + arr[1] + ":";
-			}
-			b.append("ORDER BY id ASC LIMIT " + limit);
-			
-			String query = b.toString();
-			
-			SimpleDateFormat f = new SimpleDateFormat("EEE, MMM d");
-			
-			DBConnectionService service = DBConnectionService.getInstance();
-			DBConnection conn = service.getDBConnection();
-			java.sql.ResultSet rs = conn.executeQueryWithRS(query);
-			try {
-				StringBuilder str = new StringBuilder(300);
-				if (message != null) { str.append(message+"\n"); }
-				while(rs.next()) {
-					str.append(String.format("%4d",rs.getInt(1)) + " (" + f.format(rs.getDate(3)) + ") " + rs.getString(2) + "\n");
-				}
-				userSession.send(str.toString().trim());
-			} catch(java.sql.SQLException e) { morphy.Morphy.getInstance().onError("SQLException while trying to retrieve news items. query: "+query,e); }
 		} else {
-			userSession.send(getContext().getUsage());
-			return;
+			if (arguments.equals("") || arguments.equals("all") || isRange) {
+				int limit = 10;
+				String message = null;
+				if (arguments.equals("")) {
+					limit = 10;
+					message = "Index of the last few news items:";
+				}
+				if (arguments.equals("all")) { 
+					limit = 9999;
+					message = "Index of all news items:";
+				}
+				StringBuilder b = new StringBuilder("SELECT id,name,posted_timestamp FROM newsitems WHERE visibility = 'Admin'"); 
+				
+				if (isRange) { 
+					String[] arr = arguments.split("-"); 
+					b.append(" && id BETWEEN " + arr[0] + " AND " + arr[1] + " "); 
+				} /*else if (isNum) {
+					b.append(" && id = '" + arguments + "'");
+				}*/
+				b.append("ORDER BY id ASC LIMIT " + limit);
+				
+				String query = b.toString();
+				SimpleDateFormat f = new SimpleDateFormat("EEE, MMM d");
+				
+				DBConnectionService service = DBConnectionService.getInstance();
+				DBConnection conn = service.getDBConnection();
+				java.sql.ResultSet rs = conn.executeQueryWithRS(query);
+				try {
+					StringBuilder str = new StringBuilder(300);
+					if (message != null) { str.append(message+"\n"); }
+					while(rs.next()) {
+						str.append(String.format("%4d",rs.getInt(1)) + " (" + f.format(rs.getDate(3)) + ") " + rs.getString(2) + "\n");
+					}
+					userSession.send(str.toString().trim());
+				} catch(java.sql.SQLException e) { morphy.Morphy.getInstance().onError("SQLException while trying to retrieve news items. query: "+query,e); }
+			}  else {
+				userSession.send(getContext().getUsage());
+				return;
+			}
 		}
 	}
 }

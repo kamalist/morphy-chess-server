@@ -33,12 +33,15 @@ public class ServerList implements Comparable<ServerList> {
 	private String tag;
 	private ListType type;
 	private boolean isPublic;
+	private boolean isConsideredStaff;
 
 	/**
 	 * Creates a new ServerList object.
 	 * @param name Name of the list
 	 * @param permissions Permissions required to modify the list
-	 * @param tag Tag to be given to the player to show list status.
+	 * @param listType
+	 * @param tag Tag to be given to the player to show list status, eg (SR)
+	 * @param isPublic Whether this list is open to the public for viewing.
 	 */
 	public ServerList(String name, UserLevel permissions, ListType listType,
 			String tag,boolean isPublic) {
@@ -47,6 +50,12 @@ public class ServerList implements Comparable<ServerList> {
 		setType(listType);
 		setTag(tag);
 		setPublic(isPublic);
+	}
+	
+	public ServerList(String name, UserLevel permissions, ListType listType,
+			String tag,boolean isPublic,boolean isConsideredStaff) {
+		this(name,permissions,listType,tag,isPublic);
+		setConsideredStaff(false);
 	}
 
 	protected void setName(String name) {
@@ -87,6 +96,14 @@ public class ServerList implements Comparable<ServerList> {
 
 	public boolean isPublic() {
 		return isPublic;
+	}
+	
+	public void setConsideredStaff(boolean isConsideredStaff) {
+		this.isConsideredStaff = isConsideredStaff;
+	}
+
+	public boolean isConsideredStaff() {
+		return isConsideredStaff;
 	}
 
 	/** If compareBy = Public, Public lists will come before Private lists.<br />
