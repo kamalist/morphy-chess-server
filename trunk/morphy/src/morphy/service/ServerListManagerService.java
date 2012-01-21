@@ -31,6 +31,7 @@ import morphy.utils.john.ServerList.ListType;
 
 public class ServerListManagerService implements Service {
 	protected static Log LOG = LogFactory.getLog(ServerListManagerService.class);
+	public static enum FlushToDatabase { INSERT,UPDATE; };
 	
 	private static final ServerListManagerService singletonInstance = 
 		new ServerListManagerService();
@@ -52,7 +53,19 @@ public class ServerListManagerService implements Service {
 	}
 
 	private ServerListManagerService() {
-		initialize();
+		HashMap<ServerList,List<String>> map = loadFromDatabase();
+		if (map == null || map.isEmpty()) {
+			// load defaults
+			initialize();
+		} else {
+			ServerList[] listArr = map.keySet().toArray(new ServerList[map.keySet().size()]);
+			lists = new ArrayList<ServerList>(listArr.length);
+			for(int i=0;i<listArr.length;i++) {
+				ServerList list = listArr[i];
+				lists.add(list);
+			}
+			elements = map;
+		}
 		
 		if (LOG.isInfoEnabled()) {
 			LOG.info("Initialized ServerListManagerService.");
@@ -92,6 +105,31 @@ public class ServerListManagerService implements Service {
 		}
 	}
 	
+	private void flushToDatabase(FlushToDatabase what) {
+		if (what == null) {
+			//
+		} else if (what == FlushToDatabase.INSERT) {
+			//
+			StringBuilder queryBuilder = new StringBuilder();
+			queryBuilder.append("INSERT INTO `list` (`id`,`name`) VALUES ");
+			ServerList[] lists = getLists().toArray(new ServerList[getLists().size()]);
+			for(int i=0;i<lists.length;i++) {
+				ServerList list = lists[i];
+				queryBuilder.append("(NULL,'" + list.getName() + "')");
+			}
+		} else if (what == FlushToDatabase.UPDATE) {
+			//
+		} else {
+			// 
+		}
+	}
+	
+	private HashMap<ServerList,List<String>> loadFromDatabase() {
+		HashMap<ServerList,List<String>> map = new HashMap<ServerList,List<String>>();
+		
+		return map;
+	}
+	
 	public boolean isOnList(ServerList list,String username) {
 		return listContainsIgnoreCase(elements.get(list),username);
 	}
@@ -128,8 +166,14 @@ public class ServerListManagerService implements Service {
 	}
 	
 	public void dispose() {
-		if (lists != null)
-			lists.clear();		
+		flushToDatabase(null);
+		
+		if (lists != null) {
+			lists.clear();
+		}
+		if (elements != null) {
+			elements.clear();
+		}
 	}
 
 }
