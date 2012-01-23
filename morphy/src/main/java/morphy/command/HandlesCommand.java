@@ -30,7 +30,7 @@ import morphy.utils.john.DBConnection;
 public class HandlesCommand extends AbstractCommand {
 
 	public HandlesCommand() {
-		super("Handles");
+		super("handles");
 	}
 
 	public void process(String arguments, UserSession userSession) {
