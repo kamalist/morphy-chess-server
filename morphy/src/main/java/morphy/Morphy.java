@@ -39,8 +39,8 @@ import org.apache.log4j.PropertyConfigurator;
 
 public class Morphy {
 	public static final String RESOURCES_DIR = "resources";
-	public static final String COMMAND_FILES_DIR = "resources/commandFiles";
-	public static final String SCREEN_FILES = "resources/screenFiles";
+	public static final String COMMAND_FILES_DIR = "commandFiles";
+	public static final String SCREEN_FILES = "screenFiles";
 	public static final String USER_DIRECTORY = new File(System
 			.getProperty("user.home")).getAbsolutePath()
 			+ "/" + ".morphy";
