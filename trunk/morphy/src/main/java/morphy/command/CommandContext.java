@@ -18,7 +18,7 @@
 package morphy.command;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +27,7 @@ import morphy.properties.PreferenceKeys;
 import morphy.service.PreferenceService;
 import morphy.user.UserLevel;
 import morphy.utils.MorphyStringTokenizer;
+import morphy.utils.ResourceUtils;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -47,8 +48,10 @@ public class CommandContext {
 	public CommandContext(String commandFileName) {
 		BufferedReader reader = null;
 		try {
-			reader = new BufferedReader(new FileReader(Morphy.COMMAND_FILES_DIR
-					+ "/" + commandFileName + ".txt"));
+
+			reader = new BufferedReader(new InputStreamReader(ResourceUtils
+					.getResourceAsInputStream(Morphy.COMMAND_FILES_DIR + "/"
+							+ commandFileName + ".txt")));
 
 			StringBuilder helpContent = new StringBuilder(1200);
 			String lineTerminator = PreferenceService.getInstance().getString(
@@ -82,8 +85,9 @@ public class CommandContext {
 						aliases = aliasesList.toArray(new String[0]);
 
 					} else if (StringUtils.startsWithIgnoreCase(currentLine,
-							"SeeAlso:") || StringUtils.startsWithIgnoreCase(currentLine,
-							"See Also:")) {
+							"SeeAlso:")
+							|| StringUtils.startsWithIgnoreCase(currentLine,
+									"See Also:")) {
 						String content = currentLine.substring(8).trim();
 						MorphyStringTokenizer tok = new MorphyStringTokenizer(
 								content, " ");
@@ -124,7 +128,7 @@ public class CommandContext {
 			}
 		} catch (Throwable t) {
 			if (LOG.isErrorEnabled())
-					LOG.error("Error reading help file: " + commandFileName, t);
+				LOG.error("Error reading help file: " + commandFileName, t);
 		} finally {
 			if (reader != null) {
 				try {
